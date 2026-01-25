@@ -1,65 +1,96 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import Link from 'next/link';
+
+export default function HomePage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="min-h-screen bg-gradient-to-b from-black via-slate-900 to-black text-white">
+      
+      {/* NAV */}
+      <nav className="flex justify-between items-center px-10 py-6 border-b border-white/10">
+        <h1 className="text-xl font-semibold tracking-wide">Continuum</h1>
+        <div className="flex gap-6 text-sm text-gray-300">
+          <Link href="/about" className="hover:text-white">About</Link>
+          <Link href="/dashboard" className="hover:text-white">Dashboard</Link>
+          <Link href="/daily" className="hover:text-white">Daily Log</Link>
+          <Link href="/weekly" className="hover:text-white">Weekly Reflection</Link>
+          <Link href="/habits" className="hover:text-white">Habits</Link>
+          <Link href="/login" className="hover:text-white">Log In</Link>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+      </nav>
+
+      {/* HERO */}
+      <section className="flex flex-col items-center text-center px-6 pt-28 pb-24">
+        <h2 className="text-5xl font-bold leading-tight max-w-3xl">
+          Your Personal Operating System<br />for Discipline
+        </h2>
+
+        <p className="mt-6 max-w-xl text-gray-300 text-lg">
+          Continuum helps you measure what actually matters —  
+          daily action, consistency, and identity alignment — through a single
+          score that compounds over time.
+        </p>
+
+        <div className="flex gap-4 mt-10">
+          <Link
+            href="/signup"
+            className="bg-green-500 hover:bg-green-600 text-black px-6 py-3 rounded-lg font-semibold"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            Get Started
+          </Link>
+          <Link
+            href="/about"
+            className="border border-white/20 px-6 py-3 rounded-lg hover:bg-white/10"
           >
-            Documentation
-          </a>
+            Learn More
+          </Link>
         </div>
-      </main>
-    </div>
+      </section>
+
+      {/* WHAT IS CONTINUUM */}
+      <section className="max-w-5xl mx-auto px-6 pb-24">
+        <div className="grid md:grid-cols-3 gap-10 text-left">
+          <div>
+            <h3 className="text-xl font-semibold mb-3">Body</h3>
+            <p className="text-gray-400">
+              Physical action creates momentum. Continuum tracks movement,
+              nutrition discipline, and daily reps — because energy fuels everything.
+            </p>
+          </div>
+          <div>
+            <h3 className="text-xl font-semibold mb-3">Mind</h3>
+            <p className="text-gray-400">
+              What you avoid matters as much as what you do. Track discipline,
+              habit replacement, and mental control.
+            </p>
+          </div>
+          <div>
+            <h3 className="text-xl font-semibold mb-3">Identity</h3>
+            <p className="text-gray-400">
+              Identity is built through proof. Continuum measures alignment
+              between who you say you are and what you do daily.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="text-center pb-32">
+        <h3 className="text-3xl font-bold">
+          Discipline is measurable. Now prove it.
+        </h3>
+        <Link
+          href="/signup"
+          className="inline-block mt-8 bg-green-500 hover:bg-green-600 text-black px-8 py-4 rounded-xl font-semibold text-lg"
+        >
+          Start Tracking Today
+        </Link>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="text-center text-sm text-gray-500 pb-10">
+        © {new Date().getFullYear()} Continuum Growth. All rights reserved.
+      </footer>
+    </main>
   );
 }
