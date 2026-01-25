@@ -47,7 +47,7 @@ export default function DashboardPage() {
         return;
       }
 
-      setEmail(auth.user.email);
+      setEmail(auth.user.email ?? null);
 
       const { data: logs } = await supabase
         .from('daily_logs')
