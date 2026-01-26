@@ -7,7 +7,7 @@ export default function HomePage() {
     <main className="min-h-screen bg-gradient-to-b from-black via-slate-900 to-black text-white">
       
       {/* NAV */}
-      <nav className="flex justify-between items-center px-10 py-6 border-b border-white/10">
+
         <h1 className="text-xl font-semibold tracking-wide">Continuum</h1>
         <div className="flex gap-6 text-sm text-gray-300">
           <Link href="/about" className="hover:text-white">About</Link>
@@ -17,7 +17,7 @@ export default function HomePage() {
           <Link href="/habits" className="hover:text-white">Habits</Link>
           <Link href="/login" className="hover:text-white">Log In</Link>
         </div>
-      </nav>
+    
 
       {/* HERO */}
       <section className="flex flex-col items-center text-center px-6 pt-28 pb-24">
