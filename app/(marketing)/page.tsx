@@ -10,12 +10,7 @@ export default function HomePage() {
 
         <h1 className="text-xl font-semibold tracking-wide">Continuum</h1>
         <div className="flex gap-6 text-sm text-gray-300">
-          <Link href="/about" className="hover:text-white">About</Link>
-          <Link href="/dashboard" className="hover:text-white">Dashboard</Link>
-          <Link href="/daily" className="hover:text-white">Daily Log</Link>
-          <Link href="/weekly" className="hover:text-white">Weekly Reflection</Link>
-          <Link href="/habits" className="hover:text-white">Habits</Link>
-          <Link href="/login" className="hover:text-white">Log In</Link>
+
         </div>
     
 
