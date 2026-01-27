@@ -1,6 +1,6 @@
-
 'use client';
 export const dynamic = 'force-dynamic';
+
 import { useState } from 'react';
 import { supabase } from '@/src/lib/supabaseClient';
 
@@ -22,38 +22,22 @@ export default function DailyPage() {
   const [philosophy, setPhilosophy] = useState(false);
   const [mood, setMood] = useState(5);
 
-  const [message, setMessage] = useState('');
-
+  const [message, setMessage] = useState<string | null>(null);
   const today = new Date().toISOString().split('T')[0];
 
   // -------------------------
-  // REST DAY HANDLER
+  // REST DAY (DE-EMPHASIZED)
   // -------------------------
   const submitRestDay = async () => {
-    const { data: auth } = await supabase.auth.getUser();
-    if (!auth.user) return;
+    setMessage(null);
 
-    // Check rest days in last 7 days
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const { data } = await supabase.auth.getUser();
+    if (!data.user) return;
 
-    const { data: recentRestDays } = await supabase
-      .from('daily_logs')
-      .select('id')
-      .eq('user_id', auth.user.id)
-      .eq('is_rest_day', true)
-      .gte('log_date', sevenDaysAgo.toISOString().split('T')[0]);
-
-    if ((recentRestDays?.length ?? 0) >= 1) {
-      setMessage('You already used a rest day this week');
-      return;
-    }
-
-    // Prior sovereign
     const { data: prior } = await supabase
       .from('daily_logs')
       .select('sovereign_score')
-      .eq('user_id', auth.user.id)
+      .eq('user_id', data.user.id)
       .lt('log_date', today)
       .order('log_date', { ascending: false })
       .limit(1)
@@ -64,184 +48,100 @@ export default function DailyPage() {
 
     const { error } = await supabase.from('daily_logs').upsert(
       {
-        user_id: auth.user.id,
+        user_id: data.user.id,
         log_date: today,
         is_rest_day: true,
-
-        body_score: 0,
-        mind_score: 0,
-        identity_score: 0,
         daily_raw_score: REST_DAY_SCORE,
         sovereign_score: sovereignScore,
         sovereign_value: sovereignScore,
+        body_score: 0,
+        mind_score: 0,
+        identity_score: 0,
       },
       { onConflict: 'user_id,log_date' }
     );
 
-    setMessage(error ? error.message : 'Rest Day Logged');
+    setMessage(error ? error.message : 'Rest day logged.');
   };
 
   // -------------------------
-  // NORMAL DAY HANDLER
+  // NORMAL DAY
   // -------------------------
   const submitDay = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-  
-    if (!user) {
+    setMessage(null);
+
+    const { data } = await supabase.auth.getUser();
+    if (!data.user) {
       setMessage('Not authenticated');
       return;
     }
-  
-    const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
-  
-    // --------------------
-    // GET LAST LOG
-    // --------------------
-    const { data: lastLog } = await supabase
+
+    // Scores
+    let bodyScore = (physical ? 20 : 0) + (nutrition ? 20 : 0);
+    bodyScore += reps === '50_plus' ? 10 : reps === '25_plus' ? 5 : -5;
+
+    let mindScore = (mindPositive ? 20 : 0) + (mindNegative ? 20 : 0) + discipline;
+    let identityScore = (mission ? 20 : 0) + (philosophy ? 20 : 0) + mood;
+
+    const dailyRawScore = bodyScore + mindScore + identityScore;
+
+    const { data: prior } = await supabase
       .from('daily_logs')
-      .select('log_date, sovereign_score')
-      .eq('user_id', user.id)
+      .select('sovereign_score')
+      .eq('user_id', data.user.id)
+      .lt('log_date', today)
       .order('log_date', { ascending: false })
       .limit(1)
       .maybeSingle();
-  
-    let priorScore = lastLog?.sovereign_score ?? 150;
-    let lastDate = lastLog ? new Date(lastLog.log_date) : null;
-  
-    // --------------------
-    // INSERT MISSED DAYS
-    // --------------------
-    if (lastDate) {
-      const cursor = new Date(lastDate);
-      cursor.setDate(cursor.getDate() + 1);
-  
-      while (cursor < today) {
-        const dateStr = cursor.toISOString().split('T')[0];
-  
-        const rawScore = 50;
-        const sovereignScore = priorScore * 0.7 + rawScore * 0.3;
-  
-        await supabase.from('daily_logs').insert({
-          user_id: user.id,
-          log_date: dateStr,
-          missed_day: true,
-  
-          body_score: 0,
-          mind_score: 0,
-          identity_score: 0,
-          daily_raw_score: rawScore,
-          sovereign_score: sovereignScore,
-          sovereign_value: sovereignScore,
-        });
-  
-        priorScore = sovereignScore;
-        cursor.setDate(cursor.getDate() + 1);
-      }
-    }
-  
-    // --------------------
-    // BODY SCORE
-    // --------------------
-    let bodyScore = 0;
-    if (physical) bodyScore += 20;
-    if (nutrition) bodyScore += 20;
-  
-    if (reps === '50_plus') bodyScore += 10;
-    else if (reps === '25_plus') bodyScore += 5;
-    else bodyScore -= 5;
-  
-    // --------------------
-    // MIND SCORE
-    // --------------------
-    let mindScore = 0;
-    if (mindNegative) mindScore += 20;
-    if (mindPositive) mindScore += 20;
-    mindScore += discipline;
-  
-    // --------------------
-    // IDENTITY SCORE
-    // --------------------
-    let identityScore = 0;
-    if (mission) identityScore += 20;
-    if (philosophy) identityScore += 20;
-    identityScore += mood;
-  
-    const dailyRawScore = bodyScore + mindScore + identityScore;
+
+    const priorScore = prior?.sovereign_score ?? 150;
     const sovereignScore = priorScore * 0.7 + dailyRawScore * 0.3;
-  
-    // --------------------
-    // RUNNING AVERAGE
-    // --------------------
+
     const { data: allScores } = await supabase
       .from('daily_logs')
       .select('sovereign_score')
-      .eq('user_id', user.id);
-  
+      .eq('user_id', data.user.id);
+
     const total =
       (allScores?.reduce((s, r) => s + r.sovereign_score, 0) ?? 0) +
       sovereignScore;
-  
+
     const sovereignValue = total / ((allScores?.length ?? 0) + 1);
-  
-    // --------------------
-    // UPSERT TODAY
-    // --------------------
+
     const { error } = await supabase.from('daily_logs').upsert(
       {
-        user_id: user.id,
-        log_date: todayStr,
-  
+        user_id: data.user.id,
+        log_date: today,
         body_physical_activity_completed: physical,
         body_nutritional_discipline_maintained: nutrition,
         body_daily_reps_level: reps,
-  
         mind_negative_habit_avoided: mindNegative,
         mind_positive_habit_completed: mindPositive,
         mind_discipline_rating: discipline,
-  
         identity_daily_mission_completed: mission,
         identity_philosophy_practice_completed: philosophy,
         identity_mood_rating: mood,
-  
         body_score: bodyScore,
         mind_score: mindScore,
         identity_score: identityScore,
         daily_raw_score: dailyRawScore,
         sovereign_score: sovereignScore,
         sovereign_value: sovereignValue,
-        missed_day: false,
+        is_rest_day: false,
       },
       { onConflict: 'user_id,log_date' }
     );
-  
-    setMessage(error ? error.message : 'Logged');
+
+    setMessage(error ? error.message : 'Daily log submitted.');
   };
 
   return (
     <div style={{ padding: 40, maxWidth: 600 }}>
       <h1>Daily Log</h1>
 
-      <br /><br />
+      {message && <p style={{ marginTop: 12 }}>{message}</p>}
 
-<button
-  onClick={submitDay}
-  style={{
-    width: '100%',
-    padding: '12px',
-    fontWeight: 'bold',
-  }}
->
-  Submit Daily Log
-</button>
-
-{message && <p style={{ marginTop: 12 }}>{message}</p>}
-
-<hr style={{ margin: '40px 0' }} />
-
-
+      <hr style={{ margin: '24px 0' }} />
 
       <h3>Body</h3>
       <label><input type="checkbox" checked={physical} onChange={e => setPhysical(e.target.checked)} /> Physical</label><br/>
@@ -267,22 +167,28 @@ export default function DailyPage() {
       </select>
 
       <br /><br />
-      <button onClick={submitDay}>Submit Day</button>
 
       <button
-  onClick={submitRestDay}
-  style={{
-    width: '100%',
-    padding: '12px',
-    backgroundColor: '#f5f5f5',
-    color: '#555',
-    border: '1px solid #ccc',
-  }}
->
-  Log Rest Day
-</button>
+        onClick={submitDay}
+        style={{ width: '100%', padding: 14, fontWeight: 'bold' }}
+      >
+        Submit Daily Log
+      </button>
 
-      {message && <p>{message}</p>}
+      {/* REST DAY — SMALL, SEPARATE, DISCOURAGED */}
+      <button
+        onClick={submitRestDay}
+        style={{
+          marginTop: 24,
+          padding: '6px 10px',
+          fontSize: 12,
+          background: 'transparent',
+          color: '#888',
+          border: '1px dashed #444',
+        }}
+      >
+        Log Rest Day
+      </button>
     </div>
   );
 }
