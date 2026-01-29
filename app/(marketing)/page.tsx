@@ -1,91 +1,150 @@
-'use client';
-
 import Link from 'next/link';
 
-export default function HomePage() {
+/* ---------- PAGE ---------- */
+
+export default function MarketingHome() {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-black via-slate-900 to-black text-white">
-      
-      {/* NAV */}
+    <section
+      style={{
+        minHeight: '100vh',
+        position: 'relative',
+        display: 'flex',
+        justifyContent: 'center',
+        textAlign: 'center',
+        overflow: 'hidden',
+      }}
+    >
+      {/* BACKGROUND IMAGE */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundImage: `url('/continuum-hero.jpg')`,
+          backgroundSize: 'contain',
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center',
+          opacity: 0.22,
+          filter: 'grayscale(100%)',
+        }}
+      />
 
-        <h1 className="text-xl font-semibold tracking-wide">Continuum</h1>
-        <div className="flex gap-6 text-sm text-gray-300">
+      {/* DARK OVERLAY */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background:
+            'radial-gradient(circle at center, rgba(15,23,42,0.55), rgba(2,6,23,0.95))',
+        }}
+      />
 
-        </div>
-    
+      {/* CONTENT */}
+      <div
+        style={{
+          position: 'relative',
+          zIndex: 2,
+          maxWidth: 1200,
+          padding: '120px 24px 140px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
+        {/* HERO COPY */}
+        <h1 style={{ fontSize: 56, fontWeight: 600, maxWidth: 900 }}>
+          Your Personal Operating System for Discipline
+        </h1>
 
-      {/* HERO */}
-      <section className="flex flex-col items-center text-center px-6 pt-28 pb-24">
-        <h2 className="text-5xl font-bold leading-tight max-w-3xl">
-          Your Personal Operating System<br />for Discipline
-        </h2>
-
-        <p className="mt-6 max-w-xl text-gray-300 text-lg">
-          Continuum helps you measure what actually matters —  
-          daily action, consistency, and identity alignment — through a single
-          score that compounds over time.
+        <p
+          style={{
+            maxWidth: 720,
+            fontSize: 18,
+            lineHeight: 1.6,
+            opacity: 0.85,
+            marginTop: 24,
+          }}
+        >
+          Continuum helps you measure what actually matters — daily action,
+          consistency, and identity alignment — through a single score that
+          compounds over time.
         </p>
 
-        <div className="flex gap-4 mt-10">
-          <Link
-            href="/signup"
-            className="bg-green-500 hover:bg-green-600 text-black px-6 py-3 rounded-lg font-semibold"
-          >
-            Get Started
+        {/* CTA */}
+        <div style={{ display: 'flex', gap: 16, marginTop: 36 }}>
+          <Link href="/login">
+            <button style={primaryButton}>Get Started</button>
           </Link>
-          <Link
-            href="/about"
-            className="border border-white/20 px-6 py-3 rounded-lg hover:bg-white/10"
-          >
-            Learn More
+
+          <Link href="/about">
+            <button style={secondaryButton}>Learn More</button>
           </Link>
         </div>
-      </section>
 
-      {/* WHAT IS CONTINUUM */}
-      <section className="max-w-5xl mx-auto px-6 pb-24">
-        <div className="grid md:grid-cols-3 gap-10 text-left">
-          <div>
-            <h3 className="text-xl font-semibold mb-3">Body</h3>
-            <p className="text-gray-400">
-              Physical action creates momentum. Continuum tracks movement,
-              nutrition discipline, and daily reps — because energy fuels everything.
-            </p>
-          </div>
-          <div>
-            <h3 className="text-xl font-semibold mb-3">Mind</h3>
-            <p className="text-gray-400">
-              What you avoid matters as much as what you do. Track discipline,
-              habit replacement, and mental control.
-            </p>
-          </div>
-          <div>
-            <h3 className="text-xl font-semibold mb-3">Identity</h3>
-            <p className="text-gray-400">
-              Identity is built through proof. Continuum measures alignment
-              between who you say you are and what you do daily.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="text-center pb-32">
-        <h3 className="text-3xl font-bold">
-          Discipline is measurable. Now prove it.
-        </h3>
-        <Link
-          href="/signup"
-          className="inline-block mt-8 bg-green-500 hover:bg-green-600 text-black px-8 py-4 rounded-xl font-semibold text-lg"
+        {/* PILLARS */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: 40,
+            marginTop: 100,
+            maxWidth: 1100,
+            textAlign: 'left',
+          }}
         >
-          Start Tracking Today
-        </Link>
-      </section>
+          <Pillar
+            title="Body"
+            text="Physical action creates momentum. Continuum tracks movement, nutrition discipline, and daily reps — because energy fuels everything."
+          />
+          <Pillar
+            title="Mind"
+            text="What you avoid matters as much as what you do. Track discipline, habit replacement, and mental control."
+          />
+          <Pillar
+            title="Identity"
+            text="Identity is built through proof. Continuum measures alignment between who you say you are and what you do daily."
+          />
+        </div>
 
-      {/* FOOTER */}
-      <footer className="text-center text-sm text-gray-500 pb-10">
-        © {new Date().getFullYear()} Continuum Growth. All rights reserved.
-      </footer>
-    </main>
+        {/* FINAL CTA */}
+        <div style={{ marginTop: 120, textAlign: 'center' }}>
+          <h2 style={{ fontSize: 32, marginBottom: 24 }}>
+            Discipline is measurable. Now prove it.
+          </h2>
+          <Link href="/login">
+            <button style={primaryButton}>Start Tracking Today</button>
+          </Link>
+        </div>
+      </div>
+    </section>
   );
 }
+
+/* ---------- HELPERS ---------- */
+
+function Pillar({ title, text }: { title: string; text: string }) {
+  return (
+    <div>
+      <h3 style={{ marginBottom: 12 }}>{title}</h3>
+      <p style={{ opacity: 0.75, lineHeight: 1.6 }}>{text}</p>
+    </div>
+  );
+}
+
+const primaryButton = {
+  padding: '12px 22px',
+  background: '#22c55e',
+  color: '#000',
+  borderRadius: 10,
+  fontWeight: 600,
+  border: 'none',
+  cursor: 'pointer',
+};
+
+const secondaryButton = {
+  padding: '12px 22px',
+  background: 'transparent',
+  color: '#e5e7eb',
+  borderRadius: 10,
+  border: '1px solid #334155',
+  cursor: 'pointer',
+};

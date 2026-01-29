@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 
 export default function MarketingLayout({
@@ -6,63 +7,34 @@ export default function MarketingLayout({
   children: React.ReactNode;
 }) {
   return (
-    <>
+    <div style={{ background: '#020617', minHeight: '100vh', color: '#e5e7eb' }}>
       <nav
         style={{
           display: 'flex',
-          justifyContent: 'space-between',
           alignItems: 'center',
+          justifyContent: 'space-between',
           padding: '16px 32px',
-          backgroundColor: '#020617',
           borderBottom: '1px solid #1e293b',
         }}
       >
-        {/* Logo → Home */}
-        <Link
-          href="/"
-          style={{
-            fontSize: 18,
-            fontWeight: 700,
-            color: '#e5e7eb',
-            textDecoration: 'none',
-          }}
-        >
-          Continuum
+        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <Image
+            src="/continuum-hero.jpg"
+            alt="Continuum"
+            width={36}
+            height={36}
+          />
+          <span style={{ fontWeight: 600 }}>Continuum</span>
         </Link>
 
-        {/* Nav Links */}
-        <div
-          style={{
-            display: 'flex',
-            gap: 20,
-            fontSize: 14,
-            color: '#cbd5f5',
-          }}
-        >
-          <Link href="/" style={{ textDecoration: 'none', color: '#cbd5f5' }}>
-            Home
-          </Link>
-          <Link href="/about" style={{ textDecoration: 'none', color: '#cbd5f5' }}>
-            About
-          </Link>
-          <Link href="/stories" style={{ textDecoration: 'none', color: '#cbd5f5' }}>
-            Stories
-          </Link>
-          <Link href="/login" style={{ textDecoration: 'none', color: '#cbd5f5' }}>
-            Log In
-          </Link>
+        <div style={{ display: 'flex', gap: 20 }}>
+          <Link href="/about">About</Link>
+          <Link href="/stories">Stories</Link>
+          <Link href="/login">Log In</Link>
         </div>
       </nav>
 
-      <main
-        style={{
-          maxWidth: 1200,
-          margin: '0 auto',
-          padding: '32px 24px',
-        }}
-      >
-        {children}
-      </main>
-    </>
+      <main>{children}</main>
+    </div>
   );
 }
