@@ -15,11 +15,12 @@ import {
 
 const BASELINE_SCORE = 110;
 
-const formatMonthYear = (dateStr: string) => {
-  const d = new Date(dateStr);
+// ✅ EXACT blueprint date format: Jan 26, Feb 26, Mar 26, Apr 26
+const formatMonthDay = (dateStr: string) => {
+  const d = new Date(dateStr + 'T00:00:00');
   return d.toLocaleString('en-US', {
     month: 'short',
-    year: '2-digit',
+    day: 'numeric',
   });
 };
 
@@ -63,48 +64,45 @@ export default function DashboardPage() {
 
       if (!logs || logs.length === 0) return;
 
-      // ---- stats ----
+      // ---- stats (logged days only) ----
       setDaysIn(logs.length);
       setWeeksIn(Math.ceil(logs.length / 7));
 
       const sovereignScores = logs.map(l => l.sovereign_score);
       setAvgSovereign(
-        sovereignScores.reduce((a, b) => a + b, 0) /
-          sovereignScores.length
+        sovereignScores.reduce((a, b) => a + b, 0) / sovereignScores.length
       );
 
       setPriorDay(
         logs.length > 1
           ? logs[logs.length - 2].sovereign_score
-          : 150
+          : logs[0].sovereign_score
       );
 
-      // ---- pillar averages ----
       setPillarAverages({
-        body:
-          logs.reduce((s, l) => s + l.body_score, 0) / logs.length,
-        mind:
-          logs.reduce((s, l) => s + l.mind_score, 0) / logs.length,
-        identity:
-          logs.reduce((s, l) => s + l.identity_score, 0) / logs.length,
+        body: logs.reduce((s, l) => s + l.body_score, 0) / logs.length,
+        mind: logs.reduce((s, l) => s + l.mind_score, 0) / logs.length,
+        identity: logs.reduce((s, l) => s + l.identity_score, 0) / logs.length,
       });
 
-      // ---- chart range ----
-      const firstDate = new Date(logs[0].log_date);
+      // ---- build chart range EXACTLY like blueprint ----
+      const logMap = new Map(logs.map(l => [l.log_date, l]));
+
+      const firstDate = new Date(logs[0].log_date + 'T00:00:00');
       const futureEnd = new Date(firstDate);
-      futureEnd.setDate(futureEnd.getDate() + 90);
+      futureEnd.setDate(futureEnd.getDate() + 90); // future months visible
 
       const fullRange: any[] = [];
       let d = new Date(firstDate);
 
       while (d <= futureEnd) {
         const dateStr = d.toISOString().split('T')[0];
-        const found = logs.find(l => l.log_date === dateStr);
+        const found = logMap.get(dateStr);
 
         fullRange.push({
           date: dateStr,
-          label: formatMonthYear(dateStr),
-          sovereign: found ? found.sovereign_score : undefined, // FIX
+          label: formatMonthDay(dateStr), // 🔥 THIS is what X-axis uses
+          sovereign: found ? found.sovereign_score : null,
           baseline: BASELINE_SCORE,
         });
 
@@ -122,7 +120,6 @@ export default function DashboardPage() {
       <h1>Dashboard</h1>
       <p>{email}</p>
 
-      {/* Stats */}
       <div style={{ display: 'flex', gap: 40, marginBottom: 20 }}>
         <div>
           <strong>Days In</strong>
@@ -146,32 +143,53 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Chart */}
       <h2>Sovereign Trajectory</h2>
 
-      <div style={{ height: 350 }}>
+      <div
+        style={{
+          height: 350,
+          background: '#020617',
+          borderRadius: 12,
+          padding: 16,
+          boxShadow: '0 0 0 1px #1e293b',
+        }}
+      >
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData}>
-            <XAxis dataKey="label" interval={13} />
-            <YAxis domain={[0, 175]} />
-            <Tooltip />
+            <XAxis
+              dataKey="label"     // 🔥 FIXED — matches original chart
+              interval={30}       // monthly spacing like blueprint
+              stroke="#94a3b8"
+            />
+
+            <YAxis domain={[0, 175]} stroke="#94a3b8" />
+
+            <Tooltip
+              labelFormatter={(label) => label}
+              contentStyle={{
+                backgroundColor: '#020617',
+                border: '1px solid #334155',
+                color: '#e5e7eb',
+              }}
+            />
+
             <Legend />
 
             <Line
               type="monotone"
               dataKey="sovereign"
               name="Sovereign Score"
-              stroke="#2563eb"
-              strokeWidth={2}
-              dot
-              connectNulls={false}   // FIX
+              stroke="#38bdf8"
+              strokeWidth={3}
+              dot={false}
+              connectNulls={true}
             />
 
             <Line
               type="monotone"
               dataKey="baseline"
               name="Baseline"
-              stroke="#16a34a"
+              stroke="#22c55e"
               strokeWidth={2}
               dot={false}
             />
@@ -179,7 +197,6 @@ export default function DashboardPage() {
         </ResponsiveContainer>
       </div>
 
-      {/* Pillars */}
       <h3 style={{ marginTop: 30 }}>Pillar Averages</h3>
       <div style={{ display: 'flex', gap: 40 }}>
         <div>

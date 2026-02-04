@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { signUp } from "../../../src/lib/auth";
+import { supabase } from "../../../src/lib/supabaseClient";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -29,17 +29,27 @@ export default function SignUpPage() {
     try {
       setLoading(true);
 
-      await signUp({
+      const { error } = await supabase.auth.signUp({
         email,
         password,
-        username,
-        firstName,
-        lastName,
+        options: {
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+            username,
+          },
+        },
       });
+
+      if (error) throw error;
 
       router.push("/dashboard");
     } catch (err: any) {
-      setError(err.message || "Signup failed");
+      if (err.message?.toLowerCase().includes("rate")) {
+        setError("Please wait a few minutes and try again.");
+      } else {
+        setError(err.message || "Signup failed");
+      }
     } finally {
       setLoading(false);
     }
