@@ -1,4 +1,5 @@
 'use client';
+export const dynamic = 'force-dynamic';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -59,70 +60,155 @@ export default function HabitsPage() {
     const { error } = await supabase
       .from('user_habits')
       .upsert(
-        {
-          user_id: auth.user.id,
-          ...habits,
-        },
+        { user_id: auth.user.id, ...habits },
         { onConflict: 'user_id' }
       );
 
     setMessage(error ? error.message : 'Habits saved');
   };
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) return null;
 
   return (
-    <div style={{ padding: 40, maxWidth: 700 }}>
-      <h1>Habit Definitions</h1>
-
-      <h3>Body</h3>
-      <input
-        placeholder="Physical activity (e.g. Gym workout)"
-        value={habits.body_physical_activity_name}
-        onChange={e => setHabits({ ...habits, body_physical_activity_name: e.target.value })}
-      /><br /><br />
-
-      <input
-        placeholder="Daily reps (e.g. Push-ups)"
-        value={habits.body_daily_reps_name}
-        onChange={e => setHabits({ ...habits, body_daily_reps_name: e.target.value })}
-      /><br /><br />
-
-      <input
-        placeholder="Nutrition habit to avoid (e.g. Avoid candy)"
-        value={habits.body_nutritional_discipline_name}
-        onChange={e => setHabits({ ...habits, body_nutritional_discipline_name: e.target.value })}
+    <div
+      style={{
+        minHeight: '100vh',
+        padding: '60px 24px',
+        display: 'flex',
+        justifyContent: 'center',
+        position: 'relative',
+        background:
+          'radial-gradient(circle at top, #020617 0%, #020617 40%, #01030f 100%)',
+      }}
+    >
+      {/* Continuum watermark */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundImage: "url('/continuum-hero.jpg')",
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center',
+          backgroundSize: '420px',
+          opacity: 0.04,
+          pointerEvents: 'none',
+        }}
       />
 
-      <h3 style={{ marginTop: 30 }}>Mind</h3>
-      <input
-        placeholder="Negative habit to avoid"
-        value={habits.mind_negative_habit_name}
-        onChange={e => setHabits({ ...habits, mind_negative_habit_name: e.target.value })}
-      /><br /><br />
+      <div style={{ width: '100%', maxWidth: 760, position: 'relative' }}>
+        <h1 style={{ fontSize: 28, fontWeight: 600 }}>Habit Definitions</h1>
+        <p style={{ color: '#94a3b8', marginTop: 4, marginBottom: 32 }}>
+          Define the standards you will be judged by daily.
+        </p>
 
-      <input
-        placeholder="Positive habit to build"
-        value={habits.mind_positive_habit_name}
-        onChange={e => setHabits({ ...habits, mind_positive_habit_name: e.target.value })}
-      />
+        <Pillar
+          title="Body"
+          color="#22c55e"
+          inputs={[
+            ['Physical activity', 'body_physical_activity_name'],
+            ['Daily reps', 'body_daily_reps_name'],
+            ['Nutrition discipline', 'body_nutritional_discipline_name'],
+          ]}
+          habits={habits}
+          setHabits={setHabits}
+        />
 
-      <h3 style={{ marginTop: 30 }}>Identity</h3>
-      <input
-        placeholder="Daily mission"
-        value={habits.identity_daily_mission_name}
-        onChange={e => setHabits({ ...habits, identity_daily_mission_name: e.target.value })}
-      /><br /><br />
+        <Pillar
+          title="Mind"
+          color="#3b82f6"
+          inputs={[
+            ['Negative habit to avoid', 'mind_negative_habit_name'],
+            ['Positive habit to build', 'mind_positive_habit_name'],
+          ]}
+          habits={habits}
+          setHabits={setHabits}
+        />
 
-      <input
-        placeholder="Philosophy practice"
-        value={habits.identity_philosophy_practice_name}
-        onChange={e => setHabits({ ...habits, identity_philosophy_practice_name: e.target.value })}
-      />
+        <Pillar
+          title="Identity"
+          color="#a855f7"
+          inputs={[
+            ['Daily mission', 'identity_daily_mission_name'],
+            ['Philosophy practice', 'identity_philosophy_practice_name'],
+          ]}
+          habits={habits}
+          setHabits={setHabits}
+        />
 
-      <br /><br />
-      <button onClick={saveHabits}>Save Habits</button>
-      {message && <p>{message}</p>}
+        <button
+          onClick={saveHabits}
+          style={{
+            marginTop: 36,
+            width: '100%',
+            padding: 14,
+            background: '#22c55e',
+            color: '#020617',
+            fontWeight: 600,
+            fontSize: 16,
+            borderRadius: 10,
+            border: 'none',
+            cursor: 'pointer',
+          }}
+        >
+          Save Habits
+        </button>
+
+        {message && (
+          <p style={{ marginTop: 16, color: '#94a3b8' }}>{message}</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- UI helpers ---------- */
+
+function Pillar({
+  title,
+  color,
+  inputs,
+  habits,
+  setHabits,
+}: {
+  title: string;
+  color: string;
+  inputs: [string, keyof typeof habits][];
+  habits: any;
+  setHabits: any;
+}) {
+  return (
+    <div
+      style={{
+        marginTop: 28,
+        padding: 24,
+        borderRadius: 16,
+        background: '#020617',
+        boxShadow: `0 0 0 1px ${color}40`,
+      }}
+    >
+      <h2 style={{ fontSize: 20, fontWeight: 600, color, marginBottom: 16 }}>
+        {title}
+      </h2>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {inputs.map(([label, key]) => (
+          <input
+            key={key}
+            placeholder={label}
+            value={habits[key]}
+            onChange={e =>
+              setHabits({ ...habits, [key]: e.target.value })
+            }
+            style={{
+              padding: 12,
+              borderRadius: 10,
+              background: '#020617',
+              border: '1px solid #1e293b',
+              color: '#e5e7eb',
+            }}
+          />
+        ))}
+      </div>
     </div>
   );
 }

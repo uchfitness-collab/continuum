@@ -15,19 +15,16 @@ import {
 
 const BASELINE_SCORE = 110;
 
-// ✅ EXACT blueprint date format: Jan 26, Feb 26, Mar 26, Apr 26
 const formatMonthDay = (dateStr: string) => {
   const d = new Date(dateStr + 'T00:00:00');
-  return d.toLocaleString('en-US', {
-    month: 'short',
-    day: 'numeric',
-  });
+  return d.toLocaleString('en-US', { month: 'short', day: 'numeric' });
 };
+
+const toOutOf100 = (value: number) => Math.round((value / 50) * 100);
 
 export default function DashboardPage() {
   const router = useRouter();
 
-  const [email, setEmail] = useState<string | null>(null);
   const [chartData, setChartData] = useState<any[]>([]);
   const [avgSovereign, setAvgSovereign] = useState(0);
   const [priorDay, setPriorDay] = useState(0);
@@ -48,23 +45,14 @@ export default function DashboardPage() {
         return;
       }
 
-      setEmail(auth.user.email ?? null);
-
       const { data: logs } = await supabase
         .from('daily_logs')
-        .select(`
-          log_date,
-          sovereign_score,
-          body_score,
-          mind_score,
-          identity_score
-        `)
+        .select(`log_date, sovereign_score, body_score, mind_score, identity_score`)
         .eq('user_id', auth.user.id)
         .order('log_date', { ascending: true });
 
       if (!logs || logs.length === 0) return;
 
-      // ---- stats (logged days only) ----
       setDaysIn(logs.length);
       setWeeksIn(Math.ceil(logs.length / 7));
 
@@ -85,23 +73,20 @@ export default function DashboardPage() {
         identity: logs.reduce((s, l) => s + l.identity_score, 0) / logs.length,
       });
 
-      // ---- build chart range EXACTLY like blueprint ----
       const logMap = new Map(logs.map(l => [l.log_date, l]));
-
       const firstDate = new Date(logs[0].log_date + 'T00:00:00');
       const futureEnd = new Date(firstDate);
-      futureEnd.setDate(futureEnd.getDate() + 90); // future months visible
+      futureEnd.setDate(futureEnd.getDate() + 90);
 
-      const fullRange: any[] = [];
+      const range: any[] = [];
       let d = new Date(firstDate);
 
       while (d <= futureEnd) {
         const dateStr = d.toISOString().split('T')[0];
         const found = logMap.get(dateStr);
 
-        fullRange.push({
-          date: dateStr,
-          label: formatMonthDay(dateStr), // 🔥 THIS is what X-axis uses
+        range.push({
+          label: formatMonthDay(dateStr),
           sovereign: found ? found.sovereign_score : null,
           baseline: BASELINE_SCORE,
         });
@@ -109,111 +94,168 @@ export default function DashboardPage() {
         d.setDate(d.getDate() + 1);
       }
 
-      setChartData(fullRange);
+      setChartData(range);
     };
 
     load();
   }, [router]);
 
   return (
-    <div style={{ padding: 40 }}>
-      <h1>Dashboard</h1>
-      <p>{email}</p>
+    <div className="page">
+      <div className="watermark" />
 
-      <div style={{ display: 'flex', gap: 40, marginBottom: 20 }}>
-        <div>
-          <strong>Days In</strong>
-          <br />
-          {daysIn}
+      <div className="content">
+        <header>
+          <h1>Continuum Dashboard</h1>
+          <p className="subtitle">Your discipline, measured over time.</p>
+        </header>
+
+        <div className="stats">
+          <Stat label="Days In" value={daysIn} />
+          <Stat label="Weeks" value={weeksIn} />
+          <Stat label="Avg Sovereign" value={avgSovereign.toFixed(1)} />
+          <Stat label="Prior Day" value={priorDay.toFixed(1)} />
         </div>
-        <div>
-          <strong>Weeks</strong>
-          <br />
-          {weeksIn}
-        </div>
-        <div>
-          <strong>Average Sovereign</strong>
-          <br />
-          {avgSovereign.toFixed(1)}
-        </div>
-        <div>
-          <strong>Prior Day</strong>
-          <br />
-          {priorDay.toFixed(1)}
-        </div>
+
+        <section>
+          <h2>Sovereign Trajectory</h2>
+
+          <div className="chart">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData}>
+                <XAxis dataKey="label" interval={30} stroke="#94a3b8" />
+                <YAxis domain={[0, 175]} stroke="#94a3b8" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#020617',
+                    border: '1px solid #334155',
+                    color: '#e5e7eb',
+                  }}
+                />
+                <Legend />
+
+                <Line
+                  type="monotone"
+                  dataKey="sovereign"
+                  name="Sovereign Score"
+                  stroke="#38bdf8"
+                  strokeWidth={3}
+                  dot={false}
+                  connectNulls
+                />
+
+                <Line
+                  type="monotone"
+                  dataKey="baseline"
+                  name="Baseline"
+                  stroke="#22c55e"
+                  strokeWidth={2}
+                  dot={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </section>
+
+        <section>
+          <h3>Pillar Averages</h3>
+          <div className="pillars">
+            <Pillar label="Body" value={pillarAverages.body} color="#22c55e" />
+            <Pillar label="Mind" value={pillarAverages.mind} color="#3b82f6" />
+            <Pillar label="Identity" value={pillarAverages.identity} color="#a855f7" />
+          </div>
+        </section>
       </div>
 
-      <h2>Sovereign Trajectory</h2>
+      <style jsx>{`
+        .page {
+          min-height: 100vh;
+          padding: 60px 32px;
+          background: radial-gradient(circle at top, #020617, #01030f);
+          position: relative;
+        }
+        .watermark {
+          position: absolute;
+          inset: 0;
+          background: url('/continuum-hero.jpg') center / 460px no-repeat;
+          opacity: 0.035;
+          pointer-events: none;
+        }
+        .content {
+          max-width: 1100px;
+          margin: 0 auto;
+          position: relative;
+        }
+        header h1 {
+          font-size: 32px;
+          font-weight: 600;
+        }
+        .subtitle {
+          color: #94a3b8;
+          margin-top: 4px;
+        }
+        .stats {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 20px;
+          margin: 36px 0;
+        }
+        .chart {
+          height: 360px;
+          background: #020617;
+          border-radius: 16px;
+          padding: 20px;
+          box-shadow: 0 0 0 1px #1e293b;
+        }
+        section h2 {
+          font-size: 22px;
+          margin-bottom: 16px;
+        }
+        section h3 {
+          margin-top: 36px;
+          margin-bottom: 16px;
+        }
+        .pillars {
+          display: flex;
+          gap: 32px;
+        }
+      `}</style>
+    </div>
+  );
+}
 
-      <div
-        style={{
-          height: 350,
-          background: '#020617',
-          borderRadius: 12,
-          padding: 16,
-          boxShadow: '0 0 0 1px #1e293b',
-        }}
-      >
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData}>
-            <XAxis
-              dataKey="label"     // 🔥 FIXED — matches original chart
-              interval={30}       // monthly spacing like blueprint
-              stroke="#94a3b8"
-            />
+/* ---------- Components ---------- */
 
-            <YAxis domain={[0, 175]} stroke="#94a3b8" />
+function Stat({ label, value }: { label: string; value: any }) {
+  return (
+    <div
+      style={{
+        background: '#020617',
+        padding: 20,
+        borderRadius: 14,
+        boxShadow: '0 0 0 1px #1e293b',
+      }}
+    >
+      <div style={{ color: '#94a3b8', fontSize: 13 }}>{label}</div>
+      <div style={{ fontSize: 22, fontWeight: 600 }}>{value}</div>
+    </div>
+  );
+}
 
-            <Tooltip
-              labelFormatter={(label) => label}
-              contentStyle={{
-                backgroundColor: '#020617',
-                border: '1px solid #334155',
-                color: '#e5e7eb',
-              }}
-            />
-
-            <Legend />
-
-            <Line
-              type="monotone"
-              dataKey="sovereign"
-              name="Sovereign Score"
-              stroke="#38bdf8"
-              strokeWidth={3}
-              dot={false}
-              connectNulls={true}
-            />
-
-            <Line
-              type="monotone"
-              dataKey="baseline"
-              name="Baseline"
-              stroke="#22c55e"
-              strokeWidth={2}
-              dot={false}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-
-      <h3 style={{ marginTop: 30 }}>Pillar Averages</h3>
-      <div style={{ display: 'flex', gap: 40 }}>
-        <div>
-          <strong>Body</strong>
-          <br />
-          {pillarAverages.body.toFixed(1)}
-        </div>
-        <div>
-          <strong>Mind</strong>
-          <br />
-          {pillarAverages.mind.toFixed(1)}
-        </div>
-        <div>
-          <strong>Identity</strong>
-          <br />
-          {pillarAverages.identity.toFixed(1)}
-        </div>
+function Pillar({
+  label,
+  value,
+  color,
+}: {
+  label: string;
+  value: number;
+  color: string;
+}) {
+  return (
+    <div>
+      <div style={{ color, fontWeight: 600 }}>{label}</div>
+      <div style={{ fontSize: 20 }}>
+        {toOutOf100(value)} / 100
       </div>
     </div>
   );
