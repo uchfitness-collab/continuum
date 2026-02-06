@@ -193,7 +193,7 @@ function Pillar({
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         {inputs.map(([label, key]) => (
           <input
-            key={key}
+          key={String(key)}
             placeholder={label}
             value={habits[key]}
             onChange={e =>
