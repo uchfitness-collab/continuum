@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { supabase } from '@/src/lib/supabaseClient'
 
 export default function LoginPage() {
@@ -9,24 +10,42 @@ export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
+    setError(null)
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error: loginError } = await supabase.auth.signInWithPassword({
       email,
       password,
     })
 
-    setLoading(false)
-
-    if (error) {
-      alert(error.message)
+    if (loginError) {
+      setError(loginError.message)
+      setLoading(false)
       return
     }
 
-    window.location.href = '/dashboard'
+    // Check if user has set up their habits
+    if (data.user) {
+      const { data: habitData } = await supabase
+        .from('user_habits')
+        .select('*')
+        .eq('user_id', data.user.id)
+        .single()
+
+      // If no habits set up, send to habits page
+      if (!habitData) {
+        router.push('/habits')
+      } else {
+        // If habits exist, send to dashboard
+        router.push('/dashboard')
+      }
+    }
+
+    setLoading(false)
   }
 
   return (
@@ -42,7 +61,7 @@ export default function LoginPage() {
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full mb-4 px-4 py-3 rounded bg-zinc-800 border border-white/10"
+          className="w-full mb-4 px-4 py-3 rounded bg-zinc-800 border border-white/10 text-white placeholder-zinc-400 focus:outline-none"
           required
         />
 
@@ -51,17 +70,28 @@ export default function LoginPage() {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full mb-6 px-4 py-3 rounded bg-zinc-800 border border-white/10"
+          className="w-full mb-4 px-4 py-3 rounded bg-zinc-800 border border-white/10 text-white placeholder-zinc-400 focus:outline-none"
           required
         />
 
+        {error && (
+          <p className="text-sm text-red-500 mb-4">{error}</p>
+        )}
+
         <button
           type="submit"
-          className="w-full py-3 rounded bg-green-500 text-black font-semibold"
+          className="w-full py-3 rounded bg-green-500 text-black font-semibold hover:bg-green-400 disabled:opacity-50"
           disabled={loading}
         >
           {loading ? 'Logging in...' : 'Log In'}
         </button>
+
+        <p className="mt-6 text-center text-sm text-zinc-400">
+          Don't have an account?{' '}
+          <Link href="/signup" className="text-green-500 hover:underline">
+            Sign up
+          </Link>
+        </p>
       </form>
     </div>
   )

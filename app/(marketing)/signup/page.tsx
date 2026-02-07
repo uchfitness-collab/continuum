@@ -7,10 +7,6 @@ import { supabase } from "../../../src/lib/supabaseClient";
 
 export default function SignUpPage() {
   const router = useRouter();
-
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -21,6 +17,13 @@ export default function SignUpPage() {
     e.preventDefault();
     setError(null);
 
+    // Check password length
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters");
+      return;
+    }
+
+    // Check passwords match
     if (password !== confirmPassword) {
       setError("Passwords do not match");
       return;
@@ -29,27 +32,20 @@ export default function SignUpPage() {
     try {
       setLoading(true);
 
-      const { error } = await supabase.auth.signUp({
+      // Create the user account
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          data: {
-            first_name: firstName,
-            last_name: lastName,
-            username,
-          },
-        },
       });
 
-      if (error) throw error;
+      if (signUpError) throw signUpError;
 
-      router.push("/dashboard");
+      // Success! Go to habits page
+      router.push("/habits");
+      
     } catch (err: any) {
-      if (err.message?.toLowerCase().includes("rate")) {
-        setError("Please wait a few minutes and try again.");
-      } else {
-        setError(err.message || "Signup failed");
-      }
+      console.error("Signup error:", err);
+      setError(err.message || "Signup failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -59,37 +55,10 @@ export default function SignUpPage() {
     <div className="flex min-h-screen items-center justify-center bg-black">
       <div className="w-full max-w-md rounded-xl bg-zinc-900 p-8 shadow-lg">
         <h1 className="mb-6 text-center text-2xl font-semibold text-white">
-          Sign Up
+          Create Your Account
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="text"
-            placeholder="First name"
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-            required
-            className="w-full rounded-md bg-zinc-800 px-4 py-3 text-white placeholder-zinc-400 focus:outline-none"
-          />
-
-          <input
-            type="text"
-            placeholder="Last name"
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-            required
-            className="w-full rounded-md bg-zinc-800 px-4 py-3 text-white placeholder-zinc-400 focus:outline-none"
-          />
-
-          <input
-            type="text"
-            placeholder="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-            className="w-full rounded-md bg-zinc-800 px-4 py-3 text-white placeholder-zinc-400 focus:outline-none"
-          />
-
           <input
             type="email"
             placeholder="Email"
@@ -101,7 +70,7 @@ export default function SignUpPage() {
 
           <input
             type="password"
-            placeholder="Password"
+            placeholder="Password (minimum 8 characters)"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -132,7 +101,7 @@ export default function SignUpPage() {
 
         <p className="mt-6 text-center text-sm text-zinc-400">
           Already have an account?{" "}
-          <Link href="/login" className="text-white hover:underline">
+          <Link href="/login" className="text-green-500 hover:underline">
             Log in
           </Link>
         </p>
