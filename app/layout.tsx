@@ -1,8 +1,9 @@
+import type { Metadata } from 'next';
 import './globals.css';
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'Continuum',
-  description: 'Your Personal Operating System for Daily Discipline',
+  description: 'Your Personal Operating System for Discipline',
 };
 
 export default function RootLayout({
@@ -12,14 +13,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body
-        style={{
-          margin: 0,
-          fontFamily: 'Inter, system-ui, sans-serif',
-          backgroundColor: '#0f172a',
-          color: '#e5e7eb',
-        }}
-      >
+      <body style={{ margin: 0, padding: 0, background: '#020617', color: '#e5e7eb' }}>
         {children}
       </body>
     </html>
