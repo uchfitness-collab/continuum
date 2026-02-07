@@ -71,12 +71,12 @@ export default function MarketingHome() {
 
         {/* CTA */}
         <div style={{ display: 'flex', gap: 16, marginTop: 36 }}>
-          <Link href="/login">
+          <Link href="/signup">
             <button style={primaryButton}>Get Started</button>
           </Link>
 
-          <Link href="/about">
-            <button style={secondaryButton}>Learn More</button>
+          <Link href="/how-it-works">
+            <button style={secondaryButton}>How It Works</button>
           </Link>
         </div>
 
@@ -110,7 +110,7 @@ export default function MarketingHome() {
           <h2 style={{ fontSize: 32, marginBottom: 24 }}>
             Discipline is measurable. Now prove it.
           </h2>
-          <Link href="/login">
+          <Link href="/signup">
             <button style={primaryButton}>Start Tracking Today</button>
           </Link>
         </div>
