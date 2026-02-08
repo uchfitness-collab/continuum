@@ -5,6 +5,21 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/src/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
 
+/* ---------- Internal Free Tier Allowlist ---------- */
+const INTERNAL_USERS = [
+  'uchfitness@gmail.com',
+  'heribertor7@yahoo.com',
+  'helenalejo2@gmail.com',
+  'davianhall2002@gmail.com',
+  'chidi.akusobi@gmail.com',
+  'kelechiakusobi@gmail.com',
+  'ijeoma.akusobi@gmail.com',
+  'davidhkoffi@gmail.com',
+  'darrenhall1997@gmail.com',
+  'akusobiinvestments@gmail.com',
+  'mr.ifeanyirobi@gmail.com',
+];
+
 export default function AppLayout({
   children,
 }: {
@@ -14,13 +29,51 @@ export default function AppLayout({
   const [email, setEmail] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) {
+    const runGate = async () => {
+      const { data } = await supabase.auth.getUser();
+      const user = data.user;
+
+      // 1️⃣ Not logged in → login
+      if (!user) {
         router.push('/login');
-      } else {
-        setEmail(data.user.email ?? null);
+        return;
       }
-    });
+
+      const userEmail = user.email ?? null;
+      setEmail(userEmail);
+
+      // 2️⃣ Internal users → always allowed
+      if (userEmail && INTERNAL_USERS.includes(userEmail)) {
+        return;
+      }
+
+      // 3️⃣ Check Stripe subscription
+      try {
+        const res = await fetch(
+          'https://cvfcwwgnnanzgcbpjon.supabase.co/functions/v1/check-subscription',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: userEmail }),
+          }
+        );
+
+        const result = await res.json();
+
+        // 4️⃣ No active subscription → Stripe Checkout
+        if (!result.active) {
+          window.location.href =
+            'https://cvfcwwgnnanzgcbpjon.supabase.co/functions/v1/bright-responder';
+          return;
+        }
+      } catch (err) {
+        console.error('Subscription gate error:', err);
+        window.location.href =
+          'https://cvfcwwgnnanzgcbpjon.supabase.co/functions/v1/bright-responder';
+      }
+    };
+
+    runGate();
   }, [router]);
 
   return (
@@ -38,10 +91,8 @@ export default function AppLayout({
           zIndex: 100,
         }}
       >
-        {/* LEFT SIDE - LOGO + NAV LINKS */}
         <div style={{ display: 'flex', gap: 32, alignItems: 'center' }}>
-          {/* LOGO */}
-          <Link 
+          <Link
             href="/dashboard"
             style={{
               display: 'flex',
@@ -50,8 +101,8 @@ export default function AppLayout({
               textDecoration: 'none',
             }}
           >
-            <img 
-              src="/continuum-hero.jpg" 
+            <img
+              src="/continuum-hero.jpg"
               alt="Continuum"
               style={{
                 width: 28,
@@ -60,16 +111,11 @@ export default function AppLayout({
                 filter: 'grayscale(100%)',
               }}
             />
-            <span style={{
-              fontSize: 18,
-              fontWeight: 700,
-              color: '#e5e7eb',
-            }}>
+            <span style={{ fontSize: 18, fontWeight: 700 }}>
               Continuum
             </span>
           </Link>
 
-          {/* NAV LINKS */}
           <div style={{ display: 'flex', gap: 20 }}>
             <NavLink href="/dashboard">Dashboard</NavLink>
             <NavLink href="/daily">Daily Log</NavLink>
@@ -80,16 +126,9 @@ export default function AppLayout({
           </div>
         </div>
 
-        {/* RIGHT SIDE - USER INFO + LOGOUT */}
         <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
           {email && (
-            <span style={{ 
-              opacity: 0.6, 
-              fontSize: 13,
-              color: '#94a3b8',
-            }}>
-              {email}
-            </span>
+            <span style={{ fontSize: 13, opacity: 0.6 }}>{email}</span>
           )}
           <button
             onClick={async () => {
@@ -104,14 +143,6 @@ export default function AppLayout({
               fontWeight: 600,
               border: '1px solid #ef444440',
               cursor: 'pointer',
-              fontSize: 14,
-              transition: 'all 0.2s',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = '#ef444420';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'transparent';
             }}
           >
             Log Out
@@ -124,21 +155,16 @@ export default function AppLayout({
   );
 }
 
-/* ---------- Components ---------- */
-
 function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <Link 
+    <Link
       href={href}
       style={{
         color: '#94a3b8',
         textDecoration: 'none',
         fontSize: 15,
         fontWeight: 500,
-        transition: 'color 0.2s',
       }}
-      onMouseEnter={(e) => (e.currentTarget.style.color = '#22c55e')}
-      onMouseLeave={(e) => (e.currentTarget.style.color = '#94a3b8')}
     >
       {children}
     </Link>

@@ -17,13 +17,11 @@ export default function SignUpPage() {
     e.preventDefault()
     setError(null)
 
-    // Check password length
     if (password.length < 8) {
       setError('Password must be at least 8 characters')
       return
     }
 
-    // Check passwords match
     if (password !== confirmPassword) {
       setError('Passwords do not match')
       return
@@ -32,17 +30,17 @@ export default function SignUpPage() {
     try {
       setLoading(true)
 
-      // Create the user account
-      const { data, error: signUpError } = await supabase.auth.signUp({
+      const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
       })
 
       if (signUpError) throw signUpError
 
-      // Success! Go to habits page
-      router.push('/habits')
-      
+      // ✅ IMPORTANT: just send them into the app
+      // The layout gate will handle Stripe if needed
+      router.push('/dashboard')
+
     } catch (err: any) {
       console.error('Signup error:', err)
       setError(err.message || 'Signup failed. Please try again.')
@@ -60,12 +58,7 @@ export default function SignUpPage() {
       background: 'radial-gradient(circle at top, #020617, #01030f)',
       padding: '24px',
     }}>
-      {/* CONTENT */}
-      <div style={{
-        width: '100%',
-        maxWidth: 440,
-      }}>
-        {/* LOGO */}
+      <div style={{ width: '100%', maxWidth: 440 }}>
         <Link 
           href="/"
           style={{
@@ -96,7 +89,6 @@ export default function SignUpPage() {
           </span>
         </Link>
 
-        {/* FORM CARD */}
         <div style={{
           background: '#020617',
           padding: 40,
@@ -123,18 +115,9 @@ export default function SignUpPage() {
 
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: 20 }}>
-              <label style={{
-                display: 'block',
-                marginBottom: 8,
-                fontSize: 14,
-                fontWeight: 500,
-                color: '#e5e7eb',
-              }}>
-                Email
-              </label>
+              <label style={{ color: '#e5e7eb' }}>Email</label>
               <input
                 type="email"
-                placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -145,24 +128,14 @@ export default function SignUpPage() {
                   background: '#01030f',
                   border: '1px solid #334155',
                   color: '#e5e7eb',
-                  fontSize: 15,
                 }}
               />
             </div>
 
             <div style={{ marginBottom: 20 }}>
-              <label style={{
-                display: 'block',
-                marginBottom: 8,
-                fontSize: 14,
-                fontWeight: 500,
-                color: '#e5e7eb',
-              }}>
-                Password
-              </label>
+              <label style={{ color: '#e5e7eb' }}>Password</label>
               <input
                 type="password"
-                placeholder="Minimum 8 characters"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -173,24 +146,14 @@ export default function SignUpPage() {
                   background: '#01030f',
                   border: '1px solid #334155',
                   color: '#e5e7eb',
-                  fontSize: 15,
                 }}
               />
             </div>
 
             <div style={{ marginBottom: 24 }}>
-              <label style={{
-                display: 'block',
-                marginBottom: 8,
-                fontSize: 14,
-                fontWeight: 500,
-                color: '#e5e7eb',
-              }}>
-                Confirm Password
-              </label>
+              <label style={{ color: '#e5e7eb' }}>Confirm Password</label>
               <input
                 type="password"
-                placeholder="Re-enter your password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
@@ -201,7 +164,6 @@ export default function SignUpPage() {
                   background: '#01030f',
                   border: '1px solid #334155',
                   color: '#e5e7eb',
-                  fontSize: 15,
                 }}
               />
             </div>
@@ -214,7 +176,6 @@ export default function SignUpPage() {
                 background: '#2c0808',
                 border: '1px solid #ef4444',
                 color: '#ef4444',
-                fontSize: 14,
               }}>
                 {error}
               </div>
@@ -230,51 +191,13 @@ export default function SignUpPage() {
                 background: loading ? '#94a3b8' : 'linear-gradient(180deg, #22c55e, #16a34a)',
                 color: '#020617',
                 fontWeight: 600,
-                fontSize: 16,
                 border: 'none',
-                cursor: loading ? 'not-allowed' : 'pointer',
               }}
             >
               {loading ? 'Creating account...' : 'Create Account'}
             </button>
           </form>
-
-          <div style={{
-            marginTop: 24,
-            paddingTop: 24,
-            borderTop: '1px solid #1e293b',
-            textAlign: 'center',
-          }}>
-            <p style={{ color: '#94a3b8', fontSize: 14 }}>
-              Already have an account?{' '}
-              <Link 
-                href="/login"
-                style={{
-                  color: '#22c55e',
-                  textDecoration: 'none',
-                  fontWeight: 600,
-                }}
-              >
-                Log in
-              </Link>
-            </p>
-          </div>
         </div>
-
-        {/* BACK TO HOME */}
-        <Link
-          href="/"
-          style={{
-            display: 'block',
-            marginTop: 20,
-            textAlign: 'center',
-            color: '#94a3b8',
-            fontSize: 14,
-            textDecoration: 'none',
-          }}
-        >
-          ← Back to home
-        </Link>
       </div>
     </div>
   )
