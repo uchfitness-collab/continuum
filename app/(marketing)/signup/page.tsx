@@ -33,14 +33,16 @@ export default function SignUpPage() {
       const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          // ✅ THIS IS THE KEY FIX
+          emailRedirectTo: `${window.location.origin}/dashboard`,
+        },
       })
 
       if (signUpError) throw signUpError
 
-      // ✅ IMPORTANT: just send them into the app
-      // The layout gate will handle Stripe if needed
-      router.push('/dashboard')
-
+      // Do NOT push here.
+      // User will be redirected after email confirmation.
     } catch (err: any) {
       console.error('Signup error:', err)
       setError(err.message || 'Signup failed. Please try again.')
@@ -50,16 +52,18 @@ export default function SignUpPage() {
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'radial-gradient(circle at top, #020617, #01030f)',
-      padding: '24px',
-    }}>
+    <div
+      style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'radial-gradient(circle at top, #020617, #01030f)',
+        padding: '24px',
+      }}
+    >
       <div style={{ width: '100%', maxWidth: 440 }}>
-        <Link 
+        <Link
           href="/"
           style={{
             display: 'flex',
@@ -70,8 +74,8 @@ export default function SignUpPage() {
             textDecoration: 'none',
           }}
         >
-          <img 
-            src="/continuum-hero.jpg" 
+          <img
+            src="/continuum-hero.jpg"
             alt="Continuum"
             style={{
               width: 40,
@@ -80,36 +84,44 @@ export default function SignUpPage() {
               filter: 'grayscale(100%)',
             }}
           />
-          <span style={{
-            fontSize: 24,
-            fontWeight: 700,
-            color: '#e5e7eb',
-          }}>
+          <span
+            style={{
+              fontSize: 24,
+              fontWeight: 700,
+              color: '#e5e7eb',
+            }}
+          >
             Continuum
           </span>
         </Link>
 
-        <div style={{
-          background: '#020617',
-          padding: 40,
-          borderRadius: 16,
-          border: '1px solid #1e293b',
-        }}>
-          <h1 style={{ 
-            fontSize: 28, 
-            fontWeight: 600, 
-            marginBottom: 8,
-            textAlign: 'center',
-            color: '#e5e7eb',
-          }}>
+        <div
+          style={{
+            background: '#020617',
+            padding: 40,
+            borderRadius: 16,
+            border: '1px solid #1e293b',
+          }}
+        >
+          <h1
+            style={{
+              fontSize: 28,
+              fontWeight: 600,
+              marginBottom: 8,
+              textAlign: 'center',
+              color: '#e5e7eb',
+            }}
+          >
             Start Building Discipline
           </h1>
-          <p style={{
-            textAlign: 'center',
-            color: '#94a3b8',
-            fontSize: 15,
-            marginBottom: 32,
-          }}>
+          <p
+            style={{
+              textAlign: 'center',
+              color: '#94a3b8',
+              fontSize: 15,
+              marginBottom: 32,
+            }}
+          >
             Create your account and track your sovereignty
           </p>
 
@@ -169,14 +181,16 @@ export default function SignUpPage() {
             </div>
 
             {error && (
-              <div style={{
-                padding: 12,
-                marginBottom: 20,
-                borderRadius: 8,
-                background: '#2c0808',
-                border: '1px solid #ef4444',
-                color: '#ef4444',
-              }}>
+              <div
+                style={{
+                  padding: 12,
+                  marginBottom: 20,
+                  borderRadius: 8,
+                  background: '#2c0808',
+                  border: '1px solid #ef4444',
+                  color: '#ef4444',
+                }}
+              >
                 {error}
               </div>
             )}
@@ -188,7 +202,9 @@ export default function SignUpPage() {
                 width: '100%',
                 padding: 16,
                 borderRadius: 10,
-                background: loading ? '#94a3b8' : 'linear-gradient(180deg, #22c55e, #16a34a)',
+                background: loading
+                  ? '#94a3b8'
+                  : 'linear-gradient(180deg, #22c55e, #16a34a)',
                 color: '#020617',
                 fontWeight: 600,
                 border: 'none',
