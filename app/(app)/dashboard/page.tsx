@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { supabase } from '@/src/lib/supabaseClient';
 import {
   LineChart,
@@ -30,6 +31,8 @@ export default function DashboardPage() {
   const [priorDay, setPriorDay] = useState(0);
   const [daysIn, setDaysIn] = useState(0);
   const [weeksIn, setWeeksIn] = useState(0);
+  const [currentStreak, setCurrentStreak] = useState(0);
+  const [todayLogged, setTodayLogged] = useState(false);
 
   const [pillarAverages, setPillarAverages] = useState({
     body: 0,
@@ -73,15 +76,68 @@ export default function DashboardPage() {
         identity: logs.reduce((s, l) => s + l.identity_score, 0) / logs.length,
       });
 
+      // Check if today is logged
+      const today = new Date().toISOString().split('T')[0];
+      const todayLog = logs.find(l => l.log_date === today);
+      setTodayLogged(!!todayLog);
+
+      // Calculate current streak
+      let streak = 0;
+      const sortedDates = logs.map(l => l.log_date).sort().reverse();
+      const todayDate = new Date();
+      todayDate.setHours(0, 0, 0, 0); // Reset to midnight
+
+      for (let i = 0; i < sortedDates.length; i++) {
+        const logDate = new Date(sortedDates[i] + 'T00:00:00');
+        logDate.setHours(0, 0, 0, 0);
+        
+        const expectedDate = new Date(todayDate);
+        expectedDate.setDate(todayDate.getDate() - i);
+        expectedDate.setHours(0, 0, 0, 0);
+        
+        const logDateStr = logDate.toISOString().split('T')[0];
+        const expectedDateStr = expectedDate.toISOString().split('T')[0];
+        
+        if (logDateStr === expectedDateStr) {
+          streak++;
+        } else {
+          break;
+        }
+      }
+
+      // If streak is still 0 but we have logs, at least count today
+      if (streak === 0 && logs.length > 0) {
+        const todayStr = new Date().toISOString().split('T')[0];
+        const hasToday = logs.some(l => l.log_date === todayStr);
+        if (hasToday) streak = 1;
+      }
+
+      setCurrentStreak(streak);
+
+      // Build chart data with smart 6-month window
       const logMap = new Map(logs.map(l => [l.log_date, l]));
+      const todayForChart = new Date();
       const firstDate = new Date(logs[0].log_date + 'T00:00:00');
-      const futureEnd = new Date(firstDate);
-      futureEnd.setDate(futureEnd.getDate() + 90);
+
+      let startDate: Date;
+      let endDate: Date;
+
+      if (logs.length < 180) {
+        // New users (< 6 months): show from day 1 to 6 months forward
+        startDate = new Date(firstDate);
+        endDate = new Date(firstDate);
+        endDate.setDate(endDate.getDate() + 180);
+      } else {
+        // Veteran users (6+ months): show rolling 6-month window
+        startDate = new Date(todayForChart);
+        startDate.setDate(startDate.getDate() - 180);
+        endDate = new Date(todayForChart);
+      }
 
       const range: any[] = [];
-      let d = new Date(firstDate);
+      let d = new Date(startDate);
 
-      while (d <= futureEnd) {
+      while (d <= endDate) {
         const dateStr = d.toISOString().split('T')[0];
         const found = logMap.get(dateStr);
 
@@ -100,36 +156,111 @@ export default function DashboardPage() {
     load();
   }, [router]);
 
+  const trend = avgSovereign > priorDay ? 'up' : avgSovereign < priorDay ? 'down' : 'stable';
+
   return (
-    <div className="page">
-      <div className="watermark" />
-
-      <div className="content">
-        <header>
-          <h1>Continuum Dashboard</h1>
-          <p className="subtitle">Your discipline, measured over time.</p>
-        </header>
-
-        <div className="stats">
-          <Stat label="Days In" value={daysIn} />
-          <Stat label="Weeks" value={weeksIn} />
-          <Stat label="Avg Sovereign" value={avgSovereign.toFixed(1)} />
-          <Stat label="Prior Day" value={priorDay.toFixed(1)} />
+    <div style={{
+      minHeight: '100vh',
+      padding: '60px 24px',
+      background: 'radial-gradient(circle at top, #020617, #01030f)',
+    }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+        
+        {/* HEADER */}
+        <div style={{ marginBottom: 40 }}>
+          <h1 style={{ fontSize: 36, fontWeight: 600, marginBottom: 8 }}>
+            Dashboard
+          </h1>
+          <p style={{ color: '#94a3b8', fontSize: 16 }}>
+            Your discipline, measured over time.
+          </p>
         </div>
 
-        <section>
-          <h2>Sovereign Trajectory</h2>
+        {/* TODAY CTA */}
+        {!todayLogged && (
+          <div style={{
+            padding: 20,
+            marginBottom: 32,
+            borderRadius: 12,
+            background: '#022c22',
+            border: '2px solid #22c55e',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}>
+            <div>
+              <h3 style={{ color: '#22c55e', marginBottom: 4, fontSize: 18 }}>
+                Today's log is pending
+              </h3>
+              <p style={{ color: '#94a3b8', fontSize: 14, margin: 0 }}>
+                Keep your streak alive. Log your day.
+              </p>
+            </div>
+            <Link
+              href="/daily"
+              style={{
+                padding: '12px 24px',
+                background: 'linear-gradient(180deg, #22c55e, #16a34a)',
+                color: '#020617',
+                fontWeight: 600,
+                borderRadius: 8,
+                textDecoration: 'none',
+                fontSize: 15,
+              }}
+            >
+              Log Today
+            </Link>
+          </div>
+        )}
 
-          <div className="chart">
+        {/* STATS */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+          gap: 20,
+          marginBottom: 40,
+        }}>
+          <StatCard label="Current Streak" value={`${currentStreak} days`} color="#22c55e" />
+          <StatCard label="Total Days" value={daysIn} />
+          <StatCard label="Weeks Active" value={weeksIn} />
+          <StatCard 
+            label="Avg Sovereign" 
+            value={avgSovereign.toFixed(1)} 
+            trend={trend}
+          />
+        </div>
+
+        {/* CHART */}
+        <div style={{
+          marginBottom: 40,
+          padding: 24,
+          background: '#020617',
+          borderRadius: 16,
+          border: '1px solid #1e293b',
+        }}>
+          <h2 style={{ fontSize: 22, marginBottom: 20, fontWeight: 600 }}>
+            Sovereign Trajectory (6 Months)
+          </h2>
+          <div style={{ height: 400 }}>
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData}>
-                <XAxis dataKey="label" interval={30} stroke="#94a3b8" />
-                <YAxis domain={[0, 175]} stroke="#94a3b8" />
+                <XAxis 
+                  dataKey="label" 
+                  interval={30} 
+                  stroke="#94a3b8"
+                  style={{ fontSize: 12 }}
+                />
+                <YAxis 
+                  domain={[0, 175]} 
+                  stroke="#94a3b8"
+                  style={{ fontSize: 12 }}
+                />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: '#020617',
                     border: '1px solid #334155',
                     color: '#e5e7eb',
+                    borderRadius: 8,
                   }}
                 />
                 <Legend />
@@ -151,111 +282,151 @@ export default function DashboardPage() {
                   stroke="#22c55e"
                   strokeWidth={2}
                   dot={false}
+                  strokeDasharray="5 5"
                 />
               </LineChart>
             </ResponsiveContainer>
           </div>
-        </section>
+        </div>
 
-        <section>
-          <h3>Pillar Averages</h3>
-          <div className="pillars">
-            <Pillar label="Body" value={pillarAverages.body} color="#22c55e" />
-            <Pillar label="Mind" value={pillarAverages.mind} color="#3b82f6" />
-            <Pillar label="Identity" value={pillarAverages.identity} color="#a855f7" />
+        {/* PILLAR AVERAGES */}
+        <div>
+          <h2 style={{ fontSize: 22, marginBottom: 20, fontWeight: 600 }}>
+            Pillar Performance
+          </h2>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: 20,
+          }}>
+            <PillarCard 
+              label="Body" 
+              value={pillarAverages.body} 
+              color="#22c55e"
+              icon="💪"
+            />
+            <PillarCard 
+              label="Mind" 
+              value={pillarAverages.mind} 
+              color="#3b82f6"
+              icon="🧠"
+            />
+            <PillarCard 
+              label="Identity" 
+              value={pillarAverages.identity} 
+              color="#a855f7"
+              icon="⚡"
+            />
           </div>
-        </section>
+        </div>
       </div>
-
-      <style jsx>{`
-        .page {
-          min-height: 100vh;
-          padding: 60px 32px;
-          background: radial-gradient(circle at top, #020617, #01030f);
-          position: relative;
-        }
-        .watermark {
-          position: absolute;
-          inset: 0;
-          background: url('/continuum-hero.jpg') center / 460px no-repeat;
-          opacity: 0.035;
-          pointer-events: none;
-        }
-        .content {
-          max-width: 1100px;
-          margin: 0 auto;
-          position: relative;
-        }
-        header h1 {
-          font-size: 32px;
-          font-weight: 600;
-        }
-        .subtitle {
-          color: #94a3b8;
-          margin-top: 4px;
-        }
-        .stats {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 20px;
-          margin: 36px 0;
-        }
-        .chart {
-          height: 360px;
-          background: #020617;
-          border-radius: 16px;
-          padding: 20px;
-          box-shadow: 0 0 0 1px #1e293b;
-        }
-        section h2 {
-          font-size: 22px;
-          margin-bottom: 16px;
-        }
-        section h3 {
-          margin-top: 36px;
-          margin-bottom: 16px;
-        }
-        .pillars {
-          display: flex;
-          gap: 32px;
-        }
-      `}</style>
     </div>
   );
 }
 
 /* ---------- Components ---------- */
 
-function Stat({ label, value }: { label: string; value: any }) {
+function StatCard({ 
+  label, 
+  value, 
+  color, 
+  trend 
+}: { 
+  label: string; 
+  value: any;
+  color?: string;
+  trend?: 'up' | 'down' | 'stable';
+}) {
   return (
-    <div
-      style={{
-        background: '#020617',
-        padding: 20,
-        borderRadius: 14,
-        boxShadow: '0 0 0 1px #1e293b',
-      }}
-    >
-      <div style={{ color: '#94a3b8', fontSize: 13 }}>{label}</div>
-      <div style={{ fontSize: 22, fontWeight: 600 }}>{value}</div>
+    <div style={{
+      background: '#020617',
+      padding: 24,
+      borderRadius: 12,
+      border: '1px solid #1e293b',
+    }}>
+      <div style={{ color: '#94a3b8', fontSize: 13, marginBottom: 8 }}>
+        {label}
+      </div>
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        gap: 8 
+      }}>
+        <div style={{ 
+          fontSize: 28, 
+          fontWeight: 600,
+          color: color || '#e5e7eb',
+        }}>
+          {value}
+        </div>
+        {trend && trend !== 'stable' && (
+          <span style={{ 
+            fontSize: 18,
+            color: trend === 'up' ? '#22c55e' : '#ef4444',
+          }}>
+            {trend === 'up' ? '↗' : '↘'}
+          </span>
+        )}
+      </div>
     </div>
   );
 }
 
-function Pillar({
+function PillarCard({
   label,
   value,
   color,
+  icon,
 }: {
   label: string;
   value: number;
   color: string;
+  icon: string;
 }) {
+  const percentage = toOutOf100(value);
+  
   return (
-    <div>
-      <div style={{ color, fontWeight: 600 }}>{label}</div>
-      <div style={{ fontSize: 20 }}>
-        {toOutOf100(value)} / 100
+    <div style={{
+      background: '#020617',
+      padding: 24,
+      borderRadius: 12,
+      border: `1px solid ${color}30`,
+      borderLeft: `4px solid ${color}`,
+    }}>
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        gap: 10,
+        marginBottom: 16,
+      }}>
+        <span style={{ fontSize: 24 }}>{icon}</span>
+        <div style={{ color, fontWeight: 600, fontSize: 16 }}>
+          {label}
+        </div>
+      </div>
+      
+      <div style={{ fontSize: 32, fontWeight: 600, marginBottom: 8 }}>
+        {percentage}
+        <span style={{ fontSize: 18, color: '#94a3b8', fontWeight: 400 }}>
+          /100
+        </span>
+      </div>
+      
+      {/* Progress bar */}
+      <div style={{
+        width: '100%',
+        height: 8,
+        background: '#1e293b',
+        borderRadius: 4,
+        overflow: 'hidden',
+      }}>
+        <div style={{
+          width: `${percentage}%`,
+          height: '100%',
+          background: color,
+          borderRadius: 4,
+          transition: 'width 0.3s ease',
+        }} />
       </div>
     </div>
   );

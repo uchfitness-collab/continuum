@@ -1,7 +1,5 @@
 import Link from 'next/link';
 
-/* ---------- PAGE ---------- */
-
 export default function MarketingHome() {
   return (
     <section
@@ -23,7 +21,7 @@ export default function MarketingHome() {
           backgroundSize: 'contain',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center',
-          opacity: 0.22,
+          opacity: 0.28,
           filter: 'grayscale(100%)',
         }}
       />
@@ -34,7 +32,7 @@ export default function MarketingHome() {
           position: 'absolute',
           inset: 0,
           background:
-            'radial-gradient(circle at center, rgba(15,23,42,0.55), rgba(2,6,23,0.95))',
+            'radial-gradient(circle at center, rgba(15,23,42,0.5), rgba(2,6,23,0.92))',
         }}
       />
 
@@ -44,24 +42,30 @@ export default function MarketingHome() {
           position: 'relative',
           zIndex: 2,
           maxWidth: 1200,
-          padding: '120px 24px 140px',
+          padding: '100px 24px 120px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
         }}
       >
         {/* HERO COPY */}
-        <h1 style={{ fontSize: 56, fontWeight: 600, maxWidth: 900 }}>
+        <h1 style={{ 
+          fontSize: 56, 
+          fontWeight: 700, 
+          maxWidth: 900,
+          lineHeight: 1.15,
+          marginBottom: 24
+        }}>
           Your Personal Operating System for Discipline
         </h1>
 
         <p
           style={{
-            maxWidth: 720,
-            fontSize: 18,
-            lineHeight: 1.6,
-            opacity: 0.85,
-            marginTop: 24,
+            maxWidth: 680,
+            fontSize: 19,
+            lineHeight: 1.7,
+            color: '#94a3b8',
+            marginBottom: 40,
           }}
         >
           Continuum helps you measure what actually matters — daily action,
@@ -70,12 +74,12 @@ export default function MarketingHome() {
         </p>
 
         {/* CTA */}
-        <div style={{ display: 'flex', gap: 16, marginTop: 36 }}>
-          <Link href="/signup">
+        <div style={{ display: 'flex', gap: 16 }}>
+          <Link href="/signup" style={{ textDecoration: 'none' }}>
             <button style={primaryButton}>Get Started</button>
           </Link>
 
-          <Link href="/how-it-works">
+          <Link href="/how-it-works" style={{ textDecoration: 'none' }}>
             <button style={secondaryButton}>How It Works</button>
           </Link>
         </div>
@@ -85,32 +89,38 @@ export default function MarketingHome() {
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: 40,
-            marginTop: 100,
+            gap: 56,
+            marginTop: 120,
             maxWidth: 1100,
             textAlign: 'left',
           }}
         >
           <Pillar
             title="Body"
+            color="#22c55e"
             text="Physical action creates momentum. Continuum tracks movement, nutrition discipline, and daily reps — because energy fuels everything."
           />
           <Pillar
             title="Mind"
+            color="#3b82f6"
             text="What you avoid matters as much as what you do. Track discipline, habit replacement, and mental control."
           />
           <Pillar
             title="Identity"
+            color="#a855f7"
             text="Identity is built through proof. Continuum measures alignment between who you say you are and what you do daily."
           />
         </div>
 
         {/* FINAL CTA */}
-        <div style={{ marginTop: 120, textAlign: 'center' }}>
-          <h2 style={{ fontSize: 32, marginBottom: 24 }}>
+        <div style={{ marginTop: 140, textAlign: 'center' }}>
+          <h2 style={{ fontSize: 36, marginBottom: 16, fontWeight: 600 }}>
             Discipline is measurable. Now prove it.
           </h2>
-          <Link href="/signup">
+          <p style={{ color: '#94a3b8', marginBottom: 32, fontSize: 17 }}>
+            Join hundreds tracking their way to sovereignty.
+          </p>
+          <Link href="/signup" style={{ textDecoration: 'none' }}>
             <button style={primaryButton}>Start Tracking Today</button>
           </Link>
         </div>
@@ -121,30 +131,42 @@ export default function MarketingHome() {
 
 /* ---------- HELPERS ---------- */
 
-function Pillar({ title, text }: { title: string; text: string }) {
+function Pillar({ title, text, color }: { title: string; text: string; color: string }) {
   return (
     <div>
-      <h3 style={{ marginBottom: 12 }}>{title}</h3>
-      <p style={{ opacity: 0.75, lineHeight: 1.6 }}>{text}</p>
+      <h3 style={{ 
+        marginBottom: 14, 
+        fontSize: 22,
+        color,
+        fontWeight: 600
+      }}>
+        {title}
+      </h3>
+      <p style={{ color: '#94a3b8', lineHeight: 1.7, fontSize: 15 }}>{text}</p>
     </div>
   );
 }
 
 const primaryButton = {
-  padding: '12px 22px',
-  background: '#22c55e',
-  color: '#000',
+  padding: '14px 32px',
+  background: 'linear-gradient(180deg, #22c55e, #16a34a)',
+  color: '#020617',
   borderRadius: 10,
   fontWeight: 600,
+  fontSize: 16,
   border: 'none',
   cursor: 'pointer',
+  transition: 'transform 0.2s',
 };
 
 const secondaryButton = {
-  padding: '12px 22px',
-  background: 'transparent',
+  padding: '14px 32px',
+  background: 'rgba(255,255,255,0.05)',
   color: '#e5e7eb',
   borderRadius: 10,
-  border: '1px solid #334155',
+  border: '1px solid rgba(255,255,255,0.2)',
   cursor: 'pointer',
+  fontSize: 16,
+  fontWeight: 600,
+  transition: 'all 0.2s',
 };

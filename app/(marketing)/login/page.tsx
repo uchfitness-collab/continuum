@@ -49,50 +49,202 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black text-white">
-      <form
-        onSubmit={handleLogin}
-        className="w-full max-w-sm bg-zinc-900 p-8 rounded-xl border border-white/10"
-      >
-        <h1 className="text-2xl font-semibold mb-6 text-center">Log In</h1>
-
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full mb-4 px-4 py-3 rounded bg-zinc-800 border border-white/10 text-white placeholder-zinc-400 focus:outline-none"
-          required
-        />
-
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full mb-4 px-4 py-3 rounded bg-zinc-800 border border-white/10 text-white placeholder-zinc-400 focus:outline-none"
-          required
-        />
-
-        {error && (
-          <p className="text-sm text-red-500 mb-4">{error}</p>
-        )}
-
-        <button
-          type="submit"
-          className="w-full py-3 rounded bg-green-500 text-black font-semibold hover:bg-green-400 disabled:opacity-50"
-          disabled={loading}
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'radial-gradient(circle at top, #020617, #01030f)',
+      padding: '24px',
+    }}>
+      {/* CONTENT */}
+      <div style={{
+        width: '100%',
+        maxWidth: 440,
+      }}>
+        {/* LOGO */}
+        <Link 
+          href="/"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            justifyContent: 'center',
+            marginBottom: 40,
+            textDecoration: 'none',
+          }}
         >
-          {loading ? 'Logging in...' : 'Log In'}
-        </button>
+          <img 
+            src="/continuum-hero.jpg" 
+            alt="Continuum"
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 8,
+              filter: 'grayscale(100%)',
+            }}
+          />
+          <span style={{
+            fontSize: 24,
+            fontWeight: 700,
+            color: '#e5e7eb',
+          }}>
+            Continuum
+          </span>
+        </Link>
 
-        <p className="mt-6 text-center text-sm text-zinc-400">
-          Don't have an account?{' '}
-          <Link href="/signup" className="text-green-500 hover:underline">
-            Sign up
-          </Link>
-        </p>
-      </form>
+        {/* FORM CARD */}
+        <div style={{
+          background: '#020617',
+          padding: 40,
+          borderRadius: 16,
+          border: '1px solid #1e293b',
+        }}>
+          <h1 style={{ 
+            fontSize: 28, 
+            fontWeight: 600, 
+            marginBottom: 8,
+            textAlign: 'center',
+            color: '#e5e7eb',
+          }}>
+            Welcome Back
+          </h1>
+          <p style={{
+            textAlign: 'center',
+            color: '#94a3b8',
+            fontSize: 15,
+            marginBottom: 32,
+          }}>
+            Continue building your discipline
+          </p>
+
+          <form onSubmit={handleLogin}>
+            <div style={{ marginBottom: 20 }}>
+              <label style={{
+                display: 'block',
+                marginBottom: 8,
+                fontSize: 14,
+                fontWeight: 500,
+                color: '#e5e7eb',
+              }}>
+                Email
+              </label>
+              <input
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                style={{
+                  width: '100%',
+                  padding: 14,
+                  borderRadius: 10,
+                  background: '#01030f',
+                  border: '1px solid #334155',
+                  color: '#e5e7eb',
+                  fontSize: 15,
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: 24 }}>
+              <label style={{
+                display: 'block',
+                marginBottom: 8,
+                fontSize: 14,
+                fontWeight: 500,
+                color: '#e5e7eb',
+              }}>
+                Password
+              </label>
+              <input
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                style={{
+                  width: '100%',
+                  padding: 14,
+                  borderRadius: 10,
+                  background: '#01030f',
+                  border: '1px solid #334155',
+                  color: '#e5e7eb',
+                  fontSize: 15,
+                }}
+              />
+            </div>
+
+            {error && (
+              <div style={{
+                padding: 12,
+                marginBottom: 20,
+                borderRadius: 8,
+                background: '#2c0808',
+                border: '1px solid #ef4444',
+                color: '#ef4444',
+                fontSize: 14,
+              }}>
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                width: '100%',
+                padding: 16,
+                borderRadius: 10,
+                background: loading ? '#94a3b8' : 'linear-gradient(180deg, #22c55e, #16a34a)',
+                color: '#020617',
+                fontWeight: 600,
+                fontSize: 16,
+                border: 'none',
+                cursor: loading ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {loading ? 'Logging in...' : 'Log In'}
+            </button>
+          </form>
+
+          <div style={{
+            marginTop: 24,
+            paddingTop: 24,
+            borderTop: '1px solid #1e293b',
+            textAlign: 'center',
+          }}>
+            <p style={{ color: '#94a3b8', fontSize: 14 }}>
+              Don't have an account?{' '}
+              <Link 
+                href="/signup"
+                style={{
+                  color: '#22c55e',
+                  textDecoration: 'none',
+                  fontWeight: 600,
+                }}
+              >
+                Sign up
+              </Link>
+            </p>
+          </div>
+        </div>
+
+        {/* BACK TO HOME */}
+        <Link
+          href="/"
+          style={{
+            display: 'block',
+            marginTop: 20,
+            textAlign: 'center',
+            color: '#94a3b8',
+            fontSize: 14,
+            textDecoration: 'none',
+          }}
+        >
+          ← Back to home
+        </Link>
+      </div>
     </div>
   )
 }
