@@ -493,7 +493,7 @@ export default function DashboardPage() {
           }}
         >
           <h2 style={{ fontSize: 22, marginBottom: 20, fontWeight: 600 }}>
-            Sovereign Trajectory (6 Months)
+            Sovereign Trajectory
           </h2>
           <div style={{ height: 400 }}>
             <ResponsiveContainer width="100%" height="100%">
