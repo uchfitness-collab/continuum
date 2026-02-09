@@ -11,11 +11,19 @@ export default function WeeklyReflectionPage() {
   const [weekData, setWeekData] = useState<any[]>([]);
   const [avgScore, setAvgScore] = useState(0);
   
-  // Simplified fields
+  // Reflection fields
   const [theme, setTheme] = useState('');
   const [wins, setWins] = useState('');
   const [challenges, setChallenges] = useState('');
   const [nextWeekFocus, setNextWeekFocus] = useState('');
+  
+  // Goals
+  const [goal1, setGoal1] = useState('');
+  const [goal2, setGoal2] = useState('');
+  const [goal3, setGoal3] = useState('');
+  
+  // Last week's goals
+  const [lastWeekGoals, setLastWeekGoals] = useState<any>(null);
   
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
@@ -58,22 +66,41 @@ export default function WeeklyReflectionPage() {
         const diffDays = Math.floor(
           (today.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24)
         );
-        setWeekNumber(Math.floor(diffDays / 7) + 1);
-      }
+        const calculatedWeekNumber = Math.floor(diffDays / 7) + 1;
+        setWeekNumber(calculatedWeekNumber);
 
-      // Load existing reflection
-      const { data: reflection } = await supabase
-        .from('weekly_reflections')
-        .select('*')
-        .eq('user_id', auth.user.id)
-        .eq('week_number', Math.floor((today.getTime() - new Date(allLogs?.[0]?.log_date || today).getTime()) / (1000 * 60 * 60 * 24 * 7)) + 1)
-        .maybeSingle();
+        // Load existing reflection for this week
+        const { data: reflection } = await supabase
+          .from('weekly_reflections')
+          .select('*')
+          .eq('user_id', auth.user.id)
+          .eq('week_number', calculatedWeekNumber)
+          .maybeSingle();
 
-      if (reflection) {
-        setTheme(reflection.weekly_theme || '');
-        setWins(reflection.what_worked_well || '');
-        setChallenges(reflection.what_broke_standard || '');
-        setNextWeekFocus(reflection.next_week_goals || '');
+        if (reflection) {
+          setTheme(reflection.weekly_theme || '');
+          setWins(reflection.what_worked_well || '');
+          setChallenges(reflection.what_broke_standard || '');
+          setNextWeekFocus(reflection.next_week_goals || '');
+          
+          if (reflection.weekly_goals) {
+            setGoal1(reflection.weekly_goals.goal1 || '');
+            setGoal2(reflection.weekly_goals.goal2 || '');
+            setGoal3(reflection.weekly_goals.goal3 || '');
+          }
+        }
+
+        // Load LAST week's goals to review
+        const { data: lastWeek } = await supabase
+          .from('weekly_reflections')
+          .select('*')
+          .eq('user_id', auth.user.id)
+          .eq('week_number', calculatedWeekNumber - 1)
+          .maybeSingle();
+
+        if (lastWeek && lastWeek.weekly_goals) {
+          setLastWeekGoals(lastWeek.weekly_goals);
+        }
       }
 
       setLoading(false);
@@ -94,6 +121,12 @@ export default function WeeklyReflectionPage() {
     const end = new Date(start);
     end.setDate(start.getDate() + 6);
 
+    const goals = {
+      goal1: goal1.trim(),
+      goal2: goal2.trim(),
+      goal3: goal3.trim(),
+    };
+
     const { error } = await supabase.from('weekly_reflections').upsert(
       {
         user_id: auth.user.id,
@@ -104,6 +137,7 @@ export default function WeeklyReflectionPage() {
         what_worked_well: wins,
         what_broke_standard: challenges,
         next_week_goals: nextWeekFocus,
+        weekly_goals: goals,
       },
       { onConflict: 'user_id,week_number' }
     );
@@ -138,7 +172,6 @@ export default function WeeklyReflectionPage() {
     }}>
       <div style={{ maxWidth: 800, margin: '0 auto' }}>
         
-        {/* HEADER */}
         <div style={{ marginBottom: 40, textAlign: 'center' }}>
           <h1 style={{ fontSize: 36, fontWeight: 600, marginBottom: 8 }}>
             Week {weekNumber} Reflection
@@ -148,7 +181,28 @@ export default function WeeklyReflectionPage() {
           </p>
         </div>
 
-        {/* WEEK STATS */}
+        {/* LAST WEEK GOALS REVIEW */}
+        {lastWeekGoals && (lastWeekGoals.goal1 || lastWeekGoals.goal2 || lastWeekGoals.goal3) && (
+          <div style={{
+            padding: 24,
+            marginBottom: 32,
+            borderRadius: 12,
+            background: '#020617',
+            border: '1px solid #fbbf2440',
+            borderLeft: '4px solid #fbbf24',
+          }}>
+            <h3 style={{ color: '#fbbf24', marginBottom: 16, fontSize: 18 }}>
+              📋 Last Week's Goals - How'd You Do?
+            </h3>
+            {lastWeekGoals.goal1 && <p style={{ color: '#e5e7eb', marginBottom: 8 }}>• {lastWeekGoals.goal1}</p>}
+            {lastWeekGoals.goal2 && <p style={{ color: '#e5e7eb', marginBottom: 8 }}>• {lastWeekGoals.goal2}</p>}
+            {lastWeekGoals.goal3 && <p style={{ color: '#e5e7eb', marginBottom: 8 }}>• {lastWeekGoals.goal3}</p>}
+            <p style={{ color: '#94a3b8', fontSize: 14, marginTop: 12 }}>
+              Reflect on these as you complete today's reflection.
+            </p>
+          </div>
+        )}
+
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(3, 1fr)',
@@ -160,62 +214,36 @@ export default function WeeklyReflectionPage() {
           border: '1px solid #22c55e40',
         }}>
           <Stat label="Days Logged" value={weekData.length} />
-          <Stat label="Avg Sovereign Score" value={avgScore.toFixed(1)} />
-          <Stat 
-            label="Consistency" 
-            value={`${Math.round((weekData.length / 7) * 100)}%`} 
-          />
+          <Stat label="Avg Score" value={avgScore.toFixed(1)} />
+          <Stat label="Consistency" value={`${Math.round((weekData.length / 7) * 100)}%`} />
         </div>
 
-        {/* THEME */}
         <Card title="This Week's Theme" color="#22c55e" icon="🎯">
-          <p style={{ fontSize: 14, color: '#94a3b8', marginBottom: 12 }}>
-            One word that captures what you focused on this week
-          </p>
-          <Input
-            value={theme}
-            onChange={setTheme}
-            placeholder="e.g., Consistency, Focus, Momentum"
-          />
+          <Input value={theme} onChange={setTheme} placeholder="e.g., Consistency, Focus, Momentum" />
         </Card>
 
-        {/* WINS */}
         <Card title="What Worked" color="#22c55e" icon="✓">
-          <p style={{ fontSize: 14, color: '#94a3b8', marginBottom: 12 }}>
-            What actions, habits, or decisions moved the needle?
-          </p>
-          <Textarea 
-            value={wins} 
-            onChange={setWins}
-            placeholder="Which daily habits had the biggest impact? What decisions felt aligned?"
-          />
+          <Textarea value={wins} onChange={setWins} placeholder="Which habits had the biggest impact?" />
         </Card>
 
-        {/* CHALLENGES */}
         <Card title="What Broke" color="#ef4444" icon="⚠">
-          <p style={{ fontSize: 14, color: '#94a3b8', marginBottom: 12 }}>
-            Where did you fall short of your standard?
-          </p>
-          <Textarea 
-            value={challenges} 
-            onChange={setChallenges}
-            placeholder="Which days did you miss? What patterns emerged in your failures?"
-          />
+          <Textarea value={challenges} onChange={setChallenges} placeholder="Where did you fall short?" />
         </Card>
 
-        {/* NEXT WEEK */}
         <Card title="Next Week's Focus" color="#a855f7" icon="→">
-          <p style={{ fontSize: 14, color: '#94a3b8', marginBottom: 12 }}>
-            What's the ONE thing you're prioritizing next week?
-          </p>
-          <Textarea 
-            value={nextWeekFocus} 
-            onChange={setNextWeekFocus}
-            placeholder="Be specific. What will you do differently?"
-          />
+          <Textarea value={nextWeekFocus} onChange={setNextWeekFocus} placeholder="What will you do differently?" />
         </Card>
 
-        {/* MESSAGE */}
+        {/* WEEKLY GOALS */}
+        <Card title="Next Week's Goals" color="#fbbf24" icon="🎯">
+          <p style={{ fontSize: 14, color: '#94a3b8', marginBottom: 12 }}>
+            Set 1-3 measurable goals. We'll check in next week.
+          </p>
+          <Input value={goal1} onChange={setGoal1} placeholder="Goal 1: e.g., Log 7/7 days" />
+          <Input value={goal2} onChange={setGoal2} placeholder="Goal 2: e.g., Avoid Social Media trigger" />
+          <Input value={goal3} onChange={setGoal3} placeholder="Goal 3: e.g., Sovereign Score > 120" />
+        </Card>
+
         {message && (
           <div style={{
             padding: 16,
@@ -230,7 +258,6 @@ export default function WeeklyReflectionPage() {
           </div>
         )}
 
-        {/* SAVE BUTTON */}
         <button
           onClick={submitReflection}
           style={{
@@ -247,33 +274,12 @@ export default function WeeklyReflectionPage() {
         >
           Save Reflection
         </button>
-
-        <p style={{ 
-          marginTop: 16, 
-          textAlign: 'center', 
-          fontSize: 13, 
-          color: '#94a3b8' 
-        }}>
-          Your reflection helps you see the patterns others miss.
-        </p>
       </div>
     </div>
   );
 }
 
-/* ---------- Components ---------- */
-
-function Card({
-  title,
-  color,
-  icon,
-  children,
-}: {
-  title: string;
-  color: string;
-  icon: string;
-  children: React.ReactNode;
-}) {
+function Card({ title, color, icon, children }: any) {
   return (
     <div style={{
       marginBottom: 28,
@@ -285,24 +291,14 @@ function Card({
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
         <span style={{ fontSize: 24 }}>{icon}</span>
-        <h2 style={{ fontSize: 20, fontWeight: 600, color, margin: 0 }}>
-          {title}
-        </h2>
+        <h2 style={{ fontSize: 20, fontWeight: 600, color, margin: 0 }}>{title}</h2>
       </div>
       {children}
     </div>
   );
 }
 
-function Input({
-  value,
-  onChange,
-  placeholder,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
-}) {
+function Input({ value, onChange, placeholder }: any) {
   return (
     <input
       value={value}
@@ -316,20 +312,13 @@ function Input({
         border: '1px solid #334155',
         color: '#e5e7eb',
         fontSize: 15,
+        marginBottom: 12,
       }}
     />
   );
 }
 
-function Textarea({
-  value,
-  onChange,
-  placeholder,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
-}) {
+function Textarea({ value, onChange, placeholder }: any) {
   return (
     <textarea
       value={value}
@@ -352,15 +341,11 @@ function Textarea({
   );
 }
 
-function Stat({ label, value }: { label: string; value: any }) {
+function Stat({ label, value }: any) {
   return (
     <div style={{ textAlign: 'center' }}>
-      <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 6 }}>
-        {label}
-      </div>
-      <div style={{ fontSize: 24, fontWeight: 600, color: '#22c55e' }}>
-        {value}
-      </div>
+      <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 6 }}>{label}</div>
+      <div style={{ fontSize: 24, fontWeight: 600, color: '#22c55e' }}>{value}</div>
     </div>
   );
 }

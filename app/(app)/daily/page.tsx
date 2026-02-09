@@ -18,12 +18,16 @@ export default function DailyPage() {
   // Mind
   const [mindPositive, setMindPositive] = useState(false);
   const [mindNegative, setMindNegative] = useState(false);
+  const [negativeTrigger, setNegativeTrigger] = useState('None');
   const [discipline, setDiscipline] = useState(5);
 
   // Identity
   const [mission, setMission] = useState(false);
   const [philosophy, setPhilosophy] = useState(false);
   const [mood, setMood] = useState(5);
+
+  // Journal
+  const [dailyNotes, setDailyNotes] = useState('');
 
   // User habits
   const [userHabits, setUserHabits] = useState<any>(null);
@@ -70,10 +74,12 @@ export default function DailyPage() {
           setReps(existingLog.body_daily_reps_level);
           setMindPositive(existingLog.mind_positive_habit_completed);
           setMindNegative(existingLog.mind_negative_habit_avoided);
+          setNegativeTrigger(existingLog.negative_trigger || 'None');
           setDiscipline(existingLog.mind_discipline_rating);
           setMission(existingLog.identity_daily_mission_completed);
           setPhilosophy(existingLog.identity_philosophy_practice_completed);
           setMood(existingLog.identity_mood_rating);
+          setDailyNotes(existingLog.daily_notes || '');
         }
       }
       
@@ -82,6 +88,13 @@ export default function DailyPage() {
 
     loadData();
   }, [router, today]);
+
+  // Auto-set trigger based on mindNegative
+  useEffect(() => {
+    if (mindNegative) {
+      setNegativeTrigger('None');
+    }
+  }, [mindNegative]);
 
   const submitRestDay = async () => {
     if (isLocked) return;
@@ -112,6 +125,8 @@ export default function DailyPage() {
       body_score: 0,
       mind_score: 0,
       identity_score: 0,
+      negative_trigger: 'None',
+      daily_notes: dailyNotes,
     });
 
     if (error) {
@@ -158,6 +173,7 @@ export default function DailyPage() {
       mind_negative_habit_avoided: mindNegative,
       mind_positive_habit_completed: mindPositive,
       mind_discipline_rating: discipline,
+      negative_trigger: negativeTrigger,
       identity_daily_mission_completed: mission,
       identity_philosophy_practice_completed: philosophy,
       identity_mood_rating: mood,
@@ -168,6 +184,7 @@ export default function DailyPage() {
       sovereign_score: sovereignScore,
       sovereign_value: sovereignScore,
       is_rest_day: false,
+      daily_notes: dailyNotes,
     });
 
     if (error) {
@@ -346,6 +363,26 @@ export default function DailyPage() {
             onChange={setMindNegative}
             disabled={isLocked}
           />
+          
+          {/* TRIGGER DROPDOWN - Only show if they didn't avoid the habit */}
+          {!mindNegative && (
+            <HabitSelect
+              label="What triggered the slip-up?"
+              value={negativeTrigger}
+              onChange={setNegativeTrigger}
+              disabled={isLocked}
+              options={[
+                { value: 'Social Media', label: 'Social Media' },
+                { value: 'Boredom', label: 'Boredom' },
+                { value: 'Stress', label: 'Stress' },
+                { value: 'Fatigue', label: 'Fatigue' },
+                { value: 'Hunger', label: 'Hunger' },
+                { value: 'Peer Pressure', label: 'Peer Pressure' },
+                { value: 'Other', label: 'Other' },
+              ]}
+            />
+          )}
+
           <HabitRating
             label="Discipline rating (1-10)"
             sublabel="How disciplined were you today?"
@@ -376,6 +413,41 @@ export default function DailyPage() {
             onChange={setMood}
             disabled={isLocked}
           />
+        </Pillar>
+
+        {/* DAILY JOURNAL */}
+        <Pillar title="Daily Notes" color="#fbbf24" icon="📝">
+          <div>
+            <label style={{ display: 'block', marginBottom: 8 }}>
+              <div style={{ fontSize: 14, color: '#e5e7eb', marginBottom: 4 }}>
+                What happened today? (Optional)
+              </div>
+              <div style={{ fontSize: 13, color: '#94a3b8', fontStyle: 'italic' }}>
+                Capture wins, struggles, or context. This helps you spot patterns.
+              </div>
+            </label>
+            <textarea
+              value={dailyNotes}
+              onChange={(e) => setDailyNotes(e.target.value)}
+              disabled={isLocked}
+              placeholder="e.g., Crushed the gym, felt unstoppable. Had a stressful work call in the afternoon."
+              rows={4}
+              style={{
+                width: '100%',
+                padding: 14,
+                borderRadius: 10,
+                background: '#01030f',
+                border: '1px solid #334155',
+                color: '#e5e7eb',
+                fontSize: 15,
+                lineHeight: 1.6,
+                resize: 'vertical',
+                fontFamily: 'inherit',
+                cursor: isLocked ? 'not-allowed' : 'text',
+                opacity: isLocked ? 0.6 : 1,
+              }}
+            />
+          </div>
         </Pillar>
 
         {/* BUTTONS */}
