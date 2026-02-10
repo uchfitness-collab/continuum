@@ -10,6 +10,7 @@ export default function MarketingHome() {
         justifyContent: 'center',
         textAlign: 'center',
         overflow: 'hidden',
+        background: 'radial-gradient(circle at top, #020617, #01030f)',
       }}
     >
       {/* BACKGROUND IMAGE */}
@@ -20,8 +21,8 @@ export default function MarketingHome() {
           backgroundImage: `url('/continuum-hero.jpg')`,
           backgroundSize: 'contain',
           backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'center',
-          opacity: 0.28,
+          backgroundPosition: 'center -150px',
+          opacity: 0.05,
           filter: 'grayscale(100%)',
         }}
       />
@@ -32,7 +33,7 @@ export default function MarketingHome() {
           position: 'absolute',
           inset: 0,
           background:
-            'radial-gradient(circle at center, rgba(15,23,42,0.5), rgba(2,6,23,0.92))',
+            'radial-gradient(circle at center, rgba(15,23,42,0.55), rgba(2,6,23,0.94))',
         }}
       />
 
@@ -42,7 +43,7 @@ export default function MarketingHome() {
           position: 'relative',
           zIndex: 2,
           maxWidth: 1200,
-          padding: '100px 24px 120px',
+          padding: '100px 32px 100px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -50,33 +51,35 @@ export default function MarketingHome() {
       >
         {/* HERO COPY */}
         <h1 style={{ 
-          fontSize: 56, 
+          fontSize: 64, 
           fontWeight: 700, 
-          maxWidth: 900,
-          lineHeight: 1.15,
-          marginBottom: 24
+          maxWidth: 920,
+          lineHeight: 1.1,
+          marginBottom: 24,
+          background: 'linear-gradient(135deg, #e5e7eb, #94a3b8)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
         }}>
-          Your Personal Operating System for Discipline
+          Discipline is Measurable.<br />Now Prove It.
         </h1>
 
         <p
           style={{
             maxWidth: 680,
-            fontSize: 19,
+            fontSize: 20,
             lineHeight: 1.7,
             color: '#94a3b8',
             marginBottom: 40,
           }}
         >
-          Continuum helps you measure what actually matters — daily action,
-          consistency, and identity alignment — through a single score that
-          compounds over time.
+          Continuum measures your daily execution across Body, Mind, and Identity—
+          then shows you whether you're building the person you claim to be or just pretending.
         </p>
 
         {/* CTA */}
         <div style={{ display: 'flex', gap: 16 }}>
           <Link href="/signup" style={{ textDecoration: 'none' }}>
-            <button style={primaryButton}>Get Started</button>
+            <button style={primaryButton}>Start Tracking</button>
           </Link>
 
           <Link href="/how-it-works" style={{ textDecoration: 'none' }}>
@@ -89,39 +92,53 @@ export default function MarketingHome() {
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: 56,
+            gap: 40,
             marginTop: 120,
             maxWidth: 1100,
             textAlign: 'left',
           }}
         >
           <Pillar
+            icon="💪"
             title="Body"
             color="#22c55e"
-            text="Physical action creates momentum. Continuum tracks movement, nutrition discipline, and daily reps — because energy fuels everything."
+            text="Physical action creates momentum. Track movement, nutrition discipline, and daily reps. When your body is disciplined, everything else follows."
           />
           <Pillar
+            icon="🧠"
             title="Mind"
             color="#3b82f6"
-            text="What you avoid matters as much as what you do. Track discipline, habit replacement, and mental control."
+            text="What you avoid matters as much as what you do. Track discipline, habit replacement, and mental control. Choose discomfort when comfort is available."
           />
           <Pillar
+            icon="⚡"
             title="Identity"
             color="#a855f7"
-            text="Identity is built through proof. Continuum measures alignment between who you say you are and what you do daily."
+            text="Identity is built through proof. Measure the gap between who you say you are and what you actually do daily. Actions define identity, not intentions."
           />
         </div>
 
         {/* FINAL CTA */}
-        <div style={{ marginTop: 140, textAlign: 'center' }}>
-          <h2 style={{ fontSize: 36, marginBottom: 16, fontWeight: 600 }}>
-            Discipline is measurable. Now prove it.
+        <div style={{ marginTop: 120, textAlign: 'center' }}>
+          <h2 style={{ 
+            fontSize: 40, 
+            marginBottom: 16, 
+            fontWeight: 700,
+            color: '#e5e7eb'
+          }}>
+            Stop lying to yourself. Start tracking.
           </h2>
-          <p style={{ color: '#94a3b8', marginBottom: 32, fontSize: 17 }}>
-            Join hundreds tracking their way to sovereignty.
+          <p style={{ 
+            color: '#94a3b8', 
+            marginBottom: 32, 
+            fontSize: 18,
+            maxWidth: 560,
+            margin: '0 auto 32px'
+          }}>
+            See who you actually are when no one's watching.
           </p>
           <Link href="/signup" style={{ textDecoration: 'none' }}>
-            <button style={primaryButton}>Start Tracking Today</button>
+            <button style={primaryButton}>Get Started</button>
           </Link>
         </div>
       </div>
@@ -131,42 +148,67 @@ export default function MarketingHome() {
 
 /* ---------- HELPERS ---------- */
 
-function Pillar({ title, text, color }: { title: string; text: string; color: string }) {
+function Pillar({ 
+  icon,
+  title, 
+  text, 
+  color 
+}: { 
+  icon: string;
+  title: string; 
+  text: string; 
+  color: string;
+}) {
   return (
-    <div>
+    <div style={{
+      padding: 32,
+      background: '#020617',
+      borderRadius: 16,
+      border: `2px solid ${color}30`,
+    }}>
+      <div style={{ fontSize: 40, marginBottom: 16 }}>
+        {icon}
+      </div>
       <h3 style={{ 
         marginBottom: 14, 
-        fontSize: 22,
+        fontSize: 24,
         color,
         fontWeight: 600
       }}>
         {title}
       </h3>
-      <p style={{ color: '#94a3b8', lineHeight: 1.7, fontSize: 15 }}>{text}</p>
+      <p style={{ 
+        color: '#94a3b8', 
+        lineHeight: 1.7, 
+        fontSize: 15,
+        margin: 0
+      }}>
+        {text}
+      </p>
     </div>
   );
 }
 
 const primaryButton = {
-  padding: '14px 32px',
+  padding: '16px 40px',
   background: 'linear-gradient(180deg, #22c55e, #16a34a)',
   color: '#020617',
   borderRadius: 10,
-  fontWeight: 600,
-  fontSize: 16,
+  fontWeight: 700,
+  fontSize: 17,
   border: 'none',
   cursor: 'pointer',
   transition: 'transform 0.2s',
 };
 
 const secondaryButton = {
-  padding: '14px 32px',
-  background: 'rgba(255,255,255,0.05)',
+  padding: '16px 40px',
+  background: 'transparent',
   color: '#e5e7eb',
   borderRadius: 10,
-  border: '1px solid rgba(255,255,255,0.2)',
+  border: '2px solid #334155',
   cursor: 'pointer',
-  fontSize: 16,
+  fontSize: 17,
   fontWeight: 600,
   transition: 'all 0.2s',
 };
