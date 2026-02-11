@@ -28,6 +28,7 @@ export default function AppLayout({
   const router = useRouter();
   const [email, setEmail] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const runGate = async () => {
@@ -145,7 +146,7 @@ export default function AppLayout({
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          padding: '16px 32px',
+          padding: '16px clamp(16px, 4vw, 32px)',
           borderBottom: '1px solid #1e293b',
           position: 'sticky',
           top: 0,
@@ -153,7 +154,7 @@ export default function AppLayout({
           zIndex: 100,
         }}
       >
-        <div style={{ display: 'flex', gap: 32, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 'clamp(16px, 4vw, 32px)', alignItems: 'center', flex: 1 }}>
           <Link
             href="/dashboard"
             style={{
@@ -178,7 +179,8 @@ export default function AppLayout({
             </span>
           </Link>
 
-          <div style={{ display: 'flex', gap: 20 }}>
+          {/* Desktop Navigation */}
+          <div className="desktop-nav" style={{ display: 'flex', gap: 20 }}>
             <NavLink href="/dashboard">Dashboard</NavLink>
             <NavLink href="/daily">Daily Log</NavLink>
             <NavLink href="/habits">Habits</NavLink>
@@ -188,7 +190,8 @@ export default function AppLayout({
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+        {/* Desktop User Info + Logout */}
+        <div className="desktop-user" style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
           {email && (
             <span style={{ fontSize: 13, opacity: 0.6 }}>{email}</span>
           )}
@@ -205,12 +208,124 @@ export default function AppLayout({
               fontWeight: 600,
               border: '1px solid #ef444440',
               cursor: 'pointer',
+              fontSize: 14,
             }}
           >
             Log Out
           </button>
         </div>
+
+        {/* Mobile Hamburger */}
+        <button
+          className="mobile-menu-btn"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          style={{
+            display: 'none',
+            flexDirection: 'column',
+            gap: 5,
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            padding: 8,
+          }}
+          aria-label="Toggle menu"
+        >
+          <span style={{
+            width: 24,
+            height: 2,
+            background: '#e5e7eb',
+            transition: 'all 0.3s',
+            transform: mobileMenuOpen ? 'rotate(45deg) translateY(7px)' : 'none',
+          }} />
+          <span style={{
+            width: 24,
+            height: 2,
+            background: '#e5e7eb',
+            transition: 'all 0.3s',
+            opacity: mobileMenuOpen ? 0 : 1,
+          }} />
+          <span style={{
+            width: 24,
+            height: 2,
+            background: '#e5e7eb',
+            transition: 'all 0.3s',
+            transform: mobileMenuOpen ? 'rotate(-45deg) translateY(-7px)' : 'none',
+          }} />
+        </button>
       </nav>
+
+      {/* Mobile Menu Dropdown */}
+      {mobileMenuOpen && (
+        <div
+          className="mobile-menu"
+          style={{
+            position: 'fixed',
+            top: 61,
+            left: 0,
+            right: 0,
+            background: '#020617',
+            borderBottom: '1px solid #1e293b',
+            padding: '20px',
+            zIndex: 99,
+            maxHeight: 'calc(100vh - 61px)',
+            overflowY: 'auto',
+          }}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <MobileNavLink href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+              Dashboard
+            </MobileNavLink>
+            <MobileNavLink href="/daily" onClick={() => setMobileMenuOpen(false)}>
+              Daily Log
+            </MobileNavLink>
+            <MobileNavLink href="/habits" onClick={() => setMobileMenuOpen(false)}>
+              Habits
+            </MobileNavLink>
+            <MobileNavLink href="/goals" onClick={() => setMobileMenuOpen(false)}>
+              Goals
+            </MobileNavLink>
+            <MobileNavLink href="/weekly" onClick={() => setMobileMenuOpen(false)}>
+              Weekly
+            </MobileNavLink>
+            <MobileNavLink href="/guide" onClick={() => setMobileMenuOpen(false)}>
+              Guide
+            </MobileNavLink>
+            
+            {email && (
+              <div style={{ 
+                padding: '12px 0',
+                borderTop: '1px solid #1e293b',
+                marginTop: 8,
+                fontSize: 13,
+                color: '#94a3b8',
+              }}>
+                {email}
+              </div>
+            )}
+            
+            <button
+              onClick={async () => {
+                await supabase.auth.signOut();
+                router.push('/login');
+              }}
+              style={{
+                background: 'transparent',
+                color: '#ef4444',
+                padding: '12px 16px',
+                borderRadius: 6,
+                fontWeight: 600,
+                border: '1px solid #ef444440',
+                cursor: 'pointer',
+                fontSize: 15,
+                marginTop: 8,
+                textAlign: 'left',
+              }}
+            >
+              Log Out
+            </button>
+          </div>
+        </div>
+      )}
 
       <main>{children}</main>
 
@@ -218,6 +333,26 @@ export default function AppLayout({
         @keyframes spin {
           to {
             transform: rotate(360deg);
+          }
+        }
+
+        @media (max-width: 1024px) {
+          .desktop-nav {
+            display: none !important;
+          }
+          
+          .desktop-user {
+            display: none !important;
+          }
+          
+          .mobile-menu-btn {
+            display: flex !important;
+          }
+        }
+
+        @media (min-width: 1025px) {
+          .mobile-menu {
+            display: none !important;
           }
         }
       `}</style>
@@ -234,6 +369,35 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
         textDecoration: 'none',
         fontSize: 15,
         fontWeight: 500,
+        transition: 'color 0.2s',
+      }}
+    >
+      {children}
+    </Link>
+  );
+}
+
+function MobileNavLink({ 
+  href, 
+  children,
+  onClick 
+}: { 
+  href: string; 
+  children: React.ReactNode;
+  onClick?: () => void;
+}) {
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      style={{
+        color: '#e5e7eb',
+        textDecoration: 'none',
+        fontSize: 16,
+        fontWeight: 500,
+        padding: '12px 0',
+        borderBottom: '1px solid #1e293b',
+        display: 'block',
       }}
     >
       {children}
