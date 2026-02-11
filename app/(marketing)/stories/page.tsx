@@ -43,15 +43,25 @@ export default function StoriesPage() {
           zIndex: 2,
           maxWidth: 1100,
           margin: '0 auto',
-          padding: '120px 24px 80px',
+          padding: 'clamp(80px, 12vw, 120px) clamp(16px, 4vw, 24px) clamp(60px, 10vw, 80px)',
         }}
       >
         {/* HEADER */}
-        <div style={{ textAlign: 'center', marginBottom: 60 }}>
-          <h1 style={{ fontSize: 44, fontWeight: 700, marginBottom: 16 }}>
+        <div style={{ textAlign: 'center', marginBottom: 'clamp(48px, 8vw, 60px)' }}>
+          <h1 style={{ 
+            fontSize: 'clamp(32px, 6vw, 44px)',
+            fontWeight: 700, 
+            marginBottom: 16 
+          }}>
             Stories of Discipline
           </h1>
-          <p style={{ fontSize: 18, color: '#94a3b8', maxWidth: 700, margin: '0 auto' }}>
+          <p style={{ 
+            fontSize: 'clamp(16px, 3vw, 18px)',
+            color: '#94a3b8', 
+            maxWidth: 700, 
+            margin: '0 auto',
+            padding: '0 16px',
+          }}>
             These are not testimonials. They are real examples of how daily standards, 
             habit removal, and consistency translate into measurable results.
           </p>
@@ -62,8 +72,9 @@ export default function StoriesPage() {
           display: 'flex', 
           gap: 12, 
           justifyContent: 'center',
-          marginBottom: 60,
-          flexWrap: 'wrap'
+          marginBottom: 'clamp(48px, 8vw, 60px)',
+          flexWrap: 'wrap',
+          padding: '0 16px',
         }}>
           <PillarTab label="All Stories" active />
           <PillarTab label="Body" color="#22c55e" />
@@ -72,7 +83,7 @@ export default function StoriesPage() {
         </div>
 
         {/* STORIES */}
-        <div style={{ display: 'grid', gap: 60 }}>
+        <div style={{ display: 'grid', gap: 'clamp(48px, 8vw, 60px)' }}>
           
           {/* STORY 1 - MIND */}
           <Story
@@ -219,27 +230,35 @@ export default function StoriesPage() {
         {/* CTA */}
         <div style={{ 
           textAlign: 'center', 
-          marginTop: 80,
-          padding: 40,
+          marginTop: 'clamp(60px, 10vw, 80px)',
+          padding: 'clamp(28px, 6vw, 40px)',
           background: '#020617',
           borderRadius: 16,
           border: '1px solid #22c55e'
         }}>
-          <h2 style={{ fontSize: 28, marginBottom: 12 }}>
+          <h2 style={{ 
+            fontSize: 'clamp(24px, 4vw, 28px)',
+            marginBottom: 12 
+          }}>
             Your story starts with one day
           </h2>
-          <p style={{ color: '#94a3b8', marginBottom: 24, fontSize: 16 }}>
+          <p style={{ 
+            color: '#94a3b8', 
+            marginBottom: 24, 
+            fontSize: 'clamp(14px, 3vw, 16px)',
+            padding: '0 16px',
+          }}>
             Track your actions. See your trajectory. Prove who you're becoming.
           </p>
           <Link
             href="/signup"
             style={{
               display: 'inline-block',
-              padding: '14px 32px',
+              padding: 'clamp(12px, 3vw, 14px) clamp(24px, 5vw, 32px)',
               background: 'linear-gradient(180deg, #22c55e, #16a34a)',
               color: '#020617',
               fontWeight: 600,
-              fontSize: 16,
+              fontSize: 'clamp(14px, 3vw, 16px)',
               borderRadius: 10,
               textDecoration: 'none',
             }}
@@ -272,7 +291,7 @@ function PillarTab({
         background: active ? `${color || '#22c55e'}15` : 'transparent',
         color: active ? (color || '#22c55e') : '#94a3b8',
         fontWeight: active ? 600 : 400,
-        fontSize: 14,
+        fontSize: 'clamp(13px, 3vw, 14px)',
         cursor: 'pointer',
         transition: 'all 0.2s',
       }}
@@ -306,29 +325,36 @@ function Story({
       style={{
         background: '#020617',
         borderRadius: 16,
-        padding: 40,
+        padding: 'clamp(24px, 5vw, 40px)',
         border: `1px solid ${pillarColor}30`,
       }}
     >
       {/* Header */}
-      <div style={{ marginBottom: 32 }}>
+      <div style={{ marginBottom: 'clamp(24px, 5vw, 32px)' }}>
         <div style={{ 
           display: 'inline-block',
           padding: '6px 12px',
           background: `${pillarColor}20`,
           color: pillarColor,
           borderRadius: 6,
-          fontSize: 13,
+          fontSize: 'clamp(12px, 3vw, 13px)',
           fontWeight: 600,
           marginBottom: 16
         }}>
           {pillar} Pillar
         </div>
         
-        <h2 style={{ fontSize: 28, fontWeight: 600, marginBottom: 4 }}>
+        <h2 style={{ 
+          fontSize: 'clamp(24px, 4vw, 28px)',
+          fontWeight: 600, 
+          marginBottom: 4 
+        }}>
           {name}
         </h2>
-        <p style={{ color: '#94a3b8', fontSize: 16 }}>
+        <p style={{ 
+          color: '#94a3b8', 
+          fontSize: 'clamp(14px, 3vw, 16px)'
+        }}>
           {role}
         </p>
       </div>
@@ -336,10 +362,10 @@ function Story({
       {/* Quick Stats */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-        gap: 20,
-        marginBottom: 32,
-        padding: 20,
+        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+        gap: 'clamp(16px, 3vw, 20px)',
+        marginBottom: 'clamp(24px, 5vw, 32px)',
+        padding: 'clamp(16px, 4vw, 20px)',
         background: '#01030f',
         borderRadius: 12,
       }}>
@@ -351,7 +377,7 @@ function Story({
       {/* Full Story */}
       <div style={{ 
         lineHeight: 1.9, 
-        fontSize: 16,
+        fontSize: 'clamp(14px, 3vw, 16px)',
         color: '#e5e7eb',
       }}>
         {children}
@@ -363,10 +389,19 @@ function Story({
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 6, fontWeight: 600 }}>
+      <div style={{ 
+        fontSize: 'clamp(11px, 3vw, 12px)',
+        color: '#94a3b8', 
+        marginBottom: 6, 
+        fontWeight: 600 
+      }}>
         {label}
       </div>
-      <div style={{ fontSize: 14, color: '#e5e7eb', lineHeight: 1.5 }}>
+      <div style={{ 
+        fontSize: 'clamp(13px, 3vw, 14px)',
+        color: '#e5e7eb', 
+        lineHeight: 1.5 
+      }}>
         {value}
       </div>
     </div>

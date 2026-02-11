@@ -34,15 +34,12 @@ export default function SignUpPage() {
         email,
         password,
         options: {
-          // ✅ THIS IS THE KEY FIX
           emailRedirectTo: `${window.location.origin}/dashboard`,
         },
       })
 
       if (signUpError) throw signUpError
 
-      // Do NOT push here.
-      // User will be redirected after email confirmation.
     } catch (err: any) {
       console.error('Signup error:', err)
       setError(err.message || 'Signup failed. Please try again.')
@@ -59,7 +56,7 @@ export default function SignUpPage() {
         alignItems: 'center',
         justifyContent: 'center',
         background: 'radial-gradient(circle at top, #020617, #01030f)',
-        padding: '24px',
+        padding: 'clamp(16px, 4vw, 24px)',
       }}
     >
       <div style={{ width: '100%', maxWidth: 440 }}>
@@ -70,7 +67,7 @@ export default function SignUpPage() {
             alignItems: 'center',
             gap: 12,
             justifyContent: 'center',
-            marginBottom: 40,
+            marginBottom: 'clamp(24px, 5vw, 40px)',
             textDecoration: 'none',
           }}
         >
@@ -86,7 +83,7 @@ export default function SignUpPage() {
           />
           <span
             style={{
-              fontSize: 24,
+              fontSize: 'clamp(20px, 4vw, 24px)',
               fontWeight: 700,
               color: '#e5e7eb',
             }}
@@ -98,14 +95,14 @@ export default function SignUpPage() {
         <div
           style={{
             background: '#020617',
-            padding: 40,
+            padding: 'clamp(24px, 5vw, 40px)',
             borderRadius: 16,
             border: '1px solid #1e293b',
           }}
         >
           <h1
             style={{
-              fontSize: 28,
+              fontSize: 'clamp(24px, 4vw, 28px)',
               fontWeight: 600,
               marginBottom: 8,
               textAlign: 'center',
@@ -118,8 +115,8 @@ export default function SignUpPage() {
             style={{
               textAlign: 'center',
               color: '#94a3b8',
-              fontSize: 15,
-              marginBottom: 32,
+              fontSize: 'clamp(14px, 3vw, 15px)',
+              marginBottom: 'clamp(24px, 5vw, 32px)',
             }}
           >
             Create your account and track your sovereignty
@@ -127,7 +124,15 @@ export default function SignUpPage() {
 
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: 20 }}>
-              <label style={{ color: '#e5e7eb' }}>Email</label>
+              <label style={{ 
+                display: 'block',
+                marginBottom: 8,
+                fontSize: 14,
+                fontWeight: 500,
+                color: '#e5e7eb' 
+              }}>
+                Email
+              </label>
               <input
                 type="email"
                 value={email}
@@ -140,12 +145,22 @@ export default function SignUpPage() {
                   background: '#01030f',
                   border: '1px solid #334155',
                   color: '#e5e7eb',
+                  fontSize: 15,
+                  boxSizing: 'border-box',
                 }}
               />
             </div>
 
             <div style={{ marginBottom: 20 }}>
-              <label style={{ color: '#e5e7eb' }}>Password</label>
+              <label style={{ 
+                display: 'block',
+                marginBottom: 8,
+                fontSize: 14,
+                fontWeight: 500,
+                color: '#e5e7eb' 
+              }}>
+                Password
+              </label>
               <input
                 type="password"
                 value={password}
@@ -158,12 +173,22 @@ export default function SignUpPage() {
                   background: '#01030f',
                   border: '1px solid #334155',
                   color: '#e5e7eb',
+                  fontSize: 15,
+                  boxSizing: 'border-box',
                 }}
               />
             </div>
 
             <div style={{ marginBottom: 24 }}>
-              <label style={{ color: '#e5e7eb' }}>Confirm Password</label>
+              <label style={{ 
+                display: 'block',
+                marginBottom: 8,
+                fontSize: 14,
+                fontWeight: 500,
+                color: '#e5e7eb' 
+              }}>
+                Confirm Password
+              </label>
               <input
                 type="password"
                 value={confirmPassword}
@@ -176,6 +201,8 @@ export default function SignUpPage() {
                   background: '#01030f',
                   border: '1px solid #334155',
                   color: '#e5e7eb',
+                  fontSize: 15,
+                  boxSizing: 'border-box',
                 }}
               />
             </div>
@@ -189,6 +216,7 @@ export default function SignUpPage() {
                   background: '#2c0808',
                   border: '1px solid #ef4444',
                   color: '#ef4444',
+                  fontSize: 14,
                 }}
               >
                 {error}
@@ -207,13 +235,50 @@ export default function SignUpPage() {
                   : 'linear-gradient(180deg, #22c55e, #16a34a)',
                 color: '#020617',
                 fontWeight: 600,
+                fontSize: 16,
                 border: 'none',
+                cursor: loading ? 'not-allowed' : 'pointer',
               }}
             >
               {loading ? 'Creating account...' : 'Create Account'}
             </button>
           </form>
+
+          <div style={{
+            marginTop: 24,
+            paddingTop: 24,
+            borderTop: '1px solid #1e293b',
+            textAlign: 'center',
+          }}>
+            <p style={{ color: '#94a3b8', fontSize: 14 }}>
+              Already have an account?{' '}
+              <Link 
+                href="/login"
+                style={{
+                  color: '#22c55e',
+                  textDecoration: 'none',
+                  fontWeight: 600,
+                }}
+              >
+                Log in
+              </Link>
+            </p>
+          </div>
         </div>
+
+        <Link
+          href="/"
+          style={{
+            display: 'block',
+            marginTop: 20,
+            textAlign: 'center',
+            color: '#94a3b8',
+            fontSize: 14,
+            textDecoration: 'none',
+          }}
+        >
+          ← Back to home
+        </Link>
       </div>
     </div>
   )

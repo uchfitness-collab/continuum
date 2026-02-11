@@ -55,7 +55,7 @@ export default function LoginPage() {
       alignItems: 'center',
       justifyContent: 'center',
       background: 'radial-gradient(circle at top, #020617, #01030f)',
-      padding: '24px',
+      padding: 'clamp(16px, 4vw, 24px)',
     }}>
       {/* CONTENT */}
       <div style={{
@@ -70,7 +70,7 @@ export default function LoginPage() {
             alignItems: 'center',
             gap: 12,
             justifyContent: 'center',
-            marginBottom: 40,
+            marginBottom: 'clamp(24px, 5vw, 40px)',
             textDecoration: 'none',
           }}
         >
@@ -85,7 +85,7 @@ export default function LoginPage() {
             }}
           />
           <span style={{
-            fontSize: 24,
+            fontSize: 'clamp(20px, 4vw, 24px)',
             fontWeight: 700,
             color: '#e5e7eb',
           }}>
@@ -96,12 +96,12 @@ export default function LoginPage() {
         {/* FORM CARD */}
         <div style={{
           background: '#020617',
-          padding: 40,
+          padding: 'clamp(24px, 5vw, 40px)',
           borderRadius: 16,
           border: '1px solid #1e293b',
         }}>
           <h1 style={{ 
-            fontSize: 28, 
+            fontSize: 'clamp(24px, 4vw, 28px)',
             fontWeight: 600, 
             marginBottom: 8,
             textAlign: 'center',
@@ -112,8 +112,8 @@ export default function LoginPage() {
           <p style={{
             textAlign: 'center',
             color: '#94a3b8',
-            fontSize: 15,
-            marginBottom: 32,
+            fontSize: 'clamp(14px, 3vw, 15px)',
+            marginBottom: 'clamp(24px, 5vw, 32px)',
           }}>
             Continue building your discipline
           </p>
@@ -143,6 +143,7 @@ export default function LoginPage() {
                   border: '1px solid #334155',
                   color: '#e5e7eb',
                   fontSize: 15,
+                  boxSizing: 'border-box',
                 }}
               />
             </div>
@@ -171,6 +172,7 @@ export default function LoginPage() {
                   border: '1px solid #334155',
                   color: '#e5e7eb',
                   fontSize: 15,
+                  boxSizing: 'border-box',
                 }}
               />
             </div>

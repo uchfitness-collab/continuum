@@ -7,13 +7,13 @@ export default function HowItWorksPage() {
     <div style={{
       minHeight: '100vh',
       background: 'radial-gradient(circle at top, #020617, #01030f)',
-      padding: '80px 24px 120px',
+      padding: 'clamp(60px, 10vw, 80px) clamp(16px, 4vw, 24px) clamp(80px, 12vw, 120px)',
     }}>
       <div style={{ maxWidth: 900, margin: '0 auto' }}>
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: 64 }}>
+        <div style={{ textAlign: 'center', marginBottom: 'clamp(48px, 8vw, 64px)' }}>
           <h1 style={{ 
-            fontSize: 48, 
+            fontSize: 'clamp(32px, 6vw, 48px)',
             fontWeight: 700, 
             marginBottom: 20,
             background: 'linear-gradient(135deg, #e5e7eb, #94a3b8)',
@@ -23,11 +23,12 @@ export default function HowItWorksPage() {
             How Continuum Works
           </h1>
           <p style={{ 
-            fontSize: 19, 
+            fontSize: 'clamp(16px, 3vw, 19px)',
             color: '#94a3b8', 
             maxWidth: 640, 
             margin: '0 auto',
-            lineHeight: 1.7
+            lineHeight: 1.7,
+            padding: '0 16px',
           }}>
             A simple system for measuring discipline. No fluff. No gamification. 
             Just daily execution tracked across three pillars.
@@ -35,9 +36,9 @@ export default function HowItWorksPage() {
         </div>
 
         {/* The Core Loop */}
-        <section style={{ marginBottom: 72 }}>
+        <section style={{ marginBottom: 'clamp(56px, 10vw, 72px)' }}>
           <h2 style={{ 
-            fontSize: 32, 
+            fontSize: 'clamp(24px, 4vw, 32px)',
             marginBottom: 28, 
             textAlign: 'center',
             color: '#e5e7eb',
@@ -48,13 +49,13 @@ export default function HowItWorksPage() {
           
           <div style={{
             background: '#020617',
-            padding: 36,
+            padding: 'clamp(24px, 5vw, 36px)',
             borderRadius: 16,
             border: '2px solid #22c55e40',
             marginBottom: 32
           }}>
             <h3 style={{ 
-              fontSize: 24, 
+              fontSize: 'clamp(20px, 4vw, 24px)',
               marginBottom: 16, 
               color: '#22c55e',
               fontWeight: 600
@@ -63,14 +64,18 @@ export default function HowItWorksPage() {
             </h3>
             <p style={{ 
               color: '#e5e7eb', 
-              fontSize: 16, 
+              fontSize: 'clamp(14px, 3vw, 16px)',
               lineHeight: 1.8, 
               marginBottom: 20 
             }}>
               Continuum works because it's relentlessly consistent. You do the same routine 
               every day. No surprises. No complexity. Just execution.
             </p>
-            <p style={{ color: '#94a3b8', fontSize: 15, lineHeight: 1.7 }}>
+            <p style={{ 
+              color: '#94a3b8', 
+              fontSize: 'clamp(13px, 3vw, 15px)',
+              lineHeight: 1.7 
+            }}>
               Most people fail not because they had one bad day. They fail because they stop 
               tracking after the bad day. The discipline isn't in having perfect days — it's in 
               showing up to log the imperfect ones.
@@ -105,9 +110,9 @@ export default function HowItWorksPage() {
         </section>
 
         {/* The Three Pillars */}
-        <section style={{ marginBottom: 72 }}>
+        <section style={{ marginBottom: 'clamp(56px, 10vw, 72px)' }}>
           <h2 style={{ 
-            fontSize: 32, 
+            fontSize: 'clamp(24px, 4vw, 32px)',
             marginBottom: 32, 
             textAlign: 'center',
             color: '#e5e7eb',
@@ -119,10 +124,11 @@ export default function HowItWorksPage() {
           <p style={{
             textAlign: 'center',
             color: '#94a3b8',
-            fontSize: 16,
+            fontSize: 'clamp(14px, 3vw, 16px)',
             marginBottom: 36,
             maxWidth: 700,
-            margin: '0 auto 36px'
+            margin: '0 auto 36px',
+            padding: '0 16px',
           }}>
             Every day, you answer the same questions across three areas. 
             These questions don't change. The routine doesn't change. 
@@ -169,9 +175,9 @@ export default function HowItWorksPage() {
         </section>
 
         {/* The Sovereign Score */}
-        <section style={{ marginBottom: 72 }}>
+        <section style={{ marginBottom: 'clamp(56px, 10vw, 72px)' }}>
           <h2 style={{ 
-            fontSize: 32, 
+            fontSize: 'clamp(24px, 4vw, 32px)',
             marginBottom: 28, 
             textAlign: 'center',
             color: '#e5e7eb',
@@ -182,13 +188,13 @@ export default function HowItWorksPage() {
           
           <div style={{
             background: '#020617',
-            padding: 36,
+            padding: 'clamp(24px, 5vw, 36px)',
             borderRadius: 16,
             border: '1px solid #334155',
             marginBottom: 28
           }}>
             <h3 style={{ 
-              fontSize: 20, 
+              fontSize: 'clamp(18px, 3vw, 20px)',
               marginBottom: 16, 
               color: '#22c55e',
               fontWeight: 600
@@ -197,14 +203,18 @@ export default function HowItWorksPage() {
             </h3>
             <p style={{ 
               color: '#e5e7eb', 
-              fontSize: 16, 
+              fontSize: 'clamp(14px, 3vw, 16px)',
               lineHeight: 1.8,
               marginBottom: 20
             }}>
               Your Sovereign Score is calculated automatically after each log. It weighs your 
               most recent execution (30%) against your historical average (70%).
             </p>
-            <p style={{ color: '#94a3b8', fontSize: 15, lineHeight: 1.7 }}>
+            <p style={{ 
+              color: '#94a3b8', 
+              fontSize: 'clamp(13px, 3vw, 15px)',
+              lineHeight: 1.7 
+            }}>
               This means one perfect day won't inflate your score overnight, and one bad day 
               won't destroy your progress. What matters is the trend. Are you building or coasting? 
               The score tells you the truth.
@@ -230,9 +240,9 @@ export default function HowItWorksPage() {
         </section>
 
         {/* What Makes This Different */}
-        <section style={{ marginBottom: 72 }}>
+        <section style={{ marginBottom: 'clamp(56px, 10vw, 72px)' }}>
           <h2 style={{ 
-            fontSize: 32, 
+            fontSize: 'clamp(24px, 4vw, 32px)',
             marginBottom: 32, 
             textAlign: 'center',
             color: '#e5e7eb',
@@ -243,7 +253,7 @@ export default function HowItWorksPage() {
           
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
             gap: 24
           }}>
             <Principle
@@ -279,16 +289,16 @@ export default function HowItWorksPage() {
         </section>
 
         {/* The Daily Habit */}
-        <section style={{ marginBottom: 72 }}>
+        <section style={{ marginBottom: 'clamp(56px, 10vw, 72px)' }}>
           <div style={{
             background: 'linear-gradient(135deg, #020617, #0f172a)',
-            padding: 40,
+            padding: 'clamp(28px, 6vw, 40px)',
             borderRadius: 16,
             border: '2px solid #22c55e30',
             textAlign: 'center'
           }}>
             <h2 style={{ 
-              fontSize: 28, 
+              fontSize: 'clamp(22px, 4vw, 28px)',
               marginBottom: 20,
               color: '#e5e7eb',
               fontWeight: 600
@@ -297,10 +307,11 @@ export default function HowItWorksPage() {
             </h2>
             <p style={{ 
               color: '#94a3b8', 
-              fontSize: 17, 
+              fontSize: 'clamp(15px, 3vw, 17px)',
               lineHeight: 1.8,
               maxWidth: 700,
-              margin: '0 auto 24px'
+              margin: '0 auto 24px',
+              padding: '0 16px',
             }}>
               You can have perfect Body discipline. You can nail your Mind habits. 
               You can execute flawlessly on Identity. But if you don't log it, the system 
@@ -308,7 +319,7 @@ export default function HowItWorksPage() {
             </p>
             <p style={{ 
               color: '#e5e7eb', 
-              fontSize: 16, 
+              fontSize: 'clamp(14px, 3vw, 16px)',
               lineHeight: 1.7,
               fontWeight: 600
             }}>
@@ -319,9 +330,9 @@ export default function HowItWorksPage() {
         </section>
 
         {/* What Happens Over Time */}
-        <section style={{ marginBottom: 72 }}>
+        <section style={{ marginBottom: 'clamp(56px, 10vw, 72px)' }}>
           <h2 style={{ 
-            fontSize: 32, 
+            fontSize: 'clamp(24px, 4vw, 32px)',
             marginBottom: 32, 
             textAlign: 'center',
             color: '#e5e7eb',
@@ -360,14 +371,14 @@ export default function HowItWorksPage() {
         {/* Final CTA */}
         <div style={{ 
           textAlign: 'center', 
-          marginTop: 80,
-          padding: 48,
+          marginTop: 'clamp(60px, 10vw, 80px)',
+          padding: 'clamp(32px, 6vw, 48px)',
           background: 'linear-gradient(135deg, #020617, #0f172a)',
           borderRadius: 16,
           border: '2px solid #22c55e30'
         }}>
           <h2 style={{ 
-            fontSize: 36, 
+            fontSize: 'clamp(28px, 5vw, 36px)',
             marginBottom: 20,
             fontWeight: 700,
             color: '#e5e7eb'
@@ -377,10 +388,11 @@ export default function HowItWorksPage() {
           <p style={{ 
             color: '#94a3b8', 
             marginBottom: 36, 
-            fontSize: 17,
+            fontSize: 'clamp(15px, 3vw, 17px)',
             lineHeight: 1.6,
             maxWidth: 560,
-            margin: '0 auto 36px'
+            margin: '0 auto 36px',
+            padding: '0 16px',
           }}>
             Define your standards. Log your execution. Watch your discipline compound. 
             It's that simple.
@@ -390,11 +402,11 @@ export default function HowItWorksPage() {
             href="/signup"
             style={{
               display: 'inline-block',
-              padding: '18px 48px',
+              padding: 'clamp(14px, 3vw, 18px) clamp(32px, 6vw, 48px)',
               background: 'linear-gradient(180deg, #22c55e, #16a34a)',
               color: '#020617',
               fontWeight: 700,
-              fontSize: 18,
+              fontSize: 'clamp(16px, 3vw, 18px)',
               borderRadius: 10,
               textDecoration: 'none',
               boxShadow: '0 4px 20px rgba(34, 197, 94, 0.3)'
@@ -436,20 +448,20 @@ function Pillar({
 }) {
   return (
     <div style={{
-      padding: 28,
+      padding: 'clamp(20px, 4vw, 28px)',
       background: '#020617',
       borderRadius: 16,
       border: `2px solid ${color}40`,
     }}>
       <div style={{ 
-        fontSize: 32, 
+        fontSize: 'clamp(28px, 5vw, 32px)',
         marginBottom: 12 
       }}>
         {icon}
       </div>
       <h3 style={{ 
         color, 
-        fontSize: 24, 
+        fontSize: 'clamp(20px, 4vw, 24px)',
         marginBottom: 12,
         fontWeight: 600
       }}>
@@ -458,7 +470,7 @@ function Pillar({
       <p style={{ 
         color: '#94a3b8', 
         marginBottom: 20, 
-        fontSize: 15,
+        fontSize: 'clamp(13px, 3vw, 15px)',
         lineHeight: 1.7
       }}>
         {description}
@@ -479,7 +491,7 @@ function Pillar({
         </p>
         <ul style={{ 
           color: '#e5e7eb', 
-          fontSize: 14, 
+          fontSize: 'clamp(13px, 3vw, 14px)',
           lineHeight: 2, 
           paddingLeft: 20,
           margin: 0
@@ -505,15 +517,15 @@ function DailyStep({
   return (
     <div style={{
       display: 'flex',
-      gap: 20,
-      padding: 24,
+      gap: 'clamp(16px, 3vw, 20px)',
+      padding: 'clamp(16px, 4vw, 24px)',
       background: '#020617',
       borderRadius: 12,
       border: '1px solid #334155'
     }}>
       <div style={{
-        width: 48,
-        height: 48,
+        width: 'clamp(40px, 8vw, 48px)',
+        height: 'clamp(40px, 8vw, 48px)',
         borderRadius: 10,
         background: 'linear-gradient(135deg, #22c55e, #16a34a)',
         color: '#020617',
@@ -521,14 +533,14 @@ function DailyStep({
         alignItems: 'center',
         justifyContent: 'center',
         fontWeight: 800,
-        fontSize: 20,
+        fontSize: 'clamp(16px, 3vw, 20px)',
         flexShrink: 0
       }}>
         {step}
       </div>
       <div>
         <h3 style={{ 
-          fontSize: 17, 
+          fontSize: 'clamp(15px, 3vw, 17px)',
           marginBottom: 6,
           color: '#e5e7eb',
           fontWeight: 600
@@ -537,7 +549,7 @@ function DailyStep({
         </h3>
         <p style={{ 
           color: '#94a3b8', 
-          fontSize: 15,
+          fontSize: 'clamp(13px, 3vw, 15px)',
           lineHeight: 1.7,
           margin: 0
         }}>
@@ -557,13 +569,13 @@ function Principle({
 }) {
   return (
     <div style={{
-      padding: 24,
+      padding: 'clamp(20px, 4vw, 24px)',
       background: '#020617',
       borderRadius: 12,
       border: '1px solid #334155'
     }}>
       <h3 style={{ 
-        fontSize: 18, 
+        fontSize: 'clamp(16px, 3vw, 18px)',
         marginBottom: 10, 
         color: '#22c55e',
         fontWeight: 600
@@ -572,7 +584,7 @@ function Principle({
       </h3>
       <p style={{ 
         color: '#94a3b8', 
-        fontSize: 14,
+        fontSize: 'clamp(13px, 3vw, 14px)',
         lineHeight: 1.7,
         margin: 0
       }}>
@@ -591,14 +603,14 @@ function ScorePrinciple({
 }) {
   return (
     <div style={{
-      padding: 20,
+      padding: 'clamp(16px, 4vw, 20px)',
       background: '#020617',
       borderRadius: 10,
       border: '1px solid #22c55e30',
       borderLeft: '4px solid #22c55e'
     }}>
       <h4 style={{ 
-        fontSize: 16, 
+        fontSize: 'clamp(14px, 3vw, 16px)',
         marginBottom: 8, 
         color: '#e5e7eb',
         fontWeight: 600
@@ -607,7 +619,7 @@ function ScorePrinciple({
       </h4>
       <p style={{ 
         color: '#94a3b8', 
-        fontSize: 14,
+        fontSize: 'clamp(13px, 3vw, 14px)',
         lineHeight: 1.7,
         margin: 0
       }}>
@@ -628,7 +640,7 @@ function TimelineItem({
 }) {
   return (
     <div style={{
-      padding: 24,
+      padding: 'clamp(20px, 4vw, 24px)',
       background: '#020617',
       borderRadius: 12,
       border: '1px solid #334155'
@@ -644,7 +656,7 @@ function TimelineItem({
         {phase}
       </div>
       <h3 style={{ 
-        fontSize: 18, 
+        fontSize: 'clamp(16px, 3vw, 18px)',
         marginBottom: 10, 
         color: '#e5e7eb',
         fontWeight: 600
@@ -653,7 +665,7 @@ function TimelineItem({
       </h3>
       <p style={{ 
         color: '#94a3b8', 
-        fontSize: 15,
+        fontSize: 'clamp(13px, 3vw, 15px)',
         lineHeight: 1.7,
         margin: 0
       }}>
