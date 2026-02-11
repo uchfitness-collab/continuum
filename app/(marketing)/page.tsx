@@ -39,19 +39,21 @@ export default function MarketingHome() {
 
       {/* CONTENT */}
       <div
+        className="marketing-content"
         style={{
           position: 'relative',
           zIndex: 2,
           maxWidth: 1200,
-          padding: '100px 32px 100px',
+          width: '100%',
+          padding: '80px 20px 80px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
         }}
       >
         {/* HERO COPY */}
-        <h1 style={{ 
-          fontSize: 64, 
+        <h1 className="hero-title" style={{ 
+          fontSize: 'clamp(36px, 8vw, 64px)',
           fontWeight: 700, 
           maxWidth: 920,
           lineHeight: 1.1,
@@ -59,6 +61,7 @@ export default function MarketingHome() {
           background: 'linear-gradient(135deg, #e5e7eb, #94a3b8)',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
+          padding: '0 16px',
         }}>
           Discipline is Measurable.<br />Now Prove It.
         </h1>
@@ -66,10 +69,11 @@ export default function MarketingHome() {
         <p
           style={{
             maxWidth: 680,
-            fontSize: 20,
+            fontSize: 'clamp(16px, 3vw, 20px)',
             lineHeight: 1.7,
             color: '#94a3b8',
             marginBottom: 40,
+            padding: '0 16px',
           }}
         >
           Continuum measures your daily execution across Body, Mind, and Identity—
@@ -77,25 +81,34 @@ export default function MarketingHome() {
         </p>
 
         {/* CTA */}
-        <div style={{ display: 'flex', gap: 16 }}>
+        <div className="cta-buttons" style={{ 
+          display: 'flex', 
+          gap: 16,
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+          padding: '0 16px',
+        }}>
           <Link href="/signup" style={{ textDecoration: 'none' }}>
-            <button style={primaryButton}>Start Tracking</button>
+            <button className="primary-btn" style={primaryButton}>Start Tracking</button>
           </Link>
 
           <Link href="/how-it-works" style={{ textDecoration: 'none' }}>
-            <button style={secondaryButton}>How It Works</button>
+            <button className="secondary-btn" style={secondaryButton}>How It Works</button>
           </Link>
         </div>
 
         {/* PILLARS */}
         <div
+          className="pillars-grid"
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: 40,
-            marginTop: 120,
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gap: 24,
+            marginTop: 80,
             maxWidth: 1100,
+            width: '100%',
             textAlign: 'left',
+            padding: '0 16px',
           }}
         >
           <Pillar
@@ -119,9 +132,9 @@ export default function MarketingHome() {
         </div>
 
         {/* FINAL CTA */}
-        <div style={{ marginTop: 120, textAlign: 'center' }}>
+        <div style={{ marginTop: 80, textAlign: 'center', padding: '0 16px' }}>
           <h2 style={{ 
-            fontSize: 40, 
+            fontSize: 'clamp(28px, 5vw, 40px)',
             marginBottom: 16, 
             fontWeight: 700,
             color: '#e5e7eb'
@@ -131,17 +144,18 @@ export default function MarketingHome() {
           <p style={{ 
             color: '#94a3b8', 
             marginBottom: 32, 
-            fontSize: 18,
+            fontSize: 'clamp(16px, 3vw, 18px)',
             maxWidth: 560,
             margin: '0 auto 32px'
           }}>
             See who you actually are when no one's watching.
           </p>
           <Link href="/signup" style={{ textDecoration: 'none' }}>
-            <button style={primaryButton}>Get Started</button>
+            <button className="primary-btn" style={primaryButton}>Get Started</button>
           </Link>
         </div>
       </div>
+
     </section>
   );
 }
@@ -161,7 +175,7 @@ function Pillar({
 }) {
   return (
     <div style={{
-      padding: 32,
+      padding: 24,
       background: '#020617',
       borderRadius: 16,
       border: `2px solid ${color}30`,

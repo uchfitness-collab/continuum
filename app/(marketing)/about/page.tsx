@@ -38,34 +38,37 @@ export default function AboutPage() {
 
       {/* CONTENT */}
       <div
+        className="about-content"
         style={{
           position: 'relative',
           zIndex: 2,
           maxWidth: 900,
           margin: '0 auto',
-          padding: '100px 32px 120px',
+          padding: '80px 20px 100px',
         }}
       >
         {/* HERO */}
         <div style={{ marginBottom: 64, textAlign: 'center' }}>
           <h1 style={{ 
-            fontSize: 52, 
+            fontSize: 'clamp(32px, 6vw, 52px)',
             fontWeight: 700, 
             marginBottom: 20,
             lineHeight: 1.2,
             background: 'linear-gradient(135deg, #e5e7eb, #94a3b8)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
+            padding: '0 16px',
           }}>
             Discipline is Measurable.<br />Now Prove It.
           </h1>
 
           <p style={{ 
-            fontSize: 19, 
+            fontSize: 'clamp(16px, 3vw, 19px)',
             lineHeight: 1.7, 
             maxWidth: 680, 
             margin: '0 auto',
-            color: '#94a3b8'
+            color: '#94a3b8',
+            padding: '0 16px',
           }}>
             Continuum doesn't motivate you. It doesn't coach you. It doesn't tell you what to do.
             It gives you one thing: proof of who you actually are when no one's watching.
@@ -107,7 +110,7 @@ export default function AboutPage() {
 
         {/* THE SYSTEM */}
         <Section title="How It Works">
-          <p style={{ fontSize: 17, color: '#e5e7eb', marginBottom: 28 }}>
+          <p style={{ fontSize: 'clamp(15px, 3vw, 17px)', color: '#e5e7eb', marginBottom: 28 }}>
             Every day, you answer one question across three areas: <strong>Did you execute?</strong>
           </p>
 
@@ -134,7 +137,7 @@ export default function AboutPage() {
 
           <p style={{ 
             marginTop: 32, 
-            fontSize: 16, 
+            fontSize: 'clamp(14px, 3vw, 16px)',
             lineHeight: 1.8,
             color: '#94a3b8'
           }}>
@@ -166,7 +169,7 @@ export default function AboutPage() {
 
           <div style={{
             marginTop: 28,
-            padding: 24,
+            padding: 'clamp(16px, 4vw, 24px)',
             background: '#022c22',
             border: '2px solid #22c55e40',
             borderRadius: 12,
@@ -226,11 +229,11 @@ export default function AboutPage() {
 
           <p style={{ 
             marginTop: 28,
-            padding: 24,
+            padding: 'clamp(16px, 4vw, 24px)',
             background: '#0f172a',
             border: '1px solid #334155',
             borderRadius: 10,
-            fontSize: 16,
+            fontSize: 'clamp(14px, 3vw, 16px)',
             lineHeight: 1.8,
             fontStyle: 'italic'
           }}>
@@ -359,7 +362,7 @@ export default function AboutPage() {
 
         {/* THE COMMITMENT */}
         <Section title="What This Requires From You">
-          <p style={{ fontSize: 17, color: '#e5e7eb' }}>
+          <p style={{ fontSize: 'clamp(15px, 3vw, 17px)', color: '#e5e7eb' }}>
             Continuum requires exactly one thing: <strong>honesty</strong>.
           </p>
 
@@ -375,7 +378,7 @@ export default function AboutPage() {
 
           <div style={{
             marginTop: 28,
-            padding: 20,
+            padding: 'clamp(16px, 4vw, 20px)',
             background: '#1e0a0a',
             border: '1px solid #ef444440',
             borderRadius: 10,
@@ -413,16 +416,16 @@ export default function AboutPage() {
         <hr style={divider} />
 
         {/* FINAL CTA */}
-        <div style={{ 
+        <div className="final-cta" style={{ 
           textAlign: 'center', 
           marginTop: 80,
-          padding: 48,
+          padding: 'clamp(32px, 6vw, 48px)',
           background: 'linear-gradient(135deg, #020617, #0f172a)',
           borderRadius: 16,
           border: '2px solid #22c55e30'
         }}>
           <h2 style={{ 
-            fontSize: 36, 
+            fontSize: 'clamp(28px, 5vw, 36px)',
             marginBottom: 16,
             fontWeight: 700
           }}>
@@ -431,7 +434,7 @@ export default function AboutPage() {
           <p style={{ 
             color: '#94a3b8', 
             marginBottom: 36, 
-            fontSize: 17,
+            fontSize: 'clamp(15px, 3vw, 17px)',
             lineHeight: 1.6,
             maxWidth: 560,
             margin: '0 auto 36px'
@@ -444,11 +447,11 @@ export default function AboutPage() {
             href="/signup"
             style={{
               display: 'inline-block',
-              padding: '18px 48px',
+              padding: 'clamp(14px, 3vw, 18px) clamp(32px, 6vw, 48px)',
               background: 'linear-gradient(180deg, #22c55e, #16a34a)',
               color: '#020617',
               fontWeight: 700,
-              fontSize: 18,
+              fontSize: 'clamp(16px, 3vw, 18px)',
               borderRadius: 10,
               textDecoration: 'none',
               boxShadow: '0 4px 20px rgba(34, 197, 94, 0.3)'
@@ -473,7 +476,7 @@ export default function AboutPage() {
 /* ---------- Helpers ---------- */
 
 const divider = {
-  margin: '64px 0',
+  margin: 'clamp(40px, 8vw, 64px) 0',
   border: 'none',
   borderTop: '1px solid #1e293b',
 };
@@ -488,7 +491,7 @@ function Section({
   return (
     <section style={{ marginBottom: 48 }}>
       <h2 style={{ 
-        fontSize: 32, 
+        fontSize: 'clamp(24px, 4vw, 32px)',
         marginBottom: 24, 
         color: '#e5e7eb',
         fontWeight: 600
@@ -498,7 +501,7 @@ function Section({
       <div style={{ 
         lineHeight: 1.8, 
         color: '#94a3b8',
-        fontSize: 16 
+        fontSize: 'clamp(14px, 3vw, 16px)'
       }}>
         {children}
       </div>
@@ -516,18 +519,19 @@ function Step({
   text: string;
 }) {
   return (
-    <div style={{ 
+    <div className="step-card" style={{ 
       display: 'flex', 
       gap: 20, 
       marginBottom: 24,
-      padding: 24,
+      padding: 'clamp(16px, 4vw, 24px)',
       background: '#020617',
       borderRadius: 12,
-      border: '1px solid #334155'
+      border: '1px solid #334155',
+      flexDirection: 'row',
     }}>
       <div style={{
-        width: 48,
-        height: 48,
+        width: 'clamp(40px, 8vw, 48px)',
+        height: 'clamp(40px, 8vw, 48px)',
         borderRadius: 10,
         background: 'linear-gradient(135deg, #22c55e, #16a34a)',
         color: '#020617',
@@ -535,7 +539,7 @@ function Step({
         alignItems: 'center',
         justifyContent: 'center',
         fontWeight: 800,
-        fontSize: 20,
+        fontSize: 'clamp(16px, 3vw, 20px)',
         flexShrink: 0
       }}>
         {number}
@@ -543,7 +547,7 @@ function Step({
       <div>
         <h4 style={{ 
           marginBottom: 8, 
-          fontSize: 17, 
+          fontSize: 'clamp(15px, 3vw, 17px)',
           color: '#e5e7eb',
           fontWeight: 600
         }}>
@@ -551,7 +555,7 @@ function Step({
         </h4>
         <p style={{ 
           color: '#94a3b8', 
-          fontSize: 15, 
+          fontSize: 'clamp(13px, 3vw, 15px)',
           lineHeight: 1.7,
           margin: 0
         }}>
@@ -575,20 +579,20 @@ function Pillar({
 }) {
   return (
     <div style={{
-      padding: 24,
+      padding: 'clamp(16px, 4vw, 24px)',
       marginBottom: 16,
       background: '#020617',
       borderRadius: 12,
       border: `2px solid ${color}30`
     }}>
       <div style={{ 
-        fontSize: 32, 
+        fontSize: 'clamp(28px, 5vw, 32px)',
         marginBottom: 12 
       }}>
         {icon}
       </div>
       <h4 style={{ 
-        fontSize: 20, 
+        fontSize: 'clamp(18px, 3vw, 20px)',
         marginBottom: 10, 
         color,
         fontWeight: 600
@@ -597,7 +601,7 @@ function Pillar({
       </h4>
       <p style={{ 
         color: '#94a3b8', 
-        fontSize: 15, 
+        fontSize: 'clamp(13px, 3vw, 15px)',
         lineHeight: 1.7,
         margin: 0
       }}>
@@ -618,7 +622,7 @@ function Principle({
     <div style={{ marginBottom: 24 }}>
       <h4 style={{ 
         marginBottom: 8, 
-        fontSize: 17, 
+        fontSize: 'clamp(15px, 3vw, 17px)',
         color: '#22c55e',
         fontWeight: 600
       }}>
@@ -626,7 +630,7 @@ function Principle({
       </h4>
       <p style={{ 
         color: '#94a3b8', 
-        fontSize: 15, 
+        fontSize: 'clamp(13px, 3vw, 15px)',
         lineHeight: 1.7,
         margin: 0
       }}>
@@ -640,5 +644,5 @@ const list = {
   margin: '20px 0 24px 28px',
   lineHeight: 2,
   color: '#e5e7eb',
-  fontSize: 15
+  fontSize: 'clamp(13px, 3vw, 15px)'
 };
