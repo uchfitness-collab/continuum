@@ -15,6 +15,7 @@ import {
 } from 'recharts';
 
 const BASELINE_SCORE = 110;
+const CHART_DAYS = 120; // Changed from 180 to 120 (4 months)
 
 const formatMonthDay = (dateStr: string) => {
   const d = new Date(dateStr + 'T00:00:00');
@@ -145,34 +146,41 @@ export default function DashboardPage() {
       const todayLog = logs.find(l => l.log_date === today);
       setTodayLogged(!!todayLog);
 
-      // Calculate current streak
+      // Calculate current streak - FIXED VERSION
       let streak = 0;
-      const sortedDates = logs.map(l => l.log_date).sort().reverse();
       const todayDate = new Date();
       todayDate.setHours(0, 0, 0, 0);
-
-      for (let i = 0; i < sortedDates.length; i++) {
-        const logDate = new Date(sortedDates[i] + 'T00:00:00');
-        logDate.setHours(0, 0, 0, 0);
+      const todayStr = todayDate.toISOString().split('T')[0];
+      
+      // Sort dates descending (most recent first)
+      const sortedDates = logs.map(l => l.log_date).sort((a, b) => b.localeCompare(a));
+      
+      // Check if user has logged today or yesterday to start counting
+      const mostRecentLog = sortedDates[0];
+      const mostRecentDate = new Date(mostRecentLog + 'T00:00:00');
+      mostRecentDate.setHours(0, 0, 0, 0);
+      
+      const yesterday = new Date(todayDate);
+      yesterday.setDate(yesterday.getDate() - 1);
+      yesterday.setHours(0, 0, 0, 0);
+      
+      // Only count streak if most recent log is today or yesterday
+      if (mostRecentDate >= yesterday) {
+        // Start from most recent log and count backwards
+        let checkDate = new Date(mostRecentDate);
         
-        const expectedDate = new Date(todayDate);
-        expectedDate.setDate(todayDate.getDate() - i);
-        expectedDate.setHours(0, 0, 0, 0);
-        
-        const logDateStr = logDate.toISOString().split('T')[0];
-        const expectedDateStr = expectedDate.toISOString().split('T')[0];
-        
-        if (logDateStr === expectedDateStr) {
-          streak++;
-        } else {
-          break;
+        for (const logDate of sortedDates) {
+          const currentLogDate = new Date(logDate + 'T00:00:00');
+          currentLogDate.setHours(0, 0, 0, 0);
+          
+          if (currentLogDate.getTime() === checkDate.getTime()) {
+            streak++;
+            checkDate.setDate(checkDate.getDate() - 1); // Move to previous day
+          } else if (currentLogDate < checkDate) {
+            // There's a gap in the logs
+            break;
+          }
         }
-      }
-
-      if (streak === 0 && logs.length > 0) {
-        const todayStr = new Date().toISOString().split('T')[0];
-        const hasToday = logs.some(l => l.log_date === todayStr);
-        if (hasToday) streak = 1;
       }
 
       setCurrentStreak(streak);
@@ -202,7 +210,7 @@ export default function DashboardPage() {
 
       setTriggerData(triggerArray);
 
-      // Build chart data
+      // Build chart data - UPDATED TO 120 DAYS
       const logMap = new Map(logs.map(l => [l.log_date, l]));
       const todayForChart = new Date();
       const firstDate = new Date(logs[0].log_date + 'T00:00:00');
@@ -210,13 +218,16 @@ export default function DashboardPage() {
       let startDate: Date;
       let endDate: Date;
 
-      if (logs.length < 180) {
+      // If user has less than 120 days, show from first log to 120 days ahead
+      // If user has 120+ days, show rolling window of most recent 120 days
+      if (logs.length < CHART_DAYS) {
         startDate = new Date(firstDate);
         endDate = new Date(firstDate);
-        endDate.setDate(endDate.getDate() + 180);
+        endDate.setDate(endDate.getDate() + CHART_DAYS);
       } else {
+        // Rolling window: show last 120 days
         startDate = new Date(todayForChart);
-        startDate.setDate(startDate.getDate() - 180);
+        startDate.setDate(startDate.getDate() - CHART_DAYS);
         endDate = new Date(todayForChart);
       }
 
@@ -493,7 +504,7 @@ export default function DashboardPage() {
           }}
         >
           <h2 style={{ fontSize: 22, marginBottom: 20, fontWeight: 600 }}>
-            Sovereign Trajectory
+            Sovereign Trajectory (Last {CHART_DAYS} Days)
           </h2>
           <div style={{ height: 400 }}>
             <ResponsiveContainer width="100%" height="100%">
@@ -542,6 +553,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* REST OF THE COMPONENTS... (keeping all the same) */}
         {/* MOVED BELOW CHART: BEST/WORST + HABITS + PILLARS (COMBINED SECTION) */}
         <div style={{ marginBottom: 40 }}>
           
