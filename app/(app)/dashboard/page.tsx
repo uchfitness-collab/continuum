@@ -15,7 +15,7 @@ import {
 } from 'recharts';
 
 const BASELINE_SCORE = 110;
-const CHART_DAYS = 120; // Changed from 180 to 120 (4 months)
+const CHART_DAYS = 120;
 
 const formatMonthDay = (dateStr: string) => {
   const d = new Date(dateStr + 'T00:00:00');
@@ -24,7 +24,6 @@ const formatMonthDay = (dateStr: string) => {
 
 const toOutOf100 = (value: number) => Math.round((value / 50) * 100);
 
-// Motivational quotes based on performance
 const getMotivationalQuote = (streak: number, avgScore: number) => {
   if (streak === 0) {
     return { text: "Every master was once a beginner. Start today.", color: "#94a3b8" };
@@ -106,7 +105,6 @@ export default function DashboardPage() {
         identity: logs.reduce((s, l) => s + l.identity_score, 0) / logs.length,
       });
 
-      // Calculate habit completion % (last 30 days)
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       const recentLogs = logs.filter(l => new Date(l.log_date) >= thirtyDaysAgo && !l.is_rest_day);
@@ -141,21 +139,16 @@ export default function DashboardPage() {
         },
       });
 
-      // Check if today is logged
       const today = new Date().toISOString().split('T')[0];
       const todayLog = logs.find(l => l.log_date === today);
       setTodayLogged(!!todayLog);
 
-      // Calculate current streak - FIXED VERSION
       let streak = 0;
       const todayDate = new Date();
       todayDate.setHours(0, 0, 0, 0);
-      const todayStr = todayDate.toISOString().split('T')[0];
       
-      // Sort dates descending (most recent first)
       const sortedDates = logs.map(l => l.log_date).sort((a, b) => b.localeCompare(a));
       
-      // Check if user has logged today or yesterday to start counting
       const mostRecentLog = sortedDates[0];
       const mostRecentDate = new Date(mostRecentLog + 'T00:00:00');
       mostRecentDate.setHours(0, 0, 0, 0);
@@ -164,9 +157,7 @@ export default function DashboardPage() {
       yesterday.setDate(yesterday.getDate() - 1);
       yesterday.setHours(0, 0, 0, 0);
       
-      // Only count streak if most recent log is today or yesterday
       if (mostRecentDate >= yesterday) {
-        // Start from most recent log and count backwards
         let checkDate = new Date(mostRecentDate);
         
         for (const logDate of sortedDates) {
@@ -175,9 +166,8 @@ export default function DashboardPage() {
           
           if (currentLogDate.getTime() === checkDate.getTime()) {
             streak++;
-            checkDate.setDate(checkDate.getDate() - 1); // Move to previous day
+            checkDate.setDate(checkDate.getDate() - 1);
           } else if (currentLogDate < checkDate) {
-            // There's a gap in the logs
             break;
           }
         }
@@ -185,7 +175,6 @@ export default function DashboardPage() {
 
       setCurrentStreak(streak);
 
-      // Calculate best and worst days
       const sorted = [...logs].sort((a, b) => b.sovereign_score - a.sovereign_score);
       setBestDay({
         date: sorted[0].log_date,
@@ -196,7 +185,6 @@ export default function DashboardPage() {
         score: sorted[sorted.length - 1].sovereign_score,
       });
 
-      // Process trigger data (last 30 days)
       const triggerCounts: { [key: string]: number } = {};
       recentLogs.forEach(log => {
         if (log.negative_trigger && log.negative_trigger !== 'None') {
@@ -210,7 +198,6 @@ export default function DashboardPage() {
 
       setTriggerData(triggerArray);
 
-      // Build chart data - UPDATED TO 120 DAYS
       const logMap = new Map(logs.map(l => [l.log_date, l]));
       const todayForChart = new Date();
       const firstDate = new Date(logs[0].log_date + 'T00:00:00');
@@ -218,14 +205,11 @@ export default function DashboardPage() {
       let startDate: Date;
       let endDate: Date;
 
-      // If user has less than 120 days, show from first log to 120 days ahead
-      // If user has 120+ days, show rolling window of most recent 120 days
       if (logs.length < CHART_DAYS) {
         startDate = new Date(firstDate);
         endDate = new Date(firstDate);
         endDate.setDate(endDate.getDate() + CHART_DAYS);
       } else {
-        // Rolling window: show last 120 days
         startDate = new Date(todayForChart);
         startDate.setDate(startDate.getDate() - CHART_DAYS);
         endDate = new Date(todayForChart);
@@ -264,24 +248,20 @@ export default function DashboardPage() {
     
     if (!ctx) return;
 
-    // Background gradient
     const gradient = ctx.createLinearGradient(0, 0, 0, 630);
     gradient.addColorStop(0, '#020617');
     gradient.addColorStop(1, '#01030f');
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, 1200, 630);
 
-    // Border glow effect
     ctx.strokeStyle = '#22c55e';
     ctx.lineWidth = 4;
     ctx.strokeRect(20, 20, 1160, 590);
 
-    // Title
     ctx.fillStyle = '#e5e7eb';
     ctx.font = 'bold 48px Arial';
     ctx.fillText('Continuum Progress', 60, 100);
 
-    // Streak stat
     ctx.fillStyle = '#22c55e';
     ctx.font = 'bold 72px Arial';
     ctx.fillText(`${currentStreak} Day Streak`, 60, 220);
@@ -290,11 +270,9 @@ export default function DashboardPage() {
     ctx.font = '24px Arial';
     ctx.fillText(`${daysIn} total days logged`, 60, 260);
 
-    // Stats box
     ctx.fillStyle = '#1e293b';
     ctx.fillRect(60, 300, 1080, 200);
     
-    // Sovereign Score
     ctx.fillStyle = '#fbbf24';
     ctx.font = 'bold 40px Arial';
     ctx.fillText(avgSovereign.toFixed(1), 100, 370);
@@ -302,7 +280,6 @@ export default function DashboardPage() {
     ctx.font = '20px Arial';
     ctx.fillText('Avg Sovereign', 100, 410);
 
-    // Body Score
     ctx.fillStyle = '#22c55e';
     ctx.font = 'bold 40px Arial';
     ctx.fillText(toOutOf100(pillarAverages.body).toString(), 400, 370);
@@ -310,7 +287,6 @@ export default function DashboardPage() {
     ctx.font = '20px Arial';
     ctx.fillText('Body /100', 400, 410);
 
-    // Mind Score
     ctx.fillStyle = '#3b82f6';
     ctx.font = 'bold 40px Arial';
     ctx.fillText(toOutOf100(pillarAverages.mind).toString(), 650, 370);
@@ -318,7 +294,6 @@ export default function DashboardPage() {
     ctx.font = '20px Arial';
     ctx.fillText('Mind /100', 650, 410);
 
-    // Identity Score
     ctx.fillStyle = '#a855f7';
     ctx.font = 'bold 40px Arial';
     ctx.fillText(toOutOf100(pillarAverages.identity).toString(), 900, 370);
@@ -326,7 +301,6 @@ export default function DashboardPage() {
     ctx.font = '20px Arial';
     ctx.fillText('Identity /100', 900, 410);
 
-    // Quote at bottom
     ctx.fillStyle = '#94a3b8';
     ctx.font = 'italic 22px Arial';
     const quoteText = quote.text;
@@ -348,7 +322,6 @@ export default function DashboardPage() {
     }
     ctx.fillText(line, 60, y);
 
-    // Convert to blob and download
     canvas.toBlob((blob) => {
       if (!blob) return;
       
@@ -364,7 +337,6 @@ export default function DashboardPage() {
   };
 
   const handleShareChart = async () => {
-    // Find the entire chart container including title
     const chartContainer = document.getElementById('chart-section');
     
     if (!chartContainer) {
@@ -372,12 +344,11 @@ export default function DashboardPage() {
       return;
     }
 
-    // Dynamically import html2canvas
     const html2canvas = (await import('html2canvas')).default;
     
     try {
       const canvas = await html2canvas(chartContainer as HTMLElement, {
-        backgroundColor: '#020617',
+        backgroundColor: '#f3f4f6',
         scale: 2,
         logging: false,
       });
@@ -408,7 +379,6 @@ export default function DashboardPage() {
     }}>
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
         
-        {/* HEADER */}
         <div style={{ marginBottom: 40 }}>
           <h1 style={{ fontSize: 36, fontWeight: 600, marginBottom: 8 }}>
             Dashboard
@@ -418,7 +388,6 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        {/* MOTIVATIONAL QUOTE */}
         <div style={{
           padding: 20,
           marginBottom: 32,
@@ -438,7 +407,6 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        {/* TODAY CTA */}
         {!todayLogged && (
           <div style={{
             padding: 20,
@@ -475,7 +443,6 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* STATS */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
@@ -492,72 +459,154 @@ export default function DashboardPage() {
           />
         </div>
 
-        {/* CHART */}
+        {/* CHART - BOTH LINES SOLID */}
         <div 
           id="chart-section"
           style={{
             marginBottom: 40,
-            padding: 24,
-            background: '#020617',
-            borderRadius: 16,
-            border: '1px solid #1e293b',
+            padding: 32,
+            background: '#f3f4f6',
+            borderRadius: 20,
+            border: '1px solid #d1d5db',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
           }}
         >
-          <h2 style={{ fontSize: 22, marginBottom: 20, fontWeight: 600 }}>
+          <h2 style={{ 
+            fontSize: 24, 
+            marginBottom: 24, 
+            fontWeight: 700,
+            color: '#1f2937',
+            letterSpacing: '-0.025em',
+          }}>
             Sovereign Trajectory (Last {CHART_DAYS} Days)
           </h2>
-          <div style={{ height: 400 }}>
+          <div style={{ height: 450 }}>
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData}>
+              <LineChart 
+                data={chartData}
+                margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
+              >
                 <XAxis 
                   dataKey="label" 
-                  interval={30} 
-                  stroke="#94a3b8"
-                  style={{ fontSize: 12 }}
+                  interval={Math.floor(chartData.length / 8)}
+                  stroke="#6b7280"
+                  style={{ fontSize: 13, fontWeight: 500 }}
+                  tick={{ fill: '#4b5563' }}
+                  axisLine={{ stroke: '#9ca3af', strokeWidth: 2 }}
+                  tickLine={{ stroke: '#9ca3af' }}
                 />
+                
                 <YAxis 
                   domain={[0, 175]} 
-                  stroke="#94a3b8"
-                  style={{ fontSize: 12 }}
+                  stroke="#6b7280"
+                  style={{ fontSize: 13, fontWeight: 500 }}
+                  tick={{ fill: '#4b5563' }}
+                  axisLine={{ stroke: '#9ca3af', strokeWidth: 2 }}
+                  tickLine={{ stroke: '#9ca3af' }}
+                  ticks={[0, 50, 100, 110, 150, 175]}
                 />
+                
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: '#020617',
-                    border: '1px solid #334155',
-                    color: '#e5e7eb',
-                    borderRadius: 8,
+                    backgroundColor: '#ffffff',
+                    border: '2px solid #d1d5db',
+                    borderRadius: 12,
+                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                    padding: '12px 16px',
+                  }}
+                  labelStyle={{
+                    color: '#1f2937',
+                    fontWeight: 600,
+                    marginBottom: 8,
+                  }}
+                  itemStyle={{
+                    color: '#374151',
+                    fontWeight: 500,
                   }}
                 />
-                <Legend />
-
-                <Line
-                  type="monotone"
-                  dataKey="sovereign"
-                  name="Sovereign Score"
-                  stroke="#38bdf8"
-                  strokeWidth={3}
-                  dot={false}
-                  connectNulls
+                
+                <Legend 
+                  wrapperStyle={{
+                    paddingTop: 20,
+                    fontSize: 14,
+                    fontWeight: 600,
+                  }}
+                  iconType="line"
                 />
 
                 <Line
                   type="monotone"
                   dataKey="baseline"
-                  name="Baseline"
+                  name="Baseline (110)"
                   stroke="#22c55e"
-                  strokeWidth={2}
+                  strokeWidth={3}
+                  strokeDasharray="0"
                   dot={false}
+                  activeDot={false}
+                />
+
+                <Line
+                  type="monotone"
+                  dataKey="sovereign"
+                  name="Your Score"
+                  stroke="#3b82f6"
+                  strokeWidth={4}
+                  strokeDasharray="0"
+                  dot={false}
+                  activeDot={{ 
+                    r: 7, 
+                    fill: '#3b82f6',
+                    stroke: '#ffffff',
+                    strokeWidth: 3,
+                  }}
+                  connectNulls
                 />
               </LineChart>
             </ResponsiveContainer>
           </div>
+          
+          <div style={{
+            marginTop: 20,
+            padding: 16,
+            background: '#ffffff',
+            borderRadius: 12,
+            border: '1px solid #d1d5db',
+          }}>
+            <div style={{ 
+              display: 'flex', 
+              gap: 24, 
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{
+                  width: 32,
+                  height: 4,
+                  background: '#3b82f6',
+                  borderRadius: 2,
+                }}></div>
+                <span style={{ fontSize: 13, color: '#374151', fontWeight: 500 }}>
+                  Your daily performance
+                </span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{
+                  width: 32,
+                  height: 4,
+                  background: '#22c55e',
+                  borderRadius: 2,
+                }}></div>
+                <span style={{ fontSize: 13, color: '#374151', fontWeight: 500 }}>
+                  Target baseline (110)
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* REST OF THE COMPONENTS... (keeping all the same) */}
-        {/* MOVED BELOW CHART: BEST/WORST + HABITS + PILLARS (COMBINED SECTION) */}
         <div style={{ marginBottom: 40 }}>
           
-          {/* BEST/WORST DAY */}
           {daysIn > 0 && (
             <div style={{
               display: 'grid',
@@ -582,14 +631,12 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* HABIT COMPLETION % + PILLAR AVERAGES (COMBINED WRAPPER) */}
           <div style={{
             padding: 24,
             background: '#020617',
             borderRadius: 16,
             border: '1px solid #1e293b',
           }}>
-            {/* Habits row */}
             {habitCompletion.body.total > 0 && (
               <div style={{ marginBottom: 32 }}>
                 <h2 style={{ fontSize: 22, marginBottom: 20, fontWeight: 600 }}>
@@ -628,7 +675,6 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {/* Pillars row */}
             <div>
               <h2 style={{ fontSize: 22, marginBottom: 20, fontWeight: 600 }}>
                 Pillar Performance
@@ -661,7 +707,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* TRIGGER INSIGHTS */}
         {triggerData.length > 0 && (
           <div style={{ marginBottom: 40 }}>
             <h2 style={{ fontSize: 22, marginBottom: 20, fontWeight: 600 }}>
@@ -738,7 +783,6 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* SHARE BUTTONS */}
         <div style={{ 
           display: 'flex', 
           gap: 16,
@@ -788,19 +832,7 @@ export default function DashboardPage() {
   );
 }
 
-/* ---------- Components ---------- */
-
-function StatCard({ 
-  label, 
-  value, 
-  color, 
-  trend 
-}: { 
-  label: string; 
-  value: any;
-  color?: string;
-  trend?: 'up' | 'down' | 'stable';
-}) {
+function StatCard({ label, value, color, trend }: { label: string; value: any; color?: string; trend?: 'up' | 'down' | 'stable'; }) {
   return (
     <div style={{
       background: '#020617',
@@ -811,23 +843,12 @@ function StatCard({
       <div style={{ color: '#94a3b8', fontSize: 13, marginBottom: 8 }}>
         {label}
       </div>
-      <div style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        gap: 8 
-      }}>
-        <div style={{ 
-          fontSize: 28, 
-          fontWeight: 600,
-          color: color || '#e5e7eb',
-        }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ fontSize: 28, fontWeight: 600, color: color || '#e5e7eb' }}>
           {value}
         </div>
         {trend && trend !== 'stable' && (
-          <span style={{ 
-            fontSize: 18,
-            color: trend === 'up' ? '#22c55e' : '#ef4444',
-          }}>
+          <span style={{ fontSize: 18, color: trend === 'up' ? '#22c55e' : '#ef4444' }}>
             {trend === 'up' ? '↗' : '↘'}
           </span>
         )}
@@ -836,19 +857,7 @@ function StatCard({
   );
 }
 
-function BestWorstCard({
-  label,
-  date,
-  score,
-  color,
-  icon,
-}: {
-  label: string;
-  date?: string;
-  score?: number;
-  color: string;
-  icon: string;
-}) {
+function BestWorstCard({ label, date, score, color, icon }: { label: string; date?: string; score?: number; color: string; icon: string; }) {
   if (!date || score === undefined) return null;
 
   const formattedDate = new Date(date + 'T00:00:00').toLocaleDateString('en-US', {
@@ -865,44 +874,17 @@ function BestWorstCard({
       border: `1px solid ${color}30`,
       borderLeft: `4px solid ${color}`,
     }}>
-      <div style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        gap: 10,
-        marginBottom: 12,
-      }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
         <span style={{ fontSize: 24 }}>{icon}</span>
-        <div style={{ color, fontWeight: 600, fontSize: 16 }}>
-          {label}
-        </div>
+        <div style={{ color, fontWeight: 600, fontSize: 16 }}>{label}</div>
       </div>
-      
-      <div style={{ fontSize: 28, fontWeight: 600, marginBottom: 4, color }}>
-        {score.toFixed(1)}
-      </div>
-      
-      <div style={{ color: '#94a3b8', fontSize: 14 }}>
-        {formattedDate}
-      </div>
+      <div style={{ fontSize: 28, fontWeight: 600, marginBottom: 4, color }}>{score.toFixed(1)}</div>
+      <div style={{ color: '#94a3b8', fontSize: 14 }}>{formattedDate}</div>
     </div>
   );
 }
 
-function HabitCompletionCard({
-  label,
-  completed,
-  total,
-  percentage,
-  color,
-  icon,
-}: {
-  label: string;
-  completed: number;
-  total: number;
-  percentage: number;
-  color: string;
-  icon: string;
-}) {
+function HabitCompletionCard({ label, completed, total, percentage, color, icon }: { label: string; completed: number; total: number; percentage: number; color: string; icon: string; }) {
   return (
     <div style={{
       background: '#020617',
@@ -911,57 +893,20 @@ function HabitCompletionCard({
       border: `1px solid ${color}30`,
       borderLeft: `4px solid ${color}`,
     }}>
-      <div style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        gap: 10,
-        marginBottom: 16,
-      }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
         <span style={{ fontSize: 24 }}>{icon}</span>
-        <div style={{ color, fontWeight: 600, fontSize: 16 }}>
-          {label}
-        </div>
+        <div style={{ color, fontWeight: 600, fontSize: 16 }}>{label}</div>
       </div>
-      
-      <div style={{ fontSize: 32, fontWeight: 600, marginBottom: 4, color }}>
-        {percentage}%
-      </div>
-
-      <div style={{ color: '#94a3b8', fontSize: 14, marginBottom: 12 }}>
-        {completed}/{total} days
-      </div>
-      
-      {/* Progress bar */}
-      <div style={{
-        width: '100%',
-        height: 8,
-        background: '#1e293b',
-        borderRadius: 4,
-        overflow: 'hidden',
-      }}>
-        <div style={{
-          width: `${percentage}%`,
-          height: '100%',
-          background: color,
-          borderRadius: 4,
-          transition: 'width 0.3s ease',
-        }} />
+      <div style={{ fontSize: 32, fontWeight: 600, marginBottom: 4, color }}>{percentage}%</div>
+      <div style={{ color: '#94a3b8', fontSize: 14, marginBottom: 12 }}>{completed}/{total} days</div>
+      <div style={{ width: '100%', height: 8, background: '#1e293b', borderRadius: 4, overflow: 'hidden' }}>
+        <div style={{ width: `${percentage}%`, height: '100%', background: color, borderRadius: 4, transition: 'width 0.3s ease' }} />
       </div>
     </div>
   );
 }
 
-function PillarCard({
-  label,
-  value,
-  color,
-  icon,
-}: {
-  label: string;
-  value: number;
-  color: string;
-  icon: string;
-}) {
+function PillarCard({ label, value, color, icon }: { label: string; value: number; color: string; icon: string; }) {
   const percentage = toOutOf100(value);
   
   return (
@@ -972,40 +917,16 @@ function PillarCard({
       border: `1px solid ${color}30`,
       borderLeft: `4px solid ${color}`,
     }}>
-      <div style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        gap: 10,
-        marginBottom: 16,
-      }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
         <span style={{ fontSize: 24 }}>{icon}</span>
-        <div style={{ color, fontWeight: 600, fontSize: 16 }}>
-          {label}
-        </div>
+        <div style={{ color, fontWeight: 600, fontSize: 16 }}>{label}</div>
       </div>
-      
       <div style={{ fontSize: 32, fontWeight: 600, marginBottom: 8 }}>
         {percentage}
-        <span style={{ fontSize: 18, color: '#94a3b8', fontWeight: 400 }}>
-          /100
-        </span>
+        <span style={{ fontSize: 18, color: '#94a3b8', fontWeight: 400 }}>/100</span>
       </div>
-      
-      {/* Progress bar */}
-      <div style={{
-        width: '100%',
-        height: 8,
-        background: '#1e293b',
-        borderRadius: 4,
-        overflow: 'hidden',
-      }}>
-        <div style={{
-          width: `${percentage}%`,
-          height: '100%',
-          background: color,
-          borderRadius: 4,
-          transition: 'width 0.3s ease',
-        }} />
+      <div style={{ width: '100%', height: 8, background: '#1e293b', borderRadius: 4, overflow: 'hidden' }}>
+        <div style={{ width: `${percentage}%`, height: '100%', background: color, borderRadius: 4, transition: 'width 0.3s ease' }} />
       </div>
     </div>
   );
