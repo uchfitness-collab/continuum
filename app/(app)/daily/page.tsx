@@ -102,7 +102,7 @@ export default function DailyPage() {
     setMessage(null);
     const { data } = await supabase.auth.getUser();
     if (!data.user) return;
-
+  
     const { data: prior } = await supabase
       .from('daily_logs')
       .select('sovereign_score')
@@ -111,10 +111,10 @@ export default function DailyPage() {
       .order('log_date', { ascending: false })
       .limit(1)
       .maybeSingle();
-
+  
     const priorScore = prior?.sovereign_score ?? 150;
     const sovereignScore = priorScore * 0.7 + REST_DAY_SCORE * 0.3;
-
+  
     const { error } = await supabase.from('daily_logs').insert({
       user_id: data.user.id,
       log_date: today,
@@ -127,8 +127,18 @@ export default function DailyPage() {
       identity_score: 0,
       negative_trigger: 'None',
       daily_notes: dailyNotes,
+      // ADD THESE REQUIRED FIELDS:
+      body_physical_activity_completed: false,
+      body_nutritional_discipline_maintained: false,
+      body_daily_reps_level: 'below_10',
+      mind_positive_habit_completed: false,
+      mind_negative_habit_avoided: false,
+      mind_discipline_rating: 5,
+      identity_daily_mission_completed: false,
+      identity_philosophy_practice_completed: false,
+      identity_mood_rating: 5,
     });
-
+  
     if (error) {
       setMessage(error.message);
     } else {
