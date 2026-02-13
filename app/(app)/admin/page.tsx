@@ -61,13 +61,21 @@ export default function AdminDashboard() {
         .in('user_id', userIds)
         .order('log_date', { ascending: false });
 
-      // Get all user habits
-      const { data: allHabits } = await supabase
+      // FIXED: Get all user habits - select all columns to ensure we get data
+      const { data: allHabits, error: habitsError } = await supabase
         .from('user_habits')
-        .select('user_id')
+        .select('*')
         .in('user_id', userIds);
 
+      // Debug logging
+      if (habitsError) {
+        console.error('Error fetching habits:', habitsError);
+      }
+      console.log('Fetched habits:', allHabits);
+      console.log('User IDs:', userIds);
+
       const usersWithHabitsSet = new Set(allHabits?.map(h => h.user_id) || []);
+      console.log('Users with habits set:', Array.from(usersWithHabitsSet));
 
       // Create user map
       const userMap = new Map();
