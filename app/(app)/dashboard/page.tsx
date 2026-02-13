@@ -48,14 +48,14 @@ export default function DashboardPage() {
 
   const [chartData, setChartData] = useState<any[]>([]);
   const [avgSovereign, setAvgSovereign] = useState(0);
+  const [last7DaysAvg, setLast7DaysAvg] = useState(0);
+  const [last30DaysAvg, setLast30DaysAvg] = useState(0);
   const [priorDay, setPriorDay] = useState(0);
   const [daysIn, setDaysIn] = useState(0);
   const [weeksIn, setWeeksIn] = useState(0);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [todayLogged, setTodayLogged] = useState(false);
   const [triggerData, setTriggerData] = useState<{ trigger: string; count: number }[]>([]);
-  const [bestDay, setBestDay] = useState<{ date: string; score: number } | null>(null);
-  const [worstDay, setWorstDay] = useState<{ date: string; score: number } | null>(null);
 
   const [pillarAverages, setPillarAverages] = useState({
     body: 0,
@@ -81,7 +81,7 @@ export default function DashboardPage() {
         .from('daily_logs')
         .select(`log_date, sovereign_score, body_score, mind_score, identity_score, negative_trigger, body_physical_activity_completed, body_nutritional_discipline_maintained, mind_positive_habit_completed, mind_negative_habit_avoided, identity_daily_mission_completed, identity_philosophy_practice_completed, is_rest_day`)
         .eq('user_id', auth.user.id)
-        .order('log_date', { ascending: true });
+        .order('log_date', { ascending: true});
 
       if (!logs || logs.length === 0) return;
 
@@ -99,14 +99,30 @@ export default function DashboardPage() {
           : logs[0].sovereign_score
       );
 
+      // Calculate Last 7 Days Average
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      const last7Logs = logs.filter(l => new Date(l.log_date) >= sevenDaysAgo);
+      if (last7Logs.length > 0) {
+        const avg7 = last7Logs.reduce((sum, log) => sum + log.sovereign_score, 0) / last7Logs.length;
+        setLast7DaysAvg(avg7);
+      }
+
+      // Calculate Last 30 Days Average
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const last30Logs = logs.filter(l => new Date(l.log_date) >= thirtyDaysAgo);
+      if (last30Logs.length > 0) {
+        const avg30 = last30Logs.reduce((sum, log) => sum + log.sovereign_score, 0) / last30Logs.length;
+        setLast30DaysAvg(avg30);
+      }
+
       setPillarAverages({
         body: logs.reduce((s, l) => s + l.body_score, 0) / logs.length,
         mind: logs.reduce((s, l) => s + l.mind_score, 0) / logs.length,
         identity: logs.reduce((s, l) => s + l.identity_score, 0) / logs.length,
       });
 
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       const recentLogs = logs.filter(l => new Date(l.log_date) >= thirtyDaysAgo && !l.is_rest_day);
 
       const bodyCompleted = recentLogs.filter(l => 
@@ -175,16 +191,6 @@ export default function DashboardPage() {
 
       setCurrentStreak(streak);
 
-      const sorted = [...logs].sort((a, b) => b.sovereign_score - a.sovereign_score);
-      setBestDay({
-        date: sorted[0].log_date,
-        score: sorted[0].sovereign_score,
-      });
-      setWorstDay({
-        date: sorted[sorted.length - 1].log_date,
-        score: sorted[sorted.length - 1].sovereign_score,
-      });
-
       const triggerCounts: { [key: string]: number } = {};
       recentLogs.forEach(log => {
         if (log.negative_trigger && log.negative_trigger !== 'None') {
@@ -239,6 +245,10 @@ export default function DashboardPage() {
 
   const trend = avgSovereign > priorDay ? 'up' : avgSovereign < priorDay ? 'down' : 'stable';
   const quote = getMotivationalQuote(currentStreak, avgSovereign);
+
+  // Calculate trend for 7-day average
+  const trend7Days = last7DaysAvg > avgSovereign ? 'up' : last7DaysAvg < avgSovereign ? 'down' : 'stable';
+  const trend30Days = last30DaysAvg > avgSovereign ? 'up' : last30DaysAvg < avgSovereign ? 'down' : 'stable';
 
   const handleShareProgress = () => {
     const canvas = document.createElement('canvas');
@@ -459,7 +469,7 @@ export default function DashboardPage() {
           />
         </div>
 
-        {/* CHART - BOTH LINES SOLID */}
+        {/* CHART */}
         <div 
           id="chart-section"
           style={{
@@ -478,7 +488,7 @@ export default function DashboardPage() {
             color: '#1f2937',
             letterSpacing: '-0.025em',
           }}>
-            Sovereign Trajectory 
+            Sovereign Trajectory (Last {CHART_DAYS} Days)
           </h2>
           <div style={{ height: 450 }}>
             <ResponsiveContainer width="100%" height="100%">
@@ -605,8 +615,8 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* RECENT TRENDS - NEW SECTION */}
         <div style={{ marginBottom: 40 }}>
-          
           {daysIn > 0 && (
             <div style={{
               display: 'grid',
@@ -614,19 +624,19 @@ export default function DashboardPage() {
               gap: 20,
               marginBottom: 40,
             }}>
-              <BestWorstCard 
-                label="Best Day" 
-                date={bestDay?.date} 
-                score={bestDay?.score}
-                color="#22c55e"
-                icon="🏆"
+              <TrendCard 
+                label="Last 7 Days Avg" 
+                value={last7DaysAvg}
+                trend={trend7Days}
+                color="#3b82f6"
+                icon="📈"
               />
-              <BestWorstCard 
-                label="Worst Day" 
-                date={worstDay?.date} 
-                score={worstDay?.score}
-                color="#ef4444"
-                icon="⚠️"
+              <TrendCard 
+                label="Last 30 Days Avg" 
+                value={last30DaysAvg}
+                trend={trend30Days}
+                color="#a855f7"
+                icon="📊"
               />
             </div>
           )}
@@ -857,15 +867,7 @@ function StatCard({ label, value, color, trend }: { label: string; value: any; c
   );
 }
 
-function BestWorstCard({ label, date, score, color, icon }: { label: string; date?: string; score?: number; color: string; icon: string; }) {
-  if (!date || score === undefined) return null;
-
-  const formattedDate = new Date(date + 'T00:00:00').toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
-
+function TrendCard({ label, value, trend, color, icon }: { label: string; value: number; trend: 'up' | 'down' | 'stable'; color: string; icon: string; }) {
   return (
     <div style={{
       background: '#020617',
@@ -878,8 +880,21 @@ function BestWorstCard({ label, date, score, color, icon }: { label: string; dat
         <span style={{ fontSize: 24 }}>{icon}</span>
         <div style={{ color, fontWeight: 600, fontSize: 16 }}>{label}</div>
       </div>
-      <div style={{ fontSize: 28, fontWeight: 600, marginBottom: 4, color }}>{score.toFixed(1)}</div>
-      <div style={{ color: '#94a3b8', fontSize: 14 }}>{formattedDate}</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ fontSize: 28, fontWeight: 600, color }}>
+          {value > 0 ? value.toFixed(1) : 'N/A'}
+        </div>
+        {value > 0 && trend !== 'stable' && (
+          <span style={{ fontSize: 20, color: trend === 'up' ? '#22c55e' : '#ef4444' }}>
+            {trend === 'up' ? '↗' : '↘'}
+          </span>
+        )}
+      </div>
+      <div style={{ color: '#94a3b8', fontSize: 13, marginTop: 4 }}>
+        {trend === 'up' && 'Improving'}
+        {trend === 'down' && 'Needs focus'}
+        {trend === 'stable' && 'Steady'}
+      </div>
     </div>
   );
 }
