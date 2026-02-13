@@ -488,7 +488,7 @@ export default function DashboardPage() {
             color: '#1f2937',
             letterSpacing: '-0.025em',
           }}>
-            Sovereign Trajectory (Last {CHART_DAYS} Days)
+            Sovereign Trajectory 
           </h2>
           <div style={{ height: 450 }}>
             <ResponsiveContainer width="100%" height="100%">
