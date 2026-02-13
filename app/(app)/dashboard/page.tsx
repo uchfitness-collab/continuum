@@ -488,7 +488,7 @@ export default function DashboardPage() {
             color: '#1f2937',
             letterSpacing: '-0.025em',
           }}>
-            Sovereign Trajectory 
+            Sovereign Trajectory (Last {CHART_DAYS} Days)
           </h2>
           <div style={{ height: 450 }}>
             <ResponsiveContainer width="100%" height="100%">
@@ -631,12 +631,11 @@ export default function DashboardPage() {
                 color="#3b82f6"
                 icon="📈"
               />
-              <TrendCard 
-                label="Last 30 Days Avg" 
-                value={last30DaysAvg}
-                trend={trend30Days}
-                color="#a855f7"
-                icon="📊"
+              <StrongestPillarCard 
+                pillarAverages={pillarAverages}
+              />
+              <NeedsAttentionCard 
+                pillarAverages={pillarAverages}
               />
             </div>
           )}
@@ -894,6 +893,70 @@ function TrendCard({ label, value, trend, color, icon }: { label: string; value:
         {trend === 'up' && 'Improving'}
         {trend === 'down' && 'Needs focus'}
         {trend === 'stable' && 'Steady'}
+      </div>
+    </div>
+  );
+}
+
+function StrongestPillarCard({ pillarAverages }: { pillarAverages: { body: number; mind: number; identity: number } }) {
+  const pillars = [
+    { name: 'Body', value: pillarAverages.body, icon: '💪', color: '#22c55e' },
+    { name: 'Mind', value: pillarAverages.mind, icon: '🧠', color: '#3b82f6' },
+    { name: 'Identity', value: pillarAverages.identity, icon: '⚡', color: '#a855f7' },
+  ];
+  
+  const strongest = pillars.reduce((max, pillar) => pillar.value > max.value ? pillar : max);
+  const percentage = toOutOf100(strongest.value);
+
+  return (
+    <div style={{
+      background: '#020617',
+      padding: 24,
+      borderRadius: 12,
+      border: `1px solid ${strongest.color}30`,
+      borderLeft: `4px solid ${strongest.color}`,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+        <span style={{ fontSize: 24 }}>{strongest.icon}</span>
+        <div style={{ color: strongest.color, fontWeight: 600, fontSize: 16 }}>Strongest Pillar</div>
+      </div>
+      <div style={{ fontSize: 28, fontWeight: 600, color: strongest.color, marginBottom: 4 }}>
+        {strongest.name}
+      </div>
+      <div style={{ color: '#94a3b8', fontSize: 13 }}>
+        {percentage}% average
+      </div>
+    </div>
+  );
+}
+
+function NeedsAttentionCard({ pillarAverages }: { pillarAverages: { body: number; mind: number; identity: number } }) {
+  const pillars = [
+    { name: 'Body', value: pillarAverages.body, icon: '💪', color: '#22c55e' },
+    { name: 'Mind', value: pillarAverages.mind, icon: '🧠', color: '#3b82f6' },
+    { name: 'Identity', value: pillarAverages.identity, icon: '⚡', color: '#a855f7' },
+  ];
+  
+  const weakest = pillars.reduce((min, pillar) => pillar.value < min.value ? pillar : min);
+  const percentage = toOutOf100(weakest.value);
+
+  return (
+    <div style={{
+      background: '#020617',
+      padding: 24,
+      borderRadius: 12,
+      border: '1px solid #fbbf2430',
+      borderLeft: '4px solid #fbbf24',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+        <span style={{ fontSize: 24 }}>{weakest.icon}</span>
+        <div style={{ color: '#fbbf24', fontWeight: 600, fontSize: 16 }}>Needs Attention</div>
+      </div>
+      <div style={{ fontSize: 28, fontWeight: 600, color: '#fbbf24', marginBottom: 4 }}>
+        {weakest.name}
+      </div>
+      <div style={{ color: '#94a3b8', fontSize: 13 }}>
+        {percentage}% average
       </div>
     </div>
   );
