@@ -17,7 +17,7 @@ jobs:
     steps:
       - name: Send reminder emails
         run: |
-          curl -L -v -X POST https://continuumgrowth.org/api/send-daily-reminders \
+          curl -L -v -X POST https://www.continuumgrowth.org/api/send-daily-reminders \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             -H "Content-Type: application/json" \
             -w "\nHTTP Status: %{http_code}\n"
