@@ -1,0 +1,23 @@
+name: Send Daily Reminders
+
+on:
+  schedule:
+    # Runs every day at 8:00 PM UTC (adjust timezone as needed)
+    # Format: minute hour day month day-of-week
+    # 20:00 UTC = 3:00 PM EST / 12:00 PM PST
+    - cron: '0 20 * * *'
+  
+  # Allow manual triggering for testing
+  workflow_dispatch:
+
+jobs:
+  send-reminders:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Send reminder emails
+        run: |
+          curl -X POST https://continuumgrowth.org/api/send-daily-reminders \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            -w "\nHTTP Status: %{http_code}\n"

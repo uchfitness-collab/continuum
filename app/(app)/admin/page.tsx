@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/src/lib/supabaseClient';
-import { getAllUsers } from './actions';
+import { getAllUsers, getAllUserHabits, getAllDailyLogs, getUserDetails } from './actions';
 
 // Add your email here to restrict access
 const ADMIN_EMAIL = 'uchfitness@gmail.com';
@@ -36,8 +36,11 @@ export default function AdminDashboard() {
 
   const loadStats = async () => {
     try {
-      // Get ALL users from Supabase Auth
+      console.log('=== ADMIN DEBUG START ===');
+      
+      // Get ALL users from Supabase Auth using server action
       const authUsers = await getAllUsers();
+      console.log('✅ Auth users fetched:', authUsers.length);
       
       if (!authUsers || authUsers.length === 0) {
         console.log('No users found');
@@ -52,41 +55,32 @@ export default function AdminDashboard() {
         return;
       }
 
+      // Get all logs using server action (bypasses RLS)
+      const allLogs = await getAllDailyLogs();
+      console.log('✅ Logs fetched:', allLogs.length);
+
+      // Get all habits using server action (bypasses RLS)
+      const allHabits = await getAllUserHabits();
+      console.log('✅ Habits fetched:', allHabits.length);
+      console.log('Sample habits:', allHabits.slice(0, 3));
+
       const userIds = authUsers.map(u => u.id);
-
-      // Get all logs for these users
-      const { data: allLogs } = await supabase
-        .from('daily_logs')
-        .select('user_id, log_date, sovereign_score')
-        .in('user_id', userIds)
-        .order('log_date', { ascending: false });
-
-      // FIXED: Get all user habits - select all columns to ensure we get data
-      const { data: allHabits, error: habitsError } = await supabase
-        .from('user_habits')
-        .select('*')
-        .in('user_id', userIds);
-
-      // Debug logging
-      if (habitsError) {
-        console.error('Error fetching habits:', habitsError);
-      }
-      console.log('Fetched habits:', allHabits);
-      console.log('User IDs:', userIds);
-
-      const usersWithHabitsSet = new Set(allHabits?.map(h => h.user_id) || []);
-      console.log('Users with habits set:', Array.from(usersWithHabitsSet));
+      const usersWithHabitsSet = new Set(allHabits.map(h => h.user_id));
+      console.log('✅ Users with habits:', Array.from(usersWithHabitsSet));
 
       // Create user map
       const userMap = new Map();
       
       // Initialize all auth users
       authUsers.forEach(authUser => {
+        const hasHabits = usersWithHabitsSet.has(authUser.id);
+        
         userMap.set(authUser.id, {
           user_id: authUser.id,
           email: authUser.email,
           created_at: authUser.created_at,
-          has_habits: usersWithHabitsSet.has(authUser.id),
+          last_sign_in_at: authUser.last_sign_in_at,
+          has_habits: hasHabits,
           total_logs: 0,
           last_log: null,
           avg_score: 0,
@@ -158,6 +152,12 @@ export default function AdminDashboard() {
 
       const usersWithHabitsCount = usersWithHabitsSet.size;
 
+      console.log('=== FINAL STATS ===');
+      console.log('Total users:', totalUsers);
+      console.log('Users with habits:', usersWithHabitsCount);
+      console.log('Active users (7d):', activeUsers);
+      console.log('Total logs:', totalLogs);
+
       setStats({
         totalUsers,
         totalLogs,
@@ -167,38 +167,20 @@ export default function AdminDashboard() {
       });
     } catch (error) {
       console.error('Error loading stats:', error);
-      alert('Error loading users. Make sure SUPABASE_SERVICE_ROLE_KEY is set in your .env.local file');
+      alert('Error loading users. Check console for details.');
     }
   };
 
   const loadUserDetails = async (userId: string) => {
     setSelectedUser(userId);
 
-    // Get user's logs
-    const { data: logs } = await supabase
-      .from('daily_logs')
-      .select('*')
-      .eq('user_id', userId)
-      .order('log_date', { ascending: false });
-
-    // Get user's habits
-    const { data: habits } = await supabase
-      .from('user_habits')
-      .select('*')
-      .eq('user_id', userId)
-      .maybeSingle();
-
-    // Get user's goals
-    const { data: goals } = await supabase
-      .from('user_goals')
-      .select('*')
-      .eq('user_id', userId)
-      .maybeSingle();
+    // Use server action to get user details (bypasses RLS)
+    const details = await getUserDetails(userId);
 
     // Calculate streak
     let currentStreak = 0;
-    if (logs && logs.length > 0) {
-      const sortedDates = logs.map(l => l.log_date).sort().reverse();
+    if (details.logs && details.logs.length > 0) {
+      const sortedDates = details.logs.map(l => l.log_date).sort().reverse();
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
@@ -222,12 +204,12 @@ export default function AdminDashboard() {
     }
 
     setUserDetails({
-      logs: logs || [],
-      habits: habits || null,
-      goals: goals || null,
+      logs: details.logs,
+      habits: details.habits,
+      goals: details.goals,
       currentStreak,
-      totalDays: logs?.length || 0,
-      avgScore: logs?.length ? (logs.reduce((sum, log) => sum + log.sovereign_score, 0) / logs.length).toFixed(1) : 'N/A',
+      totalDays: details.logs.length,
+      avgScore: details.logs.length ? (details.logs.reduce((sum: number, log: any) => sum + log.sovereign_score, 0) / details.logs.length).toFixed(1) : 'N/A',
     });
   };
 
@@ -336,6 +318,8 @@ export default function AdminDashboard() {
                       <div style={{ fontSize: 13, color: '#94a3b8' }}>
                         {user.last_log 
                           ? `Last log: ${new Date(user.last_log).toLocaleDateString()}`
+                          : user.last_sign_in_at
+                          ? `Last login: ${new Date(user.last_sign_in_at).toLocaleDateString()}`
                           : `Signed up: ${new Date(user.created_at).toLocaleDateString()}`
                         }
                       </div>

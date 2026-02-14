@@ -7,6 +7,15 @@ import { supabase } from '@/src/lib/supabaseClient';
 
 const REST_DAY_SCORE = 100;
 
+// Helper function to get local date (not UTC)
+const getLocalDate = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export default function DailyPage() {
   const router = useRouter();
   
@@ -36,7 +45,7 @@ export default function DailyPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [todayLog, setTodayLog] = useState<any>(null);
   
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalDate(); // Uses local timezone, resets at midnight local time
 
   // Load user's habits and check if today's log exists
   useEffect(() => {
@@ -127,7 +136,6 @@ export default function DailyPage() {
       identity_score: 0,
       negative_trigger: 'None',
       daily_notes: dailyNotes,
-      // ADD THESE REQUIRED FIELDS:
       body_physical_activity_completed: false,
       body_nutritional_discipline_maintained: false,
       body_daily_reps_level: 'below_10',
@@ -523,6 +531,7 @@ export default function DailyPage() {
           color: '#94a3b8',
         }}>
           {!isLocked && 'Log locks after submission. Be honest.'}
+          {isLocked && 'Your log resets at midnight. Come back tomorrow.'}
         </p>
       </div>
     </div>
