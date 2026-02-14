@@ -74,7 +74,7 @@ export async function POST(request: Request) {
     const emailPromises = usersToRemind.map(async (user) => {
       try {
         const result = await resend.emails.send({
-          from: 'Continuum <onboarding@resend.dev>', // Change this when you add your domain
+          from: 'Continuum <reminders@continuumgrowth.org>', // Change this when you add your domain
           to: user.email!,
           subject: "Don't Break the Chain – Log Your Day",
           html: generateEmailHTML(user.email!),
