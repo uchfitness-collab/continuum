@@ -87,12 +87,12 @@ export default function WeeklyReflectionPage() {
         const totalSovereign = logs.reduce((sum, l) => sum + (l.sovereign_score || 0), 0);
 
         const maxPillar = logs.length * MAX_PILLAR_POINTS_PER_DAY;
-        const maxTotal = logs.length * MAX_PILLAR_POINTS_PER_DAY * 3;
+        const maxTotalPossible = 7 * MAX_PILLAR_POINTS_PER_DAY * 3;
 
         setBodyPercent(Math.round((totalBody / maxPillar) * 100));
         setMindPercent(Math.round((totalMind / maxPillar) * 100));
         setIdentityPercent(Math.round((totalIdentity / maxPillar) * 100));
-        setWeeklyPercent(Math.round((totalSovereign / maxTotal) * 100));
+        setWeeklyPercent(Math.round((totalSovereign / maxTotalPossible) * 100));
       }
 
       const { data: allLogs } = await supabase
