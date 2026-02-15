@@ -10,104 +10,126 @@ export default function HowItWorksPage() {
       padding: 'clamp(60px, 10vw, 80px) clamp(16px, 4vw, 24px) clamp(80px, 12vw, 120px)',
     }}>
       <div style={{ maxWidth: 900, margin: '0 auto' }}>
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: 'clamp(48px, 8vw, 64px)' }}>
-          <h1 style={{ 
-            fontSize: 'clamp(32px, 6vw, 48px)',
-            fontWeight: 700, 
-            marginBottom: 20,
-            background: 'linear-gradient(135deg, #e5e7eb, #94a3b8)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-          }}>
-            How Continuum Works
-          </h1>
-          <p style={{ 
-            fontSize: 'clamp(16px, 3vw, 19px)',
-            color: '#94a3b8', 
-            maxWidth: 640, 
-            margin: '0 auto',
-            lineHeight: 1.7,
-            padding: '0 16px',
-          }}>
-            A simple system for measuring discipline. No fluff. No gamification. 
-            Just daily execution tracked across three pillars.
-          </p>
-        </div>
+{/* Header */}
+<div style={{ textAlign: 'center', marginBottom: 'clamp(48px, 8vw, 64px)' }}>
+  <h1 style={{ 
+    fontSize: 'clamp(32px, 6vw, 48px)',
+    fontWeight: 700, 
+    marginBottom: 20,
+    background: 'linear-gradient(135deg, #e5e7eb, #94a3b8)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+  }}>
+    How Continuum Works
+  </h1>
 
-        {/* The Core Loop */}
-        <section style={{ marginBottom: 'clamp(56px, 10vw, 72px)' }}>
-          <h2 style={{ 
-            fontSize: 'clamp(24px, 4vw, 32px)',
-            marginBottom: 28, 
-            textAlign: 'center',
-            color: '#e5e7eb',
-            fontWeight: 600
-          }}>
-            The Core Loop
-          </h2>
-          
-          <div style={{
-            background: '#020617',
-            padding: 'clamp(24px, 5vw, 36px)',
-            borderRadius: 16,
-            border: '2px solid #22c55e40',
-            marginBottom: 32
-          }}>
-            <h3 style={{ 
-              fontSize: 'clamp(20px, 4vw, 24px)',
-              marginBottom: 16, 
-              color: '#22c55e',
-              fontWeight: 600
-            }}>
-              It's the same thing, every day
-            </h3>
-            <p style={{ 
-              color: '#e5e7eb', 
-              fontSize: 'clamp(14px, 3vw, 16px)',
-              lineHeight: 1.8, 
-              marginBottom: 20 
-            }}>
-              Continuum works because it's relentlessly consistent. You do the same routine 
-              every day. No surprises. No complexity. Just execution.
-            </p>
-            <p style={{ 
-              color: '#94a3b8', 
-              fontSize: 'clamp(13px, 3vw, 15px)',
-              lineHeight: 1.7 
-            }}>
-              Most people fail not because they had one bad day. They fail because they stop 
-              tracking after the bad day. The discipline isn't in having perfect days — it's in 
-              showing up to log the imperfect ones.
-            </p>
-          </div>
+  <p style={{ 
+    fontSize: 'clamp(16px, 3vw, 19px)',
+    color: '#e5e7eb', 
+    maxWidth: 700, 
+    margin: '0 auto 16px',
+    lineHeight: 1.7,
+    padding: '0 16px',
+  }}>
+    Discipline is invisible — until you measure it.
+  </p>
 
-          <div style={{ display: 'grid', gap: 20 }}>
-            <DailyStep
-              step="1"
-              title="Show up at the same time daily"
-              description="Pick a time — morning or evening — and make logging part of your routine. The consistency of WHEN you log matters almost as much as logging itself."
-            />
-            
-            <DailyStep
-              step="2"
-              title="Answer honestly (2-3 minutes)"
-              description="Did you execute today? Check the boxes. Rate your discipline and mood. Don't overthink it. The truth is what makes the data valuable."
-            />
-            
-            <DailyStep
-              step="3"
-              title="See your score update automatically"
-              description="Your Sovereign Score recalculates based on today's execution weighted against your history. Watch it compound. One day doesn't define you — the pattern does."
-            />
-            
-            <DailyStep
-              step="4"
-              title="Repeat tomorrow. And the next day."
-              description="The power is in repetition. No celebration. No fanfare. Just log again. Discipline is boring. That's the point."
-            />
-          </div>
-        </section>
+  <p style={{ 
+    fontSize: 'clamp(14px, 3vw, 17px)',
+    color: '#94a3b8', 
+    maxWidth: 640, 
+    margin: '0 auto',
+    lineHeight: 1.7,
+    padding: '0 16px',
+  }}>
+    Continuum turns daily execution into measurable proof. 
+    No hype. No streak games. No social comparison. 
+    Just evidence of who you are becoming.
+  </p>
+</div>
+
+{/* How It Works in 4 Simple Steps */}
+<section style={{ marginBottom: 'clamp(56px, 10vw, 72px)' }}>
+  <h2 style={{ 
+    fontSize: 'clamp(24px, 4vw, 32px)',
+    marginBottom: 28, 
+    textAlign: 'center',
+    color: '#e5e7eb',
+    fontWeight: 600
+  }}>
+    How It Works — In 4 Simple Steps
+  </h2>
+
+  <p style={{
+    textAlign: 'center',
+    color: '#94a3b8',
+    fontSize: 'clamp(14px, 3vw, 16px)',
+    marginBottom: 36,
+    maxWidth: 700,
+    margin: '0 auto 36px',
+    padding: '0 16px',
+  }}>
+    The system never changes. The questions never change. 
+    Only your execution does.
+  </p>
+
+  <div style={{ display: 'grid', gap: 20 }}>
+    <DailyStep
+      step="1"
+      title="Define Your Standards"
+      description="Set your Body, Mind, and Identity habits. Your rules. Your expectations. Your definition of execution."
+    />
+    
+    <DailyStep
+      step="2"
+      title="Log Daily (2–3 Minutes)"
+      description="Answer the same questions every day. Check the boxes. Rate yourself honestly. Truth creates useful data."
+    />
+    
+    <DailyStep
+      step="3"
+      title="See Your Sovereign Score Update"
+      description="Your score recalculates automatically, weighing today's execution against your history. One day doesn’t matter. Patterns do."
+    />
+    
+    <DailyStep
+      step="4"
+      title="Repeat. Relentlessly."
+      description="No streak resets. No gamification. Just daily logging. Discipline compounds quietly."
+    />
+  </div>
+
+  <div style={{
+    marginTop: 40,
+    padding: 'clamp(24px, 5vw, 32px)',
+    borderRadius: 16,
+    background: '#020617',
+    border: '1px solid #22c55e40',
+    textAlign: 'center'
+  }}>
+    <h3 style={{ 
+      fontSize: 'clamp(18px, 3vw, 20px)',
+      marginBottom: 16, 
+      color: '#22c55e',
+      fontWeight: 600
+    }}>
+      Example Daily Log
+    </h3>
+
+    <p style={{ color: '#e5e7eb', marginBottom: 6 }}>
+      Body: ✔ Workout · ✔ Nutrition · 25+ Reps
+    </p>
+    <p style={{ color: '#e5e7eb', marginBottom: 6 }}>
+      Mind: ✔ Positive Habit · ✘ Avoided Negative Habit (Stress)
+    </p>
+    <p style={{ color: '#e5e7eb', marginBottom: 6 }}>
+      Identity: ✔ Mission · ✔ Philosophy · Mood 8/10
+    </p>
+    <p style={{ color: '#fbbf24', fontWeight: 700, marginTop: 12 }}>
+      Sovereign Score: 141.6
+    </p>
+  </div>
+</section>
 
         {/* The Three Pillars */}
         <section style={{ marginBottom: 'clamp(56px, 10vw, 72px)' }}>
@@ -207,8 +229,8 @@ export default function HowItWorksPage() {
               lineHeight: 1.8,
               marginBottom: 20
             }}>
-              Your Sovereign Score is calculated automatically after each log. It weighs your 
-              most recent execution (30%) against your historical average (70%).
+              Your Sovereign Score updates automatically after each log. 
+              It reflects your consistency over time — a living measure of the gap between your standards and your actions.
             </p>
             <p style={{ 
               color: '#94a3b8', 

@@ -1,10 +1,32 @@
 @import "tailwindcss";
 
+/* ============================================
+   CONTINUUM – DARK NAVY + GREEN THEME
+   ============================================ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Backgrounds */
+  --background: #0b1220;            /* deep navy */
+  --background-secondary: #0f172a;  /* slate navy */
+
+  /* Text */
+  --foreground: #f1f5f9;
+  --text-muted: #94a3b8;
+
+  /* Cards & Borders */
+  --card-bg: #111827;
+  --border-color: #1e293b;
+
+  /* Brand Accent */
+  --accent: #16a34a;                /* primary green */
+  --accent-soft: #22c55e;
+  --accent-glow: #4ade80;
+
+  --danger: #ef4444;
+  --warning: #fbbf24;
 }
 
+/* Tailwind theme bridge */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -12,32 +34,36 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Optional automatic dark preference handling */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #0b1220;
+    --foreground: #f1f5f9;
   }
 }
 
+/* Body */
 body {
-  background: var(--background);
+  background: radial-gradient(
+    circle at top,
+    var(--background),
+    var(--background-secondary)
+  );
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
 
 /* ============================================
-   MOBILE RESPONSIVE STYLES FOR APP PAGES
+   MOBILE RESPONSIVE STYLES
    ============================================ */
 
-/* Base responsive improvements */
 @media (max-width: 768px) {
-  /* Reduce padding on main containers */
+
   body > div > div {
     padding-left: 16px !important;
     padding-right: 16px !important;
   }
 
-  /* Make headings responsive */
   h1 {
     font-size: clamp(28px, 6vw, 36px) !important;
   }
@@ -50,34 +76,28 @@ body {
     font-size: clamp(18px, 3.5vw, 22px) !important;
   }
 
-  /* Fix input/textarea overflow */
   input, textarea, select {
     box-sizing: border-box !important;
     max-width: 100% !important;
   }
 
-  /* Make buttons stack on mobile */
   div[style*="display: flex"][style*="gap"] > button,
   div[style*="display: flex"][style*="gap"] > a {
     min-width: 100px;
   }
 
-  /* Improve chart readability */
   .recharts-wrapper {
     font-size: 11px !important;
   }
 
-  /* Stack grid items on mobile */
   div[style*="gridTemplateColumns"] {
     grid-template-columns: 1fr !important;
   }
 
-  /* Keep 2-column grids for stats */
   div[style*="repeat(auto-fit"] {
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important;
   }
 
-  /* Reduce card padding on mobile */
   div[style*="padding: 28px"] {
     padding: 20px !important;
   }
@@ -87,8 +107,8 @@ body {
   }
 }
 
-/* Very small screens */
 @media (max-width: 480px) {
+
   h1 {
     font-size: 24px !important;
   }
@@ -97,7 +117,6 @@ body {
     font-size: 20px !important;
   }
 
-  /* Single column for everything */
   div[style*="gridTemplateColumns"] {
     grid-template-columns: 1fr !important;
   }

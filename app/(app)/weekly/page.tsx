@@ -4,27 +4,31 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/src/lib/supabaseClient';
 
+const MAX_PILLAR_POINTS_PER_DAY = 50;
+
 export default function WeeklyReflectionPage() {
   const router = useRouter();
 
   const [weekNumber, setWeekNumber] = useState<number>(1);
   const [weekData, setWeekData] = useState<any[]>([]);
-  const [avgScore, setAvgScore] = useState(0);
-  
-  // Reflection fields
-  const [theme, setTheme] = useState('');
+  const [weekRange, setWeekRange] = useState('');
+
+  const [weeklyPercent, setWeeklyPercent] = useState(0);
+  const [bodyPercent, setBodyPercent] = useState(0);
+  const [mindPercent, setMindPercent] = useState(0);
+  const [identityPercent, setIdentityPercent] = useState(0);
+
   const [wins, setWins] = useState('');
   const [challenges, setChallenges] = useState('');
   const [nextWeekFocus, setNextWeekFocus] = useState('');
-  
-  // Goals
+
   const [goal1, setGoal1] = useState('');
   const [goal2, setGoal2] = useState('');
   const [goal3, setGoal3] = useState('');
-  
-  // Last week's goals
+
   const [lastWeekGoals, setLastWeekGoals] = useState<any>(null);
-  
+  const [yearGoals, setYearGoals] = useState<any>(null);
+
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -36,53 +40,88 @@ export default function WeeklyReflectionPage() {
         return;
       }
 
-      // Get this week's logs
-      const today = new Date();
-      const startOfWeek = new Date(today);
-      startOfWeek.setDate(today.getDate() - today.getDay() + 1);
-      
+      const userId = auth.user.id;
+
+      const { data: goals } = await supabase
+        .from('user_goals')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (goals) setYearGoals(goals);
+
+      const now = new Date();
+      const estToday = new Date(
+        now.toLocaleString('en-US', { timeZone: 'America/New_York' })
+      );
+
+      const day = estToday.getDay();
+      const diffToMonday = day === 0 ? -6 : 1 - day;
+
+      const startOfWeek = new Date(estToday);
+      startOfWeek.setDate(estToday.getDate() + diffToMonday);
+
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+      const startStr = startOfWeek.toISOString().split('T')[0];
+      const endStr = endOfWeek.toISOString().split('T')[0];
+
+      setWeekRange(
+        `${startOfWeek.toLocaleDateString()} - ${endOfWeek.toLocaleDateString()}`
+      );
+
       const { data: logs } = await supabase
         .from('daily_logs')
         .select('*')
-        .eq('user_id', auth.user.id)
-        .gte('log_date', startOfWeek.toISOString().split('T')[0])
-        .order('log_date', { ascending: true });
+        .eq('user_id', userId)
+        .gte('log_date', startStr)
+        .lte('log_date', endStr);
 
       if (logs && logs.length > 0) {
         setWeekData(logs);
-        const avg = logs.reduce((sum, l) => sum + l.sovereign_score, 0) / logs.length;
-        setAvgScore(avg);
+
+        const totalBody = logs.reduce((sum, l) => sum + (l.body_score || 0), 0);
+        const totalMind = logs.reduce((sum, l) => sum + (l.mind_score || 0), 0);
+        const totalIdentity = logs.reduce((sum, l) => sum + (l.identity_score || 0), 0);
+        const totalSovereign = logs.reduce((sum, l) => sum + (l.sovereign_score || 0), 0);
+
+        const maxPillar = logs.length * MAX_PILLAR_POINTS_PER_DAY;
+        const maxTotal = logs.length * MAX_PILLAR_POINTS_PER_DAY * 3;
+
+        setBodyPercent(Math.round((totalBody / maxPillar) * 100));
+        setMindPercent(Math.round((totalMind / maxPillar) * 100));
+        setIdentityPercent(Math.round((totalIdentity / maxPillar) * 100));
+        setWeeklyPercent(Math.round((totalSovereign / maxTotal) * 100));
       }
 
-      // Calculate week number
       const { data: allLogs } = await supabase
         .from('daily_logs')
         .select('log_date')
-        .eq('user_id', auth.user.id)
+        .eq('user_id', userId)
         .order('log_date', { ascending: true });
 
       if (allLogs && allLogs.length > 0) {
         const firstDate = new Date(allLogs[0].log_date);
         const diffDays = Math.floor(
-          (today.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24)
+          (estToday.getTime() - firstDate.getTime()) /
+          (1000 * 60 * 60 * 24)
         );
-        const calculatedWeekNumber = Math.floor(diffDays / 7) + 1;
-        setWeekNumber(calculatedWeekNumber);
+        const calculatedWeek = Math.floor(diffDays / 7) + 1;
+        setWeekNumber(calculatedWeek);
 
-        // Load existing reflection for this week
         const { data: reflection } = await supabase
           .from('weekly_reflections')
           .select('*')
-          .eq('user_id', auth.user.id)
-          .eq('week_number', calculatedWeekNumber)
+          .eq('user_id', userId)
+          .eq('week_number', calculatedWeek)
           .maybeSingle();
 
         if (reflection) {
-          setTheme(reflection.weekly_theme || '');
           setWins(reflection.what_worked_well || '');
           setChallenges(reflection.what_broke_standard || '');
           setNextWeekFocus(reflection.next_week_goals || '');
-          
+
           if (reflection.weekly_goals) {
             setGoal1(reflection.weekly_goals.goal1 || '');
             setGoal2(reflection.weekly_goals.goal2 || '');
@@ -90,15 +129,14 @@ export default function WeeklyReflectionPage() {
           }
         }
 
-        // Load LAST week's goals to review
         const { data: lastWeek } = await supabase
           .from('weekly_reflections')
           .select('*')
-          .eq('user_id', auth.user.id)
-          .eq('week_number', calculatedWeekNumber - 1)
+          .eq('user_id', userId)
+          .eq('week_number', calculatedWeek - 1)
           .maybeSingle();
 
-        if (lastWeek && lastWeek.weekly_goals) {
+        if (lastWeek?.weekly_goals) {
           setLastWeekGoals(lastWeek.weekly_goals);
         }
       }
@@ -111,58 +149,24 @@ export default function WeeklyReflectionPage() {
 
   const submitReflection = async () => {
     const { data: auth } = await supabase.auth.getUser();
-    if (!auth.user) {
-      setMessage('Not authenticated');
-      return;
-    }
+    if (!auth.user) return;
 
-    const start = new Date();
-    start.setDate(start.getDate() - start.getDay() + 1);
-    const end = new Date(start);
-    end.setDate(start.getDate() + 6);
-
-    const goals = {
-      goal1: goal1.trim(),
-      goal2: goal2.trim(),
-      goal3: goal3.trim(),
-    };
-
-    const { error } = await supabase.from('weekly_reflections').upsert(
+    await supabase.from('weekly_reflections').upsert(
       {
         user_id: auth.user.id,
         week_number: weekNumber,
-        week_start_date: start.toISOString().split('T')[0],
-        week_end_date: end.toISOString().split('T')[0],
-        weekly_theme: theme,
         what_worked_well: wins,
         what_broke_standard: challenges,
         next_week_goals: nextWeekFocus,
-        weekly_goals: goals,
+        weekly_goals: { goal1, goal2, goal3 },
       },
       { onConflict: 'user_id,week_number' }
     );
 
-    if (error) {
-      setMessage(error.message);
-    } else {
-      setMessage('Reflection saved ✓');
-      setTimeout(() => router.push('/dashboard'), 1500);
-    }
+    setMessage('Reflection saved ✓');
   };
 
-  if (loading) {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        background: 'radial-gradient(circle at top, #020617, #01030f)',
-      }}>
-        <p style={{ color: '#94a3b8' }}>Loading...</p>
-      </div>
-    );
-  }
+  if (loading) return null;
 
   return (
     <div style={{
@@ -170,93 +174,92 @@ export default function WeeklyReflectionPage() {
       padding: '60px 24px',
       background: 'radial-gradient(circle at top, #020617, #01030f)',
     }}>
-      <div style={{ maxWidth: 800, margin: '0 auto' }}>
-        
-        <div style={{ marginBottom: 40, textAlign: 'center' }}>
-          <h1 style={{ fontSize: 36, fontWeight: 600, marginBottom: 8 }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+
+        <div style={{ textAlign: 'center', marginBottom: 40 }}>
+          <h1 style={{ fontSize: 36, fontWeight: 600 }}>
             Week {weekNumber} Reflection
           </h1>
-          <p style={{ color: '#94a3b8', fontSize: 16 }}>
-            Patterns reveal truth. Progress compounds in reflection.
-          </p>
+          <p style={{ color: '#94a3b8' }}>{weekRange}</p>
         </div>
 
-        {/* LAST WEEK GOALS REVIEW */}
-        {lastWeekGoals && (lastWeekGoals.goal1 || lastWeekGoals.goal2 || lastWeekGoals.goal3) && (
-          <div style={{
-            padding: 24,
-            marginBottom: 32,
-            borderRadius: 12,
-            background: '#020617',
-            border: '1px solid #fbbf2440',
-            borderLeft: '4px solid #fbbf24',
-          }}>
-            <h3 style={{ color: '#fbbf24', marginBottom: 16, fontSize: 18 }}>
-              📋 Last Week's Goals - How'd You Do?
-            </h3>
-            {lastWeekGoals.goal1 && <p style={{ color: '#e5e7eb', marginBottom: 8 }}>• {lastWeekGoals.goal1}</p>}
-            {lastWeekGoals.goal2 && <p style={{ color: '#e5e7eb', marginBottom: 8 }}>• {lastWeekGoals.goal2}</p>}
-            {lastWeekGoals.goal3 && <p style={{ color: '#e5e7eb', marginBottom: 8 }}>• {lastWeekGoals.goal3}</p>}
-            <p style={{ color: '#94a3b8', fontSize: 14, marginTop: 12 }}>
-              Reflect on these as you complete today's reflection.
-            </p>
-          </div>
-        )}
-
+        {/* TOP TWO BOXES */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: 20,
+          gridTemplateColumns: '1fr 1fr',
+          gap: 24,
           marginBottom: 40,
-          padding: 24,
-          background: '#020617',
-          borderRadius: 12,
-          border: '1px solid #22c55e40',
         }}>
-          <Stat label="Days Logged" value={weekData.length} />
-          <Stat label="Avg Score" value={avgScore.toFixed(1)} />
-          <Stat label="Consistency" value={`${Math.round((weekData.length / 7) * 100)}%`} />
+
+          {yearGoals && (
+            <div style={{
+              padding: 28,
+              borderRadius: 16,
+              background: '#020617',
+              border: '1px solid #3b82f640',
+              borderLeft: '4px solid #3b82f6',
+            }}>
+              <h3 style={{ color: '#3b82f6', marginBottom: 16 }}>
+                🎯 Your 1-Year Direction
+              </h3>
+              {yearGoals.body_goal && <p>💪 {yearGoals.body_goal}</p>}
+              {yearGoals.mind_goal && <p>🧠 {yearGoals.mind_goal}</p>}
+              {yearGoals.identity_goal && <p>⚡ {yearGoals.identity_goal}</p>}
+            </div>
+          )}
+
+          {lastWeekGoals && (
+            <div style={{
+              padding: 28,
+              borderRadius: 16,
+              background: '#020617',
+              border: '1px solid #fbbf2440',
+              borderLeft: '4px solid #fbbf24',
+            }}>
+              <h3 style={{ color: '#fbbf24', marginBottom: 16 }}>
+                📋 Last Week's Goals — How’d You Do?
+              </h3>
+              {lastWeekGoals.goal1 && <p>• {lastWeekGoals.goal1}</p>}
+              {lastWeekGoals.goal2 && <p>• {lastWeekGoals.goal2}</p>}
+              {lastWeekGoals.goal3 && <p>• {lastWeekGoals.goal3}</p>}
+            </div>
+          )}
         </div>
 
-        <Card title="This Week's Theme" color="#22c55e" icon="🎯">
-          <Input value={theme} onChange={setTheme} placeholder="e.g., Consistency, Focus, Momentum" />
+        {/* STATS */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: 20,
+          marginBottom: 40,
+          padding: 28,
+          background: '#020617',
+          borderRadius: 16,
+          border: '1px solid #22c55e40',
+        }}>
+          <Stat label="Weekly %" value={weeklyPercent} />
+          <Stat label="Body %" value={bodyPercent} />
+          <Stat label="Mind %" value={mindPercent} />
+          <Stat label="Identity %" value={identityPercent} />
+        </div>
+
+        <Card title="Where did you execute at or above your standard this week?" color="#22c55e">
+          <Textarea value={wins} onChange={setWins} />
         </Card>
 
-        <Card title="What Worked" color="#22c55e" icon="✓">
-          <Textarea value={wins} onChange={setWins} placeholder="Which habits had the biggest impact?" />
+        <Card title="Where did you fall below your standard — and why?" color="#ef4444">
+          <Textarea value={challenges} onChange={setChallenges} />
         </Card>
 
-        <Card title="What Broke" color="#ef4444" icon="⚠">
-          <Textarea value={challenges} onChange={setChallenges} placeholder="Where did you fall short?" />
+        <Card title="What specific adjustment will you make next week to close the gap?" color="#a855f7">
+          <Textarea value={nextWeekFocus} onChange={setNextWeekFocus} />
         </Card>
 
-        <Card title="Next Week's Focus" color="#a855f7" icon="→">
-          <Textarea value={nextWeekFocus} onChange={setNextWeekFocus} placeholder="What will you do differently?" />
+        <Card title="Next Week's Goals" color="#fbbf24">
+          <Input value={goal1} onChange={setGoal1} placeholder="Goal 1" />
+          <Input value={goal2} onChange={setGoal2} placeholder="Goal 2" />
+          <Input value={goal3} onChange={setGoal3} placeholder="Goal 3" />
         </Card>
-
-        {/* WEEKLY GOALS */}
-        <Card title="Next Week's Goals" color="#fbbf24" icon="🎯">
-          <p style={{ fontSize: 14, color: '#94a3b8', marginBottom: 12 }}>
-            Set 1-3 measurable goals. We'll check in next week.
-          </p>
-          <Input value={goal1} onChange={setGoal1} placeholder="Goal 1: e.g., Log 7/7 days" />
-          <Input value={goal2} onChange={setGoal2} placeholder="Goal 2: e.g., Avoid Social Media trigger" />
-          <Input value={goal3} onChange={setGoal3} placeholder="Goal 3: e.g., Sovereign Score > 120" />
-        </Card>
-
-        {message && (
-          <div style={{
-            padding: 16,
-            marginBottom: 20,
-            borderRadius: 10,
-            background: message.includes('✓') ? '#022c22' : '#2c0808',
-            border: `1px solid ${message.includes('✓') ? '#22c55e' : '#ef4444'}`,
-            color: message.includes('✓') ? '#22c55e' : '#ef4444',
-            textAlign: 'center',
-          }}>
-            {message}
-          </div>
-        )}
 
         <button
           onClick={submitReflection}
@@ -274,25 +277,48 @@ export default function WeeklyReflectionPage() {
         >
           Save Reflection
         </button>
+
+        {message && (
+          <p style={{ marginTop: 16, color: '#22c55e' }}>{message}</p>
+        )}
       </div>
     </div>
   );
 }
 
-function Card({ title, color, icon, children }: any) {
+function getColor(value: number) {
+  if (value >= 80) return '#22c55e';
+  if (value >= 50) return '#facc15';
+  return '#ef4444';
+}
+
+function Stat({ label, value }: any) {
+  const color = getColor(value);
+  return (
+    <div style={{ textAlign: 'center' }}>
+      <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 6 }}>
+        {label}
+      </div>
+      <div style={{ fontSize: 24, fontWeight: 600, color }}>
+        {value}%
+      </div>
+    </div>
+  );
+}
+
+function Card({ title, color, children }: any) {
   return (
     <div style={{
-      marginBottom: 28,
-      padding: 28,
-      borderRadius: 16,
+      marginBottom: 32,
+      padding: 32,
+      borderRadius: 20,
       background: '#020617',
       border: `1px solid ${color}30`,
       borderLeft: `4px solid ${color}`,
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-        <span style={{ fontSize: 24 }}>{icon}</span>
-        <h2 style={{ fontSize: 20, fontWeight: 600, color, margin: 0 }}>{title}</h2>
-      </div>
+      <h2 style={{ fontSize: 20, fontWeight: 600, color, marginBottom: 20 }}>
+        {title}
+      </h2>
       {children}
     </div>
   );
@@ -306,46 +332,34 @@ function Input({ value, onChange, placeholder }: any) {
       onChange={e => onChange(e.target.value)}
       style={{
         width: '100%',
-        padding: 14,
-        borderRadius: 10,
+        padding: 16,
+        borderRadius: 12,
         background: '#01030f',
         border: '1px solid #334155',
         color: '#e5e7eb',
         fontSize: 15,
-        marginBottom: 12,
+        marginBottom: 14,
       }}
     />
   );
 }
 
-function Textarea({ value, onChange, placeholder }: any) {
+function Textarea({ value, onChange }: any) {
   return (
     <textarea
       value={value}
-      placeholder={placeholder}
       onChange={e => onChange(e.target.value)}
-      rows={4}
+      rows={5}
       style={{
         width: '100%',
-        padding: 14,
-        borderRadius: 10,
+        padding: 16,
+        borderRadius: 12,
         background: '#01030f',
         border: '1px solid #334155',
         color: '#e5e7eb',
         fontSize: 15,
-        lineHeight: 1.6,
         resize: 'vertical',
-        fontFamily: 'inherit',
       }}
     />
-  );
-}
-
-function Stat({ label, value }: any) {
-  return (
-    <div style={{ textAlign: 'center' }}>
-      <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 6 }}>{label}</div>
-      <div style={{ fontSize: 24, fontWeight: 600, color: '#22c55e' }}>{value}</div>
-    </div>
   );
 }

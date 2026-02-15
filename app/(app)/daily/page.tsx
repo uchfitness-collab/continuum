@@ -7,13 +7,35 @@ import { supabase } from '@/src/lib/supabaseClient';
 
 const REST_DAY_SCORE = 100;
 
-// Helper function to get local date (not UTC)
-const getLocalDate = () => {
+/* ---------- EST DATE (12:01 AM RESET) ---------- */
+
+const getESTDate = () => {
   const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
+  const estString = now.toLocaleString('en-US', {
+    timeZone: 'America/New_York',
+  });
+  const estDate = new Date(estString);
+
+  const year = estDate.getFullYear();
+  const month = String(estDate.getMonth() + 1).padStart(2, '0');
+  const day = String(estDate.getDate()).padStart(2, '0');
+
   return `${year}-${month}-${day}`;
+};
+
+const getESTDisplayDate = () => {
+  const now = new Date();
+  const estString = now.toLocaleString('en-US', {
+    timeZone: 'America/New_York',
+  });
+  const estDate = new Date(estString);
+
+  return estDate.toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
 };
 
 export default function DailyPage() {
@@ -45,7 +67,8 @@ export default function DailyPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [todayLog, setTodayLog] = useState<any>(null);
   
-  const today = getLocalDate(); // Uses local timezone, resets at midnight local time
+  const today = getESTDate();
+  const displayDate = getESTDisplayDate();
 
   // Load user's habits and check if today's log exists
   useEffect(() => {
@@ -56,7 +79,6 @@ export default function DailyPage() {
         return;
       }
 
-      // Load user's habit definitions
       const { data: habits } = await supabase
         .from('user_habits')
         .select('*')
@@ -65,7 +87,6 @@ export default function DailyPage() {
 
       setUserHabits(habits);
 
-      // Check if today's log exists
       const { data: existingLog } = await supabase
         .from('daily_logs')
         .select('*')
@@ -98,7 +119,6 @@ export default function DailyPage() {
     loadData();
   }, [router, today]);
 
-  // Auto-set trigger based on mindNegative
   useEffect(() => {
     if (mindNegative) {
       setNegativeTrigger('None');
@@ -228,7 +248,6 @@ export default function DailyPage() {
     );
   }
 
-  // Show message if no habits defined
   if (!userHabits) {
     return (
       <div style={{
@@ -285,6 +304,11 @@ export default function DailyPage() {
           <h1 style={{ fontSize: 36, fontWeight: 600, marginBottom: 8 }}>
             Daily Log
           </h1>
+
+          <div style={{ marginBottom: 6, color: '#94a3b8', fontSize: 14 }}>
+            📅 {displayDate} (EST)
+          </div>
+
           <p style={{ color: '#94a3b8', fontSize: 16 }}>
             {isLocked ? "Today's log is complete ✓" : 'Show up. Record truthfully.'}
           </p>
@@ -325,7 +349,6 @@ export default function DailyPage() {
           </div>
         )}
 
-        {/* MESSAGE */}
         {message && (
           <div style={{
             padding: 16,
@@ -382,7 +405,6 @@ export default function DailyPage() {
             disabled={isLocked}
           />
           
-          {/* TRIGGER DROPDOWN - Only show if they didn't avoid the habit */}
           {!mindNegative && (
             <HabitSelect
               label="What triggered the slip-up?"
@@ -531,7 +553,7 @@ export default function DailyPage() {
           color: '#94a3b8',
         }}>
           {!isLocked && 'Log locks after submission. Be honest.'}
-          {isLocked && 'Your log resets at midnight. Come back tomorrow.'}
+          {isLocked && 'Your log resets at 12:01 AM EST. Come back tomorrow.'}
         </p>
       </div>
     </div>
