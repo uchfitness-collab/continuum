@@ -6,6 +6,15 @@ import { supabase } from '@/src/lib/supabaseClient';
 
 const MAX_PILLAR_POINTS_PER_DAY = 50;
 
+const getMondayOfWeek = (dateStr: string) => {
+  const date = new Date(dateStr + 'T00:00:00');
+  const day = date.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  const monday = new Date(date);
+  monday.setDate(date.getDate() + diff);
+  return monday.toISOString().split('T')[0];
+};
+
 export default function WeeklyReflectionPage() {
   const router = useRouter();
 
@@ -21,10 +30,6 @@ export default function WeeklyReflectionPage() {
   const [wins, setWins] = useState('');
   const [challenges, setChallenges] = useState('');
   const [nextWeekFocus, setNextWeekFocus] = useState('');
-
-  const [goal1, setGoal1] = useState('');
-  const [goal2, setGoal2] = useState('');
-  const [goal3, setGoal3] = useState('');
 
   const [lastWeekGoals, setLastWeekGoals] = useState<any>(null);
   const [yearGoals, setYearGoals] = useState<any>(null);
@@ -51,12 +56,15 @@ export default function WeeklyReflectionPage() {
       if (goals) setYearGoals(goals);
 
       const now = new Date();
-      const estToday = new Date(
-        now.toLocaleString('en-US', { timeZone: 'America/New_York' })
-      );
+      const estString = now.toLocaleString('en-US', { timeZone: 'America/New_York' });
+      
+      // Parse EST date properly
+      const [datePart] = estString.split(', ');
+      const [month, day, year] = datePart.split('/');
+      const estToday = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
 
-      const day = estToday.getDay();
-      const diffToMonday = day === 0 ? -6 : 1 - day;
+      const dayOfWeek = estToday.getDay();
+      const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
 
       const startOfWeek = new Date(estToday);
       startOfWeek.setDate(estToday.getDate() + diffToMonday);
@@ -121,23 +129,18 @@ export default function WeeklyReflectionPage() {
           setWins(reflection.what_worked_well || '');
           setChallenges(reflection.what_broke_standard || '');
           setNextWeekFocus(reflection.next_week_goals || '');
-
-          if (reflection.weekly_goals) {
-            setGoal1(reflection.weekly_goals.goal1 || '');
-            setGoal2(reflection.weekly_goals.goal2 || '');
-            setGoal3(reflection.weekly_goals.goal3 || '');
-          }
         }
 
-        const { data: lastWeek } = await supabase
-          .from('weekly_reflections')
+        // Load THIS week's goals from weekly_goals table
+        const { data: thisWeekGoals } = await supabase
+          .from('weekly_goals')
           .select('*')
           .eq('user_id', userId)
-          .eq('week_number', calculatedWeek - 1)
+          .eq('week_start_date', startStr)
           .maybeSingle();
 
-        if (lastWeek?.weekly_goals) {
-          setLastWeekGoals(lastWeek.weekly_goals);
+        if (thisWeekGoals) {
+          setLastWeekGoals(thisWeekGoals);
         }
       }
 
@@ -158,7 +161,6 @@ export default function WeeklyReflectionPage() {
         what_worked_well: wins,
         what_broke_standard: challenges,
         next_week_goals: nextWeekFocus,
-        weekly_goals: { goal1, goal2, goal3 },
       },
       { onConflict: 'user_id,week_number' }
     );
@@ -199,16 +201,16 @@ export default function WeeklyReflectionPage() {
               border: '1px solid #3b82f640',
               borderLeft: '4px solid #3b82f6',
             }}>
-              <h3 style={{ color: '#3b82f6', marginBottom: 16 }}>
+              <h3 style={{ color: '#3b82f6', marginBottom: 16, fontSize: 18 }}>
                 🎯 Your 1-Year Direction
               </h3>
-              {yearGoals.body_goal && <p>💪 {yearGoals.body_goal}</p>}
-              {yearGoals.mind_goal && <p>🧠 {yearGoals.mind_goal}</p>}
-              {yearGoals.identity_goal && <p>⚡ {yearGoals.identity_goal}</p>}
+              {yearGoals.body_goal && <p style={{ marginBottom: 8, fontSize: 14, lineHeight: 1.6 }}>💪 {yearGoals.body_goal}</p>}
+              {yearGoals.mind_goal && <p style={{ marginBottom: 8, fontSize: 14, lineHeight: 1.6 }}>🧠 {yearGoals.mind_goal}</p>}
+              {yearGoals.identity_goal && <p style={{ marginBottom: 0, fontSize: 14, lineHeight: 1.6 }}>⚡ {yearGoals.identity_goal}</p>}
             </div>
           )}
 
-          {lastWeekGoals && (
+          {lastWeekGoals && (lastWeekGoals.goal1 || lastWeekGoals.goal2 || lastWeekGoals.goal3) ? (
             <div style={{
               padding: 28,
               borderRadius: 16,
@@ -216,12 +218,27 @@ export default function WeeklyReflectionPage() {
               border: '1px solid #fbbf2440',
               borderLeft: '4px solid #fbbf24',
             }}>
-              <h3 style={{ color: '#fbbf24', marginBottom: 16 }}>
-                📋 Last Week's Goals — How’d You Do?
+              <h3 style={{ color: '#fbbf24', marginBottom: 16, fontSize: 18 }}>
+                📋 This Week's Goals — How'd You Do?
               </h3>
-              {lastWeekGoals.goal1 && <p>• {lastWeekGoals.goal1}</p>}
-              {lastWeekGoals.goal2 && <p>• {lastWeekGoals.goal2}</p>}
-              {lastWeekGoals.goal3 && <p>• {lastWeekGoals.goal3}</p>}
+              {lastWeekGoals.goal1 && <p style={{ marginBottom: 8, fontSize: 14 }}>• {lastWeekGoals.goal1}</p>}
+              {lastWeekGoals.goal2 && <p style={{ marginBottom: 8, fontSize: 14 }}>• {lastWeekGoals.goal2}</p>}
+              {lastWeekGoals.goal3 && <p style={{ marginBottom: 0, fontSize: 14 }}>• {lastWeekGoals.goal3}</p>}
+            </div>
+          ) : (
+            <div style={{
+              padding: 28,
+              borderRadius: 16,
+              background: '#020617',
+              border: '1px solid #94a3b840',
+              borderLeft: '4px solid #94a3b8',
+            }}>
+              <h3 style={{ color: '#94a3b8', marginBottom: 16, fontSize: 18 }}>
+                📋 This Week's Goals
+              </h3>
+              <p style={{ margin: 0, fontSize: 14, color: '#94a3b8' }}>
+                No goals set for this week. Set your goals on the Goals page.
+              </p>
             </div>
           )}
         </div>
@@ -255,11 +272,20 @@ export default function WeeklyReflectionPage() {
           <Textarea value={nextWeekFocus} onChange={setNextWeekFocus} />
         </Card>
 
-        <Card title="Next Week's Goals" color="#fbbf24">
-          <Input value={goal1} onChange={setGoal1} placeholder="Goal 1" />
-          <Input value={goal2} onChange={setGoal2} placeholder="Goal 2" />
-          <Input value={goal3} onChange={setGoal3} placeholder="Goal 3" />
-        </Card>
+        <div style={{
+          padding: 24,
+          marginBottom: 32,
+          borderRadius: 16,
+          background: '#020617',
+          border: '1px solid #fbbf24',
+        }}>
+          <h3 style={{ color: '#fbbf24', marginBottom: 8, fontSize: 18 }}>
+            📝 Set Next Week's Goals
+          </h3>
+          <p style={{ color: '#94a3b8', fontSize: 14, marginBottom: 20 }}>
+            Head to the <a href="/goals" style={{ color: '#fbbf24', textDecoration: 'underline' }}>Goals page</a> to set your weekly goals for next week.
+          </p>
+        </div>
 
         <button
           onClick={submitReflection}
@@ -279,7 +305,7 @@ export default function WeeklyReflectionPage() {
         </button>
 
         {message && (
-          <p style={{ marginTop: 16, color: '#22c55e' }}>{message}</p>
+          <p style={{ marginTop: 16, textAlign: 'center', color: '#22c55e' }}>{message}</p>
         )}
       </div>
     </div>
@@ -324,26 +350,6 @@ function Card({ title, color, children }: any) {
   );
 }
 
-function Input({ value, onChange, placeholder }: any) {
-  return (
-    <input
-      value={value}
-      placeholder={placeholder}
-      onChange={e => onChange(e.target.value)}
-      style={{
-        width: '100%',
-        padding: 16,
-        borderRadius: 12,
-        background: '#01030f',
-        border: '1px solid #334155',
-        color: '#e5e7eb',
-        fontSize: 15,
-        marginBottom: 14,
-      }}
-    />
-  );
-}
-
 function Textarea({ value, onChange }: any) {
   return (
     <textarea
@@ -359,6 +365,8 @@ function Textarea({ value, onChange }: any) {
         color: '#e5e7eb',
         fontSize: 15,
         resize: 'vertical',
+        fontFamily: 'inherit',
+        lineHeight: 1.6,
       }}
     />
   );

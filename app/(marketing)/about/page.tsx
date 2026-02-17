@@ -108,6 +108,68 @@ export default function AboutPage() {
 
         <hr style={divider} />
 
+        {/* WHY HABITS MATTER */}
+        <Section title="Why Habits Are Everything">
+          <p>
+            James Clear got it right: <strong>"You do not rise to the level of your goals. 
+            You fall to the level of your systems."</strong>
+          </p>
+
+          <p>
+            Your habits are your system. They're the compound interest of self-improvement.
+            Get 1% better each day, and you'll end up 37 times better in a year. Get 1% worse,
+            and you'll decline to nearly zero.
+          </p>
+
+          <div style={{
+            marginTop: 24,
+            padding: 20,
+            background: '#0f172a',
+            border: '1px solid #3b82f640',
+            borderRadius: 10,
+          }}>
+            <h4 style={{ 
+              fontSize: 16, 
+              marginBottom: 12, 
+              color: '#3b82f6',
+              fontWeight: 600
+            }}>
+              The Three Layers of Behavior Change
+            </h4>
+            
+            <ul style={{ ...list, marginTop: 12, marginBottom: 0 }}>
+              <li>
+                <strong>Outcomes:</strong> What you want to achieve (lose 30 lbs, launch business)
+              </li>
+              <li>
+                <strong>Process:</strong> Your systems and habits (daily workouts, coding 2 hrs/day)
+              </li>
+              <li>
+                <strong>Identity:</strong> Who you become ("I'm a disciplined person," "I'm a builder")
+              </li>
+            </ul>
+
+            <p style={{ 
+              marginTop: 16,
+              marginBottom: 0,
+              fontSize: 14,
+              lineHeight: 1.7,
+              color: '#94a3b8'
+            }}>
+              Most people focus on outcomes. Winners focus on identity. Continuum measures both —
+              your daily process <em>and</em> the identity you're building through proof.
+            </p>
+          </div>
+
+          <p style={{ marginTop: 24 }}>
+            <strong>Habits create identity.</strong> Every action is a vote for the type of person you wish to become.
+            Log 100 days of discipline? You're not trying to be disciplined anymore. You <em>are</em> disciplined.
+            That's not motivation. That's evidence.
+          </p>
+        </Section>
+
+        <hr style={divider} />
+
         {/* THE SYSTEM */}
         <Section title="How It Works">
           <p style={{ fontSize: 'clamp(15px, 3vw, 17px)', color: '#e5e7eb', marginBottom: 28 }}>
@@ -180,6 +242,47 @@ export default function AboutPage() {
               When it's rising, you know. When it's flat or falling, you know that too.
             </p>
           </div>
+        </Section>
+
+        <hr style={divider} />
+
+        {/* NEW FEATURES */}
+        <Section title="Features That Keep You On Track">
+          <Feature
+            icon="🎯"
+            title="Weekly Goals"
+            description="Set 3 specific goals every Monday. See them on your Daily Log as reminders. Review them Sunday night. Weekly goals create focus and make reflection meaningful. They reset automatically every Monday at 12:01 AM EST."
+          />
+
+          <Feature
+            icon="📊"
+            title="Pattern Recognition"
+            description="Your Dashboard tracks your top weakness triggers over 30 days. Slip up because of stress? Boredom? Fatigue? The system identifies patterns you might miss. Awareness is the first step to mastery."
+          />
+
+          <Feature
+            icon="🔥"
+            title="Streak Tracking"
+            description="See how many consecutive days you've logged. Streaks are powerful motivators, but they're not the only metric that matters. The Sovereign Score rewards comebacks — missing one day doesn't erase your progress."
+          />
+
+          <Feature
+            icon="📈"
+            title="Habit Consistency Metrics"
+            description="Track how often you complete each habit over the last 30 days. Body habits at 95%? Mind habits at 60%? The data shows exactly where you're strong and where you're slipping."
+          />
+
+          <Feature
+            icon="📝"
+            title="Daily Notes & Journal"
+            description="Capture context with every log. What happened today? What triggered a slip-up? What felt different? Reviewing your notes weekly reveals patterns and insights you'd otherwise miss."
+          />
+
+          <Feature
+            icon="📤"
+            title="Progress Sharing"
+            description="Download shareable images of your stats or chart. Post them for public accountability. Social pressure works when you use it strategically."
+          />
         </Section>
 
         <hr style={divider} />
@@ -327,35 +430,6 @@ export default function AboutPage() {
             This is a measurement tool for people who refuse to coast and need a system 
             that tells them the truth every single day.
           </p>
-        </Section>
-
-        <hr style={divider} />
-
-        {/* HOW YOU'LL USE IT */}
-        <Section title="Your Daily Workflow">
-          <Step
-            number="1"
-            title="Define Your Standards (One Time)"
-            text="You decide what counts as execution in each pillar. Your workout. Your negative habit to avoid. Your daily mission. No templates. No generic advice. Your standards."
-          />
-          
-          <Step
-            number="2"
-            title="Log Daily (2-3 Minutes)"
-            text="Every evening, answer: Did you execute? Check the boxes. Rate your discipline and mood. Add notes if needed. The act of logging is discipline. It forces honesty."
-          />
-          
-          <Step
-            number="3"
-            title="Watch Your Trajectory"
-            text="Your Sovereign Score updates automatically. One day doesn't define you. The trend does. Watch the line go up as consistency builds. Watch it flatten when you coast. The data doesn't lie."
-          />
-          
-          <Step
-            number="4"
-            title="Reflect Weekly"
-            text="Once a week, review what worked, what didn't, and what patterns emerged. Patterns reveal truth. Adjust your standards if needed. Give each change at least 30 days before judging it."
-          />
         </Section>
 
         <hr style={divider} />
@@ -509,63 +583,6 @@ function Section({
   );
 }
 
-function Step({ 
-  number, 
-  title, 
-  text 
-}: { 
-  number: string;
-  title: string; 
-  text: string;
-}) {
-  return (
-    <div className="step-card" style={{ 
-      display: 'flex', 
-      gap: 20, 
-      marginBottom: 24,
-      padding: 'clamp(16px, 4vw, 24px)',
-      background: '#020617',
-      borderRadius: 12,
-      border: '1px solid #334155',
-      flexDirection: 'row',
-    }}>
-      <div style={{
-        width: 'clamp(40px, 8vw, 48px)',
-        height: 'clamp(40px, 8vw, 48px)',
-        borderRadius: 10,
-        background: 'linear-gradient(135deg, #22c55e, #16a34a)',
-        color: '#020617',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontWeight: 800,
-        fontSize: 'clamp(16px, 3vw, 20px)',
-        flexShrink: 0
-      }}>
-        {number}
-      </div>
-      <div>
-        <h4 style={{ 
-          marginBottom: 8, 
-          fontSize: 'clamp(15px, 3vw, 17px)',
-          color: '#e5e7eb',
-          fontWeight: 600
-        }}>
-          {title}
-        </h4>
-        <p style={{ 
-          color: '#94a3b8', 
-          fontSize: 'clamp(13px, 3vw, 15px)',
-          lineHeight: 1.7,
-          margin: 0
-        }}>
-          {text}
-        </p>
-      </div>
-    </div>
-  );
-}
-
 function Pillar({
   icon,
   color,
@@ -607,6 +624,48 @@ function Pillar({
       }}>
         {description}
       </p>
+    </div>
+  );
+}
+
+function Feature({
+  icon,
+  title,
+  description
+}: {
+  icon: string;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div style={{
+      padding: 20,
+      marginBottom: 16,
+      background: '#020617',
+      borderRadius: 12,
+      border: '1px solid #334155'
+    }}>
+      <div style={{ display: 'flex', alignItems: 'start', gap: 16 }}>
+        <div style={{ fontSize: 28, flexShrink: 0 }}>{icon}</div>
+        <div>
+          <h4 style={{ 
+            fontSize: 16,
+            marginBottom: 8, 
+            color: '#22c55e',
+            fontWeight: 600
+          }}>
+            {title}
+          </h4>
+          <p style={{ 
+            color: '#94a3b8', 
+            fontSize: 14,
+            lineHeight: 1.7,
+            margin: 0
+          }}>
+            {description}
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

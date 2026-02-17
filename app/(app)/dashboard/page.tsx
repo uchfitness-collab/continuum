@@ -17,6 +17,20 @@ import {
 const BASELINE_SCORE = 110;
 const CHART_DAYS = 120;
 
+const getESTDate = () => {
+  const now = new Date();
+  const estString = now.toLocaleString('en-US', {
+    timeZone: 'America/New_York',
+  });
+  const estDate = new Date(estString);
+
+  const year = estDate.getFullYear();
+  const month = String(estDate.getMonth() + 1).padStart(2, '0');
+  const day = String(estDate.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+};
+
 const formatMonthDay = (dateStr: string) => {
   const d = new Date(dateStr + 'T00:00:00');
   return d.toLocaleString('en-US', { month: 'short', day: 'numeric' });
@@ -155,7 +169,7 @@ export default function DashboardPage() {
         },
       });
 
-      const today = new Date().toISOString().split('T')[0];
+      const today = getESTDate();
       const todayLog = logs.find(l => l.log_date === today);
       setTodayLogged(!!todayLog);
 

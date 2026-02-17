@@ -38,6 +38,15 @@ const getESTDisplayDate = () => {
   });
 };
 
+const getMondayOfWeek = (dateStr: string) => {
+  const date = new Date(dateStr + 'T00:00:00');
+  const day = date.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  const monday = new Date(date);
+  monday.setDate(date.getDate() + diff);
+  return monday.toISOString().split('T')[0];
+};
+
 export default function DailyPage() {
   const router = useRouter();
   
@@ -62,6 +71,7 @@ export default function DailyPage() {
 
   // User habits
   const [userHabits, setUserHabits] = useState<any>(null);
+  const [weeklyGoals, setWeeklyGoals] = useState<any>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [isLocked, setIsLocked] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -86,6 +96,17 @@ export default function DailyPage() {
         .maybeSingle();
 
       setUserHabits(habits);
+
+      // Load weekly goals
+      const weekStart = getMondayOfWeek(today);
+      const { data: goals } = await supabase
+        .from('weekly_goals')
+        .select('*')
+        .eq('user_id', auth.user.id)
+        .eq('week_start_date', weekStart)
+        .maybeSingle();
+
+      setWeeklyGoals(goals);
 
       const { data: existingLog } = await supabase
         .from('daily_logs')
@@ -313,6 +334,56 @@ export default function DailyPage() {
             {isLocked ? "Today's log is complete ✓" : 'Show up. Record truthfully.'}
           </p>
         </div>
+
+        {/* WEEKLY GOALS REMINDER */}
+        {weeklyGoals && (weeklyGoals.goal1 || weeklyGoals.goal2 || weeklyGoals.goal3) && (
+          <div style={{
+            padding: 20,
+            marginBottom: 32,
+            borderRadius: 12,
+            background: '#2c1810',
+            border: '1px solid #fbbf24',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+              <span style={{ fontSize: 20 }}>🎯</span>
+              <h3 style={{ color: '#fbbf24', margin: 0, fontSize: 16, fontWeight: 600 }}>
+                This Week's Goals
+              </h3>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {weeklyGoals.goal1 && (
+                <div style={{ color: '#e5e7eb', fontSize: 14, display: 'flex', alignItems: 'start', gap: 8 }}>
+                  <span style={{ color: '#fbbf24', flexShrink: 0 }}>•</span>
+                  <span>{weeklyGoals.goal1}</span>
+                </div>
+              )}
+              {weeklyGoals.goal2 && (
+                <div style={{ color: '#e5e7eb', fontSize: 14, display: 'flex', alignItems: 'start', gap: 8 }}>
+                  <span style={{ color: '#fbbf24', flexShrink: 0 }}>•</span>
+                  <span>{weeklyGoals.goal2}</span>
+                </div>
+              )}
+              {weeklyGoals.goal3 && (
+                <div style={{ color: '#e5e7eb', fontSize: 14, display: 'flex', alignItems: 'start', gap: 8 }}>
+                  <span style={{ color: '#fbbf24', flexShrink: 0 }}>•</span>
+                  <span>{weeklyGoals.goal3}</span>
+                </div>
+              )}
+            </div>
+            <Link
+              href="/goals"
+              style={{
+                marginTop: 12,
+                display: 'inline-block',
+                fontSize: 13,
+                color: '#fbbf24',
+                textDecoration: 'underline',
+              }}
+            >
+              Update goals →
+            </Link>
+          </div>
+        )}
 
         {/* COMPLETED SCORES */}
         {isLocked && todayLog && (

@@ -4,17 +4,48 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/src/lib/supabaseClient';
 
+const getESTDate = () => {
+  const now = new Date();
+  const estString = now.toLocaleString('en-US', {
+    timeZone: 'America/New_York',
+  });
+  const estDate = new Date(estString);
+
+  const year = estDate.getFullYear();
+  const month = String(estDate.getMonth() + 1).padStart(2, '0');
+  const day = String(estDate.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+};
+
+const getMondayOfWeek = (dateStr: string) => {
+  const date = new Date(dateStr + 'T00:00:00');
+  const day = date.getDay();
+  const diff = day === 0 ? -6 : 1 - day; // If Sunday, go back 6 days, else go to Monday
+  const monday = new Date(date);
+  monday.setDate(date.getDate() + diff);
+  return monday.toISOString().split('T')[0];
+};
+
 export default function GoalsPage() {
   const router = useRouter();
   
-  // Goal states
+  // 1-Year Goal states
   const [bodyGoal, setBodyGoal] = useState('');
   const [mindGoal, setMindGoal] = useState('');
   const [identityGoal, setIdentityGoal] = useState('');
   
+  // Weekly Goal states
+  const [weeklyGoal1, setWeeklyGoal1] = useState('');
+  const [weeklyGoal2, setWeeklyGoal2] = useState('');
+  const [weeklyGoal3, setWeeklyGoal3] = useState('');
+  const [currentWeekStart, setCurrentWeekStart] = useState('');
+  
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingWeekly, setSavingWeekly] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [weeklyMessage, setWeeklyMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
 
   // Load existing goals
@@ -28,7 +59,7 @@ export default function GoalsPage() {
 
       setUserId(auth.user.id);
 
-      // Check if user_goals table exists and has data
+      // Load 1-year goals
       const { data: goals } = await supabase
         .from('user_goals')
         .select('*')
@@ -41,13 +72,31 @@ export default function GoalsPage() {
         setIdentityGoal(goals.identity_goal || '');
       }
 
+      // Load weekly goals
+      const today = getESTDate();
+      const weekStart = getMondayOfWeek(today);
+      setCurrentWeekStart(weekStart);
+
+      const { data: weeklyGoals } = await supabase
+        .from('weekly_goals')
+        .select('*')
+        .eq('user_id', auth.user.id)
+        .eq('week_start_date', weekStart)
+        .maybeSingle();
+
+      if (weeklyGoals) {
+        setWeeklyGoal1(weeklyGoals.goal1 || '');
+        setWeeklyGoal2(weeklyGoals.goal2 || '');
+        setWeeklyGoal3(weeklyGoals.goal3 || '');
+      }
+
       setLoading(false);
     };
 
     loadGoals();
   }, [router]);
 
-  const handleSave = async () => {
+  const handleSaveYearlyGoals = async () => {
     if (!userId) return;
 
     setSaving(true);
@@ -68,14 +117,45 @@ export default function GoalsPage() {
 
       if (error) throw error;
 
-      setMessage({ type: 'success', text: 'Goals saved successfully!' });
+      setMessage({ type: 'success', text: '1-Year goals saved successfully!' });
       
-      // Auto-hide success message after 3 seconds
       setTimeout(() => setMessage(null), 3000);
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Failed to save goals' });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSaveWeeklyGoals = async () => {
+    if (!userId || !currentWeekStart) return;
+
+    setSavingWeekly(true);
+    setWeeklyMessage(null);
+
+    try {
+      const { error } = await supabase
+        .from('weekly_goals')
+        .upsert({
+          user_id: userId,
+          week_start_date: currentWeekStart,
+          goal1: weeklyGoal1,
+          goal2: weeklyGoal2,
+          goal3: weeklyGoal3,
+          updated_at: new Date().toISOString(),
+        }, {
+          onConflict: 'user_id,week_start_date'
+        });
+
+      if (error) throw error;
+
+      setWeeklyMessage({ type: 'success', text: 'Weekly goals saved!' });
+      
+      setTimeout(() => setWeeklyMessage(null), 3000);
+    } catch (err: any) {
+      setWeeklyMessage({ type: 'error', text: err.message || 'Failed to save weekly goals' });
+    } finally {
+      setSavingWeekly(false);
     }
   };
 
@@ -93,6 +173,10 @@ export default function GoalsPage() {
     );
   }
 
+  const weekEndDate = new Date(currentWeekStart + 'T00:00:00');
+  weekEndDate.setDate(weekEndDate.getDate() + 6);
+  const weekRange = `${new Date(currentWeekStart + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEndDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -104,14 +188,132 @@ export default function GoalsPage() {
         {/* HEADER */}
         <div style={{ marginBottom: 48 }}>
           <h1 style={{ fontSize: 36, fontWeight: 600, marginBottom: 12 }}>
-            Your 1-Year Goals
+            Goals
           </h1>
           <p style={{ color: '#94a3b8', fontSize: 16, lineHeight: 1.6 }}>
-            Define where you're going. Your daily habits are the inputs that produce these outcomes.
+            Set your direction. Your daily habits are the inputs that produce these outcomes.
           </p>
         </div>
 
-        {/* MESSAGE */}
+        {/* ==================== WEEKLY GOALS SECTION ==================== */}
+        <div style={{
+          padding: 32,
+          marginBottom: 48,
+          background: '#020617',
+          borderRadius: 16,
+          border: '2px solid #fbbf24',
+        }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 12, 
+            marginBottom: 8 
+          }}>
+            <div style={{ fontSize: 28 }}>🎯</div>
+            <h2 style={{ fontSize: 24, color: '#fbbf24', margin: 0 }}>This Week's Goals</h2>
+          </div>
+          
+          <p style={{ 
+            fontSize: 14, 
+            color: '#94a3b8', 
+            marginBottom: 24,
+            marginTop: 8,
+          }}>
+            {weekRange} • These reset every Monday
+          </p>
+
+          {weeklyMessage && (
+            <div style={{
+              padding: 12,
+              marginBottom: 20,
+              borderRadius: 8,
+              background: weeklyMessage.type === 'success' ? '#022c22' : '#2c0808',
+              border: `1px solid ${weeklyMessage.type === 'success' ? '#22c55e' : '#ef4444'}`,
+              color: weeklyMessage.type === 'success' ? '#22c55e' : '#ef4444',
+              fontSize: 14,
+            }}>
+              {weeklyMessage.text}
+            </div>
+          )}
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <input
+              type="text"
+              value={weeklyGoal1}
+              onChange={(e) => setWeeklyGoal1(e.target.value)}
+              placeholder="Goal 1: e.g., Log 7/7 days above baseline"
+              style={{
+                width: '100%',
+                padding: 14,
+                background: '#01030f',
+                border: '1px solid #fbbf2450',
+                borderRadius: 10,
+                color: '#e5e7eb',
+                fontSize: 15,
+              }}
+            />
+            <input
+              type="text"
+              value={weeklyGoal2}
+              onChange={(e) => setWeeklyGoal2(e.target.value)}
+              placeholder="Goal 2: e.g., Hit the gym 5 times"
+              style={{
+                width: '100%',
+                padding: 14,
+                background: '#01030f',
+                border: '1px solid #fbbf2450',
+                borderRadius: 10,
+                color: '#e5e7eb',
+                fontSize: 15,
+              }}
+            />
+            <input
+              type="text"
+              value={weeklyGoal3}
+              onChange={(e) => setWeeklyGoal3(e.target.value)}
+              placeholder="Goal 3: e.g., Ship product feature by Friday"
+              style={{
+                width: '100%',
+                padding: 14,
+                background: '#01030f',
+                border: '1px solid #fbbf2450',
+                borderRadius: 10,
+                color: '#e5e7eb',
+                fontSize: 15,
+              }}
+            />
+          </div>
+
+          <button
+            onClick={handleSaveWeeklyGoals}
+            disabled={savingWeekly}
+            style={{
+              marginTop: 20,
+              padding: '12px 28px',
+              background: 'linear-gradient(180deg, #fbbf24, #f59e0b)',
+              color: '#020617',
+              fontWeight: 600,
+              fontSize: 15,
+              borderRadius: 8,
+              border: 'none',
+              cursor: savingWeekly ? 'not-allowed' : 'pointer',
+              opacity: savingWeekly ? 0.6 : 1,
+            }}
+          >
+            {savingWeekly ? 'Saving...' : 'Save Weekly Goals'}
+          </button>
+        </div>
+
+        {/* ==================== 1-YEAR GOALS SECTION ==================== */}
+        <div style={{ marginBottom: 32 }}>
+          <h2 style={{ fontSize: 28, fontWeight: 600, marginBottom: 8 }}>
+            Your 1-Year Direction
+          </h2>
+          <p style={{ color: '#94a3b8', fontSize: 15, lineHeight: 1.6, marginBottom: 32 }}>
+            These are your North Star. Review weekly to ensure your daily habits align.
+          </p>
+        </div>
+
         {message && (
           <div style={{
             padding: 16,
@@ -207,7 +409,7 @@ export default function GoalsPage() {
         {/* SAVE BUTTON */}
         <div style={{ marginTop: 40, textAlign: 'center' }}>
           <button
-            onClick={handleSave}
+            onClick={handleSaveYearlyGoals}
             disabled={saving}
             style={{
               padding: '14px 40px',
@@ -221,7 +423,7 @@ export default function GoalsPage() {
               opacity: saving ? 0.6 : 1,
             }}
           >
-            {saving ? 'Saving...' : 'Save Goals'}
+            {saving ? 'Saving...' : 'Save 1-Year Goals'}
           </button>
           
           <p style={{ marginTop: 16, fontSize: 13, color: '#94a3b8' }}>
