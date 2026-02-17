@@ -91,19 +91,19 @@ export default function HowToUsePage() {
           <GoalExample 
             icon="💪"
             title="Body"
-            example="Lose 30 lbs, run a half-marathon under 2 hours, have visible abs"
+            example="e.g., Lose 30 lbs, run a half-marathon under 2 hours, have visible abs"
           />
 
           <GoalExample 
             icon="🧠"
             title="Mind"
-            example="Read 24 books, eliminate social media addiction, meditate 365 days straight"
+            example="e.g., Read 24 books, eliminate social media addiction, meditate 365 days straight"
           />
 
           <GoalExample 
             icon="⚡"
             title="Identity"
-            example="Launch SaaS product with $10k monthly revenue and 100 paying customers"
+            example="e.g., 'Work on side project for 1 hour' or 'Write 500 words"
           />
 
           <InfoBox color="#3b82f6">

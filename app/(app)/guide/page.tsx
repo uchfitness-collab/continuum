@@ -39,7 +39,7 @@ export default function GuidePage() {
           <ul style={{ marginLeft: 20, lineHeight: 1.8 }}>
             <li>💪 Body: "Lose 25 lbs, run a 10k in under 50 minutes, have visible abs"</li>
             <li>🧠 Mind: "Read 24 books, eliminate social media addiction, meditate daily for 365 days"</li>
-            <li>⚡ Identity: "Launch SaaS product with $10k MRR and 100 paying customers"</li>
+            <li>⚡ Identity: "Apply to 2 jobs or Network with 1 new person or 'Study for certification 45 min"</li>
           </ul>
 
           <p style={{ color: '#fbbf24', fontWeight: 600 }}>
