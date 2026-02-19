@@ -37,6 +37,7 @@ export default function MarketingLayout({
         <div className="desktop-nav" style={{ display: "flex", gap: 20, alignItems: "center" }}>
           <Link href="/about">About</Link>
           <Link href="/stories">Stories</Link>
+          <Link href="/faq">FAQ</Link>
           <Link href="/login">Log In</Link>
 
           <Link
@@ -124,6 +125,13 @@ export default function MarketingLayout({
               style={{ padding: "12px 0", borderBottom: "1px solid #1e293b" }}
             >
               Stories
+            </Link>
+            <Link 
+              href="/faq" 
+              onClick={() => setMobileMenuOpen(false)}
+              style={{ padding: "12px 0", borderBottom: "1px solid #1e293b" }}
+            >
+              FAQ
             </Link>
             <Link 
               href="/login" 
