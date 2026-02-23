@@ -22,9 +22,8 @@ export default function RootLayout({
       <body style={{ margin: 0, padding: 0, background: '#020617', color: '#e5e7eb' }}>
         {children}
 
-        {/* Google Analytics */}
         <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-VEBJMXTZ9Z"
+          src="https://www.googletagmanager.com/gtag/js?id=G-CS1YVX5P0N"
           strategy="afterInteractive"
         />
         <Script id="google-analytics" strategy="afterInteractive">
@@ -32,7 +31,7 @@ export default function RootLayout({
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', 'G-VEBJMXTZ9Z');
+            gtag('config', 'G-CS1YVX5P0N');
           `}
         </Script>
 
