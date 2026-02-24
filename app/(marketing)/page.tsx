@@ -82,14 +82,6 @@ export default function MarketingHome() {
           then shows you whether you're building the person you claim to be or just pretending.
         </p>
 
-        <p style={{
-          color: '#22c55e',
-          fontSize: 15,
-          fontWeight: 600,
-          marginBottom: 40,
-        }}>
-          $12/month — Cancel anytime
-        </p>
 
         {/* CTA */}
         <div className="cta-buttons" style={{ 
