@@ -1,5 +1,7 @@
 import Link from 'next/link';
 
+const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/bJe5kDdx05X34nGbpy5EY00';
+
 export default function MarketingHome() {
   return (
     <section
@@ -72,12 +74,21 @@ export default function MarketingHome() {
             fontSize: 'clamp(16px, 3vw, 20px)',
             lineHeight: 1.7,
             color: '#94a3b8',
-            marginBottom: 40,
+            marginBottom: 12,
             padding: '0 16px',
           }}
         >
           Continuum measures your daily execution across Body, Mind, and Identity—
           then shows you whether you're building the person you claim to be or just pretending.
+        </p>
+
+        <p style={{
+          color: '#22c55e',
+          fontSize: 15,
+          fontWeight: 600,
+          marginBottom: 40,
+        }}>
+          $12/month — Cancel anytime
         </p>
 
         {/* CTA */}
@@ -88,14 +99,21 @@ export default function MarketingHome() {
           justifyContent: 'center',
           padding: '0 16px',
         }}>
-          <Link href="/signup" style={{ textDecoration: 'none' }}>
+          <a href={STRIPE_PAYMENT_LINK} style={{ textDecoration: 'none' }}>
             <button className="primary-btn" style={primaryButton}>Start Tracking</button>
-          </Link>
+          </a>
 
           <Link href="/how-it-works" style={{ textDecoration: 'none' }}>
             <button className="secondary-btn" style={secondaryButton}>How It Works</button>
           </Link>
         </div>
+
+        <p style={{ color: '#475569', fontSize: 13, marginTop: 16 }}>
+          Already have an account?{' '}
+          <Link href="/login" style={{ color: '#22c55e', textDecoration: 'none', fontWeight: 600 }}>
+            Log in
+          </Link>
+        </p>
 
         {/* PILLARS */}
         <div
@@ -150,9 +168,9 @@ export default function MarketingHome() {
           }}>
             See who you actually are when no one's watching.
           </p>
-          <Link href="/signup" style={{ textDecoration: 'none' }}>
-            <button className="primary-btn" style={primaryButton}>Get Started</button>
-          </Link>
+          <a href={STRIPE_PAYMENT_LINK} style={{ textDecoration: 'none' }}>
+            <button className="primary-btn" style={primaryButton}>Get Started — $12/mo</button>
+          </a>
         </div>
       </div>
 
