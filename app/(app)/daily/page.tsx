@@ -30,20 +30,16 @@ const getYesterdayESTDate = () => {
   return `${year}-${month}-${day}`;
 };
 
-const getESTDisplayDate = () => {
+const getESTDisplayDate = (dateStr?: string) => {
+  if (dateStr) {
+    const date = new Date(dateStr + 'T00:00:00');
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+    });
+  }
   const now = new Date();
   const estString = now.toLocaleString('en-US', { timeZone: 'America/New_York' });
   const estDate = new Date(estString);
-  return estDate.toLocaleDateString('en-US', {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-  });
-};
-
-const getYesterdayDisplayDate = () => {
-  const now = new Date();
-  const estString = now.toLocaleString('en-US', { timeZone: 'America/New_York' });
-  const estDate = new Date(estString);
-  estDate.setDate(estDate.getDate() - 1);
   return estDate.toLocaleDateString('en-US', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
   });
@@ -58,8 +54,8 @@ const getMondayOfWeek = (dateStr: string) => {
   return monday.toISOString().split('T')[0];
 };
 
-/* ---------- DEFAULT FORM STATE ---------- */
-const defaultForm = () => ({
+/* ---------- Default form state ---------- */
+const defaultFormState = () => ({
   physical: false,
   nutrition: false,
   reps: 'below_10' as 'below_10' | '25_plus' | '50_plus',
@@ -76,55 +72,51 @@ const defaultForm = () => ({
 export default function DailyPage() {
   const router = useRouter();
 
-  // Which mode: 'today' or 'yesterday'
-  const [mode, setMode] = useState<'today' | 'yesterday'>('today');
+  const today = getESTDate();
+  const yesterday = getYesterdayESTDate();
+
+  // Which day we're logging
+  const [activeTab, setActiveTab] = useState<'today' | 'yesterday'>('today');
+  const activeDate = activeTab === 'today' ? today : yesterday;
 
   // Today form
-  const [todayForm, setTodayForm] = useState(defaultForm());
-  const [todayLocked, setTodayLocked] = useState(false);
+  const [todayForm, setTodayForm] = useState(defaultFormState());
   const [todayLog, setTodayLog] = useState<any>(null);
+  const [isTodayLocked, setIsTodayLocked] = useState(false);
 
   // Yesterday form
-  const [yesterdayForm, setYesterdayForm] = useState(defaultForm());
-  const [yesterdayLocked, setYesterdayLocked] = useState(false);
+  const [yesterdayForm, setYesterdayForm] = useState(defaultFormState());
   const [yesterdayLog, setYesterdayLog] = useState<any>(null);
-  const [yesterdayMissed, setYesterdayMissed] = useState(false);
+  const [isYesterdayLocked, setIsYesterdayLocked] = useState(false);
+  const [showYesterdayTab, setShowYesterdayTab] = useState(false);
 
+  // Shared
   const [userHabits, setUserHabits] = useState<any>(null);
   const [weeklyGoals, setWeeklyGoals] = useState<any>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const today = getESTDate();
-  const yesterday = getYesterdayESTDate();
-  const displayDate = getESTDisplayDate();
-  const yesterdayDisplay = getYesterdayDisplayDate();
-
-  const activeForm = mode === 'today' ? todayForm : yesterdayForm;
-  const setActiveForm = mode === 'today'
-    ? (fn: any) => setTodayForm(fn)
-    : (fn: any) => setYesterdayForm(fn);
-  const isLocked = mode === 'today' ? todayLocked : yesterdayLocked;
-  const activeLog = mode === 'today' ? todayLog : yesterdayLog;
-  const activeDate = mode === 'today' ? today : yesterday;
+  const isLocked = activeTab === 'today' ? isTodayLocked : isYesterdayLocked;
+  const currentLog = activeTab === 'today' ? todayLog : yesterdayLog;
+  const form = activeTab === 'today' ? todayForm : yesterdayForm;
+  const setForm = (updater: (prev: ReturnType<typeof defaultFormState>) => ReturnType<typeof defaultFormState>) => {
+    if (activeTab === 'today') setTodayForm(updater);
+    else setYesterdayForm(updater);
+  };
 
   useEffect(() => {
     const loadData = async () => {
       const { data: auth } = await supabase.auth.getUser();
       if (!auth.user) { router.push('/login'); return; }
 
-      // Load habits
       const { data: habits } = await supabase
-        .from('user_habits').select('*')
-        .eq('user_id', auth.user.id).maybeSingle();
+        .from('user_habits').select('*').eq('user_id', auth.user.id).maybeSingle();
       setUserHabits(habits);
 
-      // Load weekly goals
       const weekStart = getMondayOfWeek(today);
       const { data: goals } = await supabase
         .from('weekly_goals').select('*')
-        .eq('user_id', auth.user.id)
-        .eq('week_start_date', weekStart).maybeSingle();
+        .eq('user_id', auth.user.id).eq('week_start_date', weekStart).maybeSingle();
       setWeeklyGoals(goals);
 
       // Load today's log
@@ -134,7 +126,7 @@ export default function DailyPage() {
 
       if (existingToday) {
         setTodayLog(existingToday);
-        setTodayLocked(true);
+        setIsTodayLocked(true);
         if (!existingToday.is_rest_day) {
           setTodayForm({
             physical: existingToday.body_physical_activity_completed,
@@ -159,7 +151,8 @@ export default function DailyPage() {
 
       if (existingYesterday) {
         setYesterdayLog(existingYesterday);
-        setYesterdayLocked(true);
+        setIsYesterdayLocked(true);
+        setShowYesterdayTab(true);
         if (!existingYesterday.is_rest_day) {
           setYesterdayForm({
             physical: existingYesterday.body_physical_activity_completed,
@@ -176,8 +169,8 @@ export default function DailyPage() {
           });
         }
       } else {
-        // Yesterday was missed — show the option only if today is logged
-        setYesterdayMissed(true);
+        // Yesterday is missing — show tab so they can fill it in
+        setShowYesterdayTab(true);
       }
 
       setIsLoading(false);
@@ -187,10 +180,10 @@ export default function DailyPage() {
   }, [router, today, yesterday]);
 
   useEffect(() => {
-    if (activeForm.mindNegative) {
-      setActiveForm((prev: any) => ({ ...prev, negativeTrigger: 'None' }));
+    if (form.mindNegative) {
+      setForm((prev) => ({ ...prev, negativeTrigger: 'None' }));
     }
-  }, [activeForm.mindNegative]);
+  }, [form.mindNegative]);
 
   const submitRestDay = async () => {
     if (isLocked) return;
@@ -200,10 +193,8 @@ export default function DailyPage() {
 
     const { data: prior } = await supabase
       .from('daily_logs').select('sovereign_score')
-      .eq('user_id', data.user.id)
-      .lt('log_date', activeDate)
-      .order('log_date', { ascending: false })
-      .limit(1).maybeSingle();
+      .eq('user_id', data.user.id).lt('log_date', activeDate)
+      .order('log_date', { ascending: false }).limit(1).maybeSingle();
 
     const priorScore = prior?.sovereign_score ?? 150;
     const sovereignScore = priorScore * 0.7 + REST_DAY_SCORE * 0.3;
@@ -217,7 +208,7 @@ export default function DailyPage() {
       sovereign_value: sovereignScore,
       body_score: 0, mind_score: 0, identity_score: 0,
       negative_trigger: 'None',
-      daily_notes: activeForm.dailyNotes,
+      daily_notes: form.dailyNotes,
       body_physical_activity_completed: false,
       body_nutritional_discipline_maintained: false,
       body_daily_reps_level: 'below_10',
@@ -232,10 +223,14 @@ export default function DailyPage() {
     if (error) {
       setMessage(error.message);
     } else {
-      setMessage('Rest day logged! Redirecting...');
-      if (mode === 'today') { setTodayLocked(true); }
-      else { setYesterdayLocked(true); setYesterdayMissed(false); }
-      setTimeout(() => router.push('/dashboard'), 1500);
+      setMessage('Rest day logged successfully!');
+      if (activeTab === 'today') {
+        setIsTodayLocked(true);
+        setTimeout(() => router.push('/dashboard'), 1500);
+      } else {
+        setIsYesterdayLocked(true);
+        setTimeout(() => setActiveTab('today'), 1500);
+      }
     }
   };
 
@@ -245,19 +240,16 @@ export default function DailyPage() {
     const { data } = await supabase.auth.getUser();
     if (!data.user) return;
 
-    const f = activeForm;
-    let bodyScore = (f.physical ? 20 : 0) + (f.nutrition ? 20 : 0);
-    bodyScore += f.reps === '50_plus' ? 10 : f.reps === '25_plus' ? 5 : -5;
-    const mindScore = (f.mindPositive ? 20 : 0) + (f.mindNegative ? 20 : 0) + f.discipline;
-    const identityScore = (f.mission ? 20 : 0) + (f.philosophy ? 20 : 0) + f.mood;
+    let bodyScore = (form.physical ? 20 : 0) + (form.nutrition ? 20 : 0);
+    bodyScore += form.reps === '50_plus' ? 10 : form.reps === '25_plus' ? 5 : -5;
+    const mindScore = (form.mindPositive ? 20 : 0) + (form.mindNegative ? 20 : 0) + form.discipline;
+    const identityScore = (form.mission ? 20 : 0) + (form.philosophy ? 20 : 0) + form.mood;
     const dailyRawScore = bodyScore + mindScore + identityScore;
 
     const { data: prior } = await supabase
       .from('daily_logs').select('sovereign_score')
-      .eq('user_id', data.user.id)
-      .lt('log_date', activeDate)
-      .order('log_date', { ascending: false })
-      .limit(1).maybeSingle();
+      .eq('user_id', data.user.id).lt('log_date', activeDate)
+      .order('log_date', { ascending: false }).limit(1).maybeSingle();
 
     const priorScore = prior?.sovereign_score ?? 150;
     const sovereignScore = priorScore * 0.7 + dailyRawScore * 0.3;
@@ -265,16 +257,16 @@ export default function DailyPage() {
     const { error } = await supabase.from('daily_logs').insert({
       user_id: data.user.id,
       log_date: activeDate,
-      body_physical_activity_completed: f.physical,
-      body_nutritional_discipline_maintained: f.nutrition,
-      body_daily_reps_level: f.reps,
-      mind_negative_habit_avoided: f.mindNegative,
-      mind_positive_habit_completed: f.mindPositive,
-      mind_discipline_rating: f.discipline,
-      negative_trigger: f.negativeTrigger,
-      identity_daily_mission_completed: f.mission,
-      identity_philosophy_practice_completed: f.philosophy,
-      identity_mood_rating: f.mood,
+      body_physical_activity_completed: form.physical,
+      body_nutritional_discipline_maintained: form.nutrition,
+      body_daily_reps_level: form.reps,
+      mind_negative_habit_avoided: form.mindNegative,
+      mind_positive_habit_completed: form.mindPositive,
+      mind_discipline_rating: form.discipline,
+      negative_trigger: form.negativeTrigger,
+      identity_daily_mission_completed: form.mission,
+      identity_philosophy_practice_completed: form.philosophy,
+      identity_mood_rating: form.mood,
       body_score: bodyScore,
       mind_score: mindScore,
       identity_score: identityScore,
@@ -282,16 +274,20 @@ export default function DailyPage() {
       sovereign_score: sovereignScore,
       sovereign_value: sovereignScore,
       is_rest_day: false,
-      daily_notes: f.dailyNotes,
+      daily_notes: form.dailyNotes,
     });
 
     if (error) {
       setMessage(error.message);
     } else {
-      setMessage('Log submitted! Redirecting...');
-      if (mode === 'today') { setTodayLocked(true); }
-      else { setYesterdayLocked(true); setYesterdayMissed(false); }
-      setTimeout(() => router.push('/dashboard'), 1500);
+      setMessage('Daily log submitted successfully!');
+      if (activeTab === 'today') {
+        setIsTodayLocked(true);
+        setTimeout(() => router.push('/dashboard'), 1500);
+      } else {
+        setIsYesterdayLocked(true);
+        setTimeout(() => setActiveTab('today'), 1500);
+      }
     }
   };
 
@@ -325,49 +321,64 @@ export default function DailyPage() {
         <div style={{ marginBottom: 24 }}>
           <h1 style={{ fontSize: 36, fontWeight: 600, marginBottom: 8 }}>Daily Log</h1>
           <p style={{ color: '#94a3b8', fontSize: 16 }}>
-            {isLocked ? `${mode === 'today' ? "Today's" : "Yesterday's"} log is complete ✓` : 'Show up. Record truthfully.'}
+            {isLocked ? `${activeTab === 'yesterday' ? "Yesterday's" : "Today's"} log is complete ✓` : 'Show up. Record truthfully.'}
           </p>
         </div>
 
-        {/* TAB SWITCHER — only show yesterday tab if today is logged AND yesterday was missed */}
-        {todayLocked && yesterdayMissed && (
+        {/* DATE TABS — only show if yesterday tab is relevant */}
+        {showYesterdayTab && (
           <div style={{ display: 'flex', gap: 8, marginBottom: 32 }}>
             <button
-              onClick={() => { setMode('today'); setMessage(null); }}
+              onClick={() => { setActiveTab('today'); setMessage(null); }}
               style={{
-                flex: 1, padding: '12px 16px', borderRadius: 10, fontWeight: 600, fontSize: 15,
-                background: mode === 'today' ? 'linear-gradient(180deg, #22c55e, #16a34a)' : 'transparent',
-                color: mode === 'today' ? '#020617' : '#94a3b8',
-                border: mode === 'today' ? 'none' : '1px solid #334155',
+                padding: '10px 20px',
+                borderRadius: 10,
+                fontWeight: 600,
+                fontSize: 14,
                 cursor: 'pointer',
+                background: activeTab === 'today' ? '#22c55e' : '#01030f',
+                color: activeTab === 'today' ? '#020617' : '#94a3b8',
+                border: activeTab === 'today' ? '1px solid #22c55e' : '1px solid #334155',
+                transition: 'all 0.15s ease',
               }}
             >
-              Today ✓
+              Today — {getESTDisplayDate().split(',')[0]}
+              {isTodayLocked ? ' ✓' : ''}
             </button>
             <button
-              onClick={() => { setMode('yesterday'); setMessage(null); }}
+              onClick={() => { setActiveTab('yesterday'); setMessage(null); }}
               style={{
-                flex: 1, padding: '12px 16px', borderRadius: 10, fontWeight: 600, fontSize: 15,
-                background: mode === 'yesterday' ? 'linear-gradient(180deg, #f59e0b, #d97706)' : 'transparent',
-                color: mode === 'yesterday' ? '#020617' : '#f59e0b',
-                border: mode === 'yesterday' ? 'none' : '1px solid #f59e0b40',
+                padding: '10px 20px',
+                borderRadius: 10,
+                fontWeight: 600,
+                fontSize: 14,
                 cursor: 'pointer',
+                background: activeTab === 'yesterday' ? '#f59e0b' : '#01030f',
+                color: activeTab === 'yesterday' ? '#020617' : '#94a3b8',
+                border: activeTab === 'yesterday' ? '1px solid #f59e0b' : '1px solid #334155',
+                transition: 'all 0.15s ease',
               }}
             >
-              ⚠️ Log Yesterday
+              Yesterday — {getESTDisplayDate(yesterday).split(',')[0]}
+              {isYesterdayLocked
+                ? ' ✓'
+                : <span style={{ marginLeft: 8, background: '#ef4444', color: '#fff', fontSize: 11, fontWeight: 700, padding: '2px 6px', borderRadius: 999 }}>MISSED</span>
+              }
             </button>
           </div>
         )}
 
         {/* DATE DISPLAY */}
-        <div style={{ marginBottom: 24, color: '#94a3b8', fontSize: 14 }}>
-          📅 {mode === 'today' ? displayDate : yesterdayDisplay} (EST)
-          {mode === 'yesterday' && (
-            <span style={{ marginLeft: 8, color: '#f59e0b', fontWeight: 600 }}>— Missed Day</span>
+        <div style={{ marginBottom: 28, color: '#94a3b8', fontSize: 14 }}>
+          📅 {getESTDisplayDate(activeDate)} (EST)
+          {activeTab === 'yesterday' && !isYesterdayLocked && (
+            <span style={{ marginLeft: 10, color: '#f59e0b', fontWeight: 600, fontSize: 13 }}>
+              ⚠️ Logging for yesterday — last chance!
+            </span>
           )}
         </div>
 
-        {/* WEEKLY GOALS REMINDER */}
+        {/* WEEKLY GOALS */}
         {weeklyGoals && (weeklyGoals.goal1 || weeklyGoals.goal2 || weeklyGoals.goal3) && (
           <div style={{ padding: 20, marginBottom: 32, borderRadius: 12, background: '#2c1810', border: '1px solid #fbbf24' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
@@ -383,36 +394,36 @@ export default function DailyPage() {
           </div>
         )}
 
-        {/* COMPLETED SCORES */}
-        {isLocked && activeLog && (
+        {/* SCORES (locked view) */}
+        {isLocked && currentLog && (
           <div style={{ padding: 24, marginBottom: 32, borderRadius: 12, background: '#022c22', border: '1px solid #22c55e' }}>
             <h3 style={{ color: '#22c55e', marginBottom: 16, fontSize: 18 }}>
-              {mode === 'today' ? "Today's" : "Yesterday's"} Results
+              {activeTab === 'yesterday' ? "Yesterday's Results" : "Today's Results"}
             </h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: 16 }}>
-              <ScorePill label="Body" value={activeLog.body_score} color="#22c55e" />
-              <ScorePill label="Mind" value={activeLog.mind_score} color="#3b82f6" />
-              <ScorePill label="Identity" value={activeLog.identity_score} color="#a855f7" />
-              <ScorePill label="Sovereign" value={activeLog.sovereign_score.toFixed(1)} color="#fbbf24" large />
+              <ScorePill label="Body" value={currentLog.body_score} color="#22c55e" />
+              <ScorePill label="Mind" value={currentLog.mind_score} color="#3b82f6" />
+              <ScorePill label="Identity" value={currentLog.identity_score} color="#a855f7" />
+              <ScorePill label="Sovereign" value={currentLog.sovereign_score.toFixed(1)} color="#fbbf24" large />
             </div>
-            {activeLog.is_rest_day && <p style={{ marginTop: 12, color: '#94a3b8', fontSize: 14, textAlign: 'center' }}>Rest Day</p>}
+            {currentLog.is_rest_day && <p style={{ marginTop: 12, color: '#94a3b8', fontSize: 14, textAlign: 'center' }}>Rest Day</p>}
           </div>
         )}
 
         {message && (
-          <div style={{ padding: 16, marginBottom: 24, borderRadius: 10, background: isLocked ? '#022c22' : '#020617', border: `1px solid ${isLocked ? '#22c55e' : '#334155'}`, color: isLocked ? '#22c55e' : '#e5e7eb', textAlign: 'center' }}>
+          <div style={{ padding: 16, marginBottom: 24, borderRadius: 10, background: '#022c22', border: '1px solid #22c55e', color: '#22c55e', textAlign: 'center' }}>
             {message}
           </div>
         )}
 
         {/* BODY PILLAR */}
         <Pillar title="Body" color="#22c55e" icon="💪">
-          <HabitCheck label={userHabits.body_physical_activity_name || 'Physical activity'} value={activeForm.physical} onChange={(v) => setActiveForm((p: any) => ({ ...p, physical: v }))} disabled={isLocked} />
-          <HabitCheck label={userHabits.body_nutritional_discipline_name || 'Nutrition discipline'} value={activeForm.nutrition} onChange={(v) => setActiveForm((p: any) => ({ ...p, nutrition: v }))} disabled={isLocked} />
+          <HabitCheck label={userHabits.body_physical_activity_name || 'Physical activity'} value={form.physical} onChange={(v) => setForm((p) => ({ ...p, physical: v }))} disabled={isLocked} />
+          <HabitCheck label={userHabits.body_nutritional_discipline_name || 'Nutrition discipline'} value={form.nutrition} onChange={(v) => setForm((p) => ({ ...p, nutrition: v }))} disabled={isLocked} />
           <HabitSelect
             label={`${userHabits.body_daily_reps_name || 'Daily reps'} completed`}
-            value={activeForm.reps}
-            onChange={(v) => setActiveForm((p: any) => ({ ...p, reps: v }))}
+            value={form.reps}
+            onChange={(v) => setForm((p) => ({ ...p, reps: v }))}
             disabled={isLocked}
             options={[
               { value: 'below_10', label: 'Below 10 (-5 pts)' },
@@ -424,13 +435,13 @@ export default function DailyPage() {
 
         {/* MIND PILLAR */}
         <Pillar title="Mind" color="#3b82f6" icon="🧠">
-          <HabitCheck label={userHabits.mind_positive_habit_name || 'Positive habit completed'} value={activeForm.mindPositive} onChange={(v) => setActiveForm((p: any) => ({ ...p, mindPositive: v }))} disabled={isLocked} />
-          <HabitCheck label={`Avoided: ${userHabits.mind_negative_habit_name || 'negative habit'}`} value={activeForm.mindNegative} onChange={(v) => setActiveForm((p: any) => ({ ...p, mindNegative: v }))} disabled={isLocked} />
-          {!activeForm.mindNegative && (
+          <HabitCheck label={userHabits.mind_positive_habit_name || 'Positive habit completed'} value={form.mindPositive} onChange={(v) => setForm((p) => ({ ...p, mindPositive: v }))} disabled={isLocked} />
+          <HabitCheck label={`Avoided: ${userHabits.mind_negative_habit_name || 'negative habit'}`} value={form.mindNegative} onChange={(v) => setForm((p) => ({ ...p, mindNegative: v }))} disabled={isLocked} />
+          {!form.mindNegative && (
             <HabitSelect
               label="What triggered the slip-up?"
-              value={activeForm.negativeTrigger}
-              onChange={(v) => setActiveForm((p: any) => ({ ...p, negativeTrigger: v }))}
+              value={form.negativeTrigger}
+              onChange={(v) => setForm((p) => ({ ...p, negativeTrigger: v }))}
               disabled={isLocked}
               options={[
                 { value: 'Social Media', label: 'Social Media' },
@@ -443,26 +454,26 @@ export default function DailyPage() {
               ]}
             />
           )}
-          <HabitRating label="Discipline rating (1-10)" sublabel="How disciplined were you today?" value={activeForm.discipline} onChange={(v) => setActiveForm((p: any) => ({ ...p, discipline: v }))} disabled={isLocked} />
+          <HabitRating label="Discipline rating (1-10)" sublabel="How disciplined were you today?" value={form.discipline} onChange={(v) => setForm((p) => ({ ...p, discipline: v }))} disabled={isLocked} />
         </Pillar>
 
         {/* IDENTITY PILLAR */}
         <Pillar title="Identity" color="#a855f7" icon="⚡">
-          <HabitCheck label={userHabits.identity_daily_mission_name || 'Daily mission completed'} value={activeForm.mission} onChange={(v) => setActiveForm((p: any) => ({ ...p, mission: v }))} disabled={isLocked} />
-          <HabitCheck label={userHabits.identity_philosophy_practice_name || 'Philosophy practiced'} value={activeForm.philosophy} onChange={(v) => setActiveForm((p: any) => ({ ...p, philosophy: v }))} disabled={isLocked} />
-          <HabitRating label="Mood rating (1-10)" sublabel="How was your mood today?" value={activeForm.mood} onChange={(v) => setActiveForm((p: any) => ({ ...p, mood: v }))} disabled={isLocked} />
+          <HabitCheck label={userHabits.identity_daily_mission_name || 'Daily mission completed'} value={form.mission} onChange={(v) => setForm((p) => ({ ...p, mission: v }))} disabled={isLocked} />
+          <HabitCheck label={userHabits.identity_philosophy_practice_name || 'Philosophy practiced'} value={form.philosophy} onChange={(v) => setForm((p) => ({ ...p, philosophy: v }))} disabled={isLocked} />
+          <HabitRating label="Mood rating (1-10)" sublabel="How was your mood today?" value={form.mood} onChange={(v) => setForm((p) => ({ ...p, mood: v }))} disabled={isLocked} />
         </Pillar>
 
         {/* DAILY JOURNAL */}
         <Pillar title="Daily Notes" color="#fbbf24" icon="📝">
           <div>
             <label style={{ display: 'block', marginBottom: 8 }}>
-              <div style={{ fontSize: 14, color: '#e5e7eb', marginBottom: 4 }}>What happened {mode === 'yesterday' ? 'yesterday' : 'today'}? (Optional)</div>
+              <div style={{ fontSize: 14, color: '#e5e7eb', marginBottom: 4 }}>What happened today? (Optional)</div>
               <div style={{ fontSize: 13, color: '#94a3b8', fontStyle: 'italic' }}>Capture wins, struggles, or context. This helps you spot patterns.</div>
             </label>
             <textarea
-              value={activeForm.dailyNotes}
-              onChange={(e) => setActiveForm((p: any) => ({ ...p, dailyNotes: e.target.value }))}
+              value={form.dailyNotes}
+              onChange={(e) => setForm((p) => ({ ...p, dailyNotes: e.target.value }))}
               disabled={isLocked}
               placeholder="e.g., Crushed the gym, felt unstoppable. Had a stressful work call in the afternoon."
               rows={4}
@@ -471,28 +482,38 @@ export default function DailyPage() {
           </div>
         </Pillar>
 
-        {/* BUTTONS */}
+        {/* SUBMIT BUTTONS */}
         {!isLocked ? (
           <div style={{ display: 'flex', gap: 16, marginTop: 40 }}>
-            <button onClick={submitDay} style={{ flex: 1, padding: 16, background: 'linear-gradient(180deg, #22c55e, #16a34a)', color: '#020617', fontWeight: 600, fontSize: 16, borderRadius: 10, border: 'none', cursor: 'pointer' }}>
-              Submit {mode === 'yesterday' ? 'Yesterday' : 'Day'}
+            <button
+              onClick={submitDay}
+              style={{ flex: 1, padding: 16, background: 'linear-gradient(180deg, #22c55e, #16a34a)', color: '#020617', fontWeight: 600, fontSize: 16, borderRadius: 10, border: 'none', cursor: 'pointer' }}
+            >
+              Submit {activeTab === 'yesterday' ? "Yesterday's Log" : "Today's Log"}
             </button>
-            <button onClick={submitRestDay} style={{ flex: 1, padding: 16, background: 'transparent', color: '#94a3b8', fontWeight: 600, fontSize: 16, borderRadius: 10, border: '1px solid #334155', cursor: 'pointer' }}>
+            <button
+              onClick={submitRestDay}
+              style={{ flex: 1, padding: 16, background: 'transparent', color: '#94a3b8', fontWeight: 600, fontSize: 16, borderRadius: 10, border: '1px solid #334155', cursor: 'pointer' }}
+            >
               Log Rest Day
             </button>
           </div>
         ) : (
-          <button onClick={() => router.push('/dashboard')} style={{ width: '100%', padding: 16, marginTop: 40, background: 'linear-gradient(180deg, #22c55e, #16a34a)', color: '#020617', fontWeight: 600, fontSize: 16, borderRadius: 10, border: 'none', cursor: 'pointer' }}>
-            View Dashboard
-          </button>
+          activeTab === 'today' && (
+            <button
+              onClick={() => router.push('/dashboard')}
+              style={{ width: '100%', padding: 16, marginTop: 40, background: 'linear-gradient(180deg, #22c55e, #16a34a)', color: '#020617', fontWeight: 600, fontSize: 16, borderRadius: 10, border: 'none', cursor: 'pointer' }}
+            >
+              View Dashboard
+            </button>
+          )
         )}
 
         <p style={{ marginTop: 16, textAlign: 'center', fontSize: 13, color: '#94a3b8' }}>
           {!isLocked && 'Log locks after submission. Be honest.'}
-          {isLocked && mode === 'today' && 'Your log resets at 12:01 AM EST. Come back tomorrow.'}
-          {isLocked && mode === 'yesterday' && 'Yesterday\'s log is complete.'}
+          {isLocked && activeTab === 'today' && "Your log resets at 12:01 AM EST. Come back tomorrow."}
+          {isLocked && activeTab === 'yesterday' && "Yesterday's log is complete."}
         </p>
-
       </div>
     </div>
   );
@@ -512,12 +533,79 @@ function Pillar({ title, color, icon, children }: { title: string; color: string
   );
 }
 
-function HabitCheck({ label, value, onChange, disabled }: { label: string; value: boolean; onChange: (v: boolean) => void; disabled: boolean }) {
+function HabitCheck({
+  label,
+  value,
+  onChange,
+  disabled,
+}: {
+  label: string;
+  value: boolean;
+  onChange: (v: boolean) => void;
+  disabled: boolean;
+}) {
+  const [touched, setTouched] = useState(false);
+
+  const handleChange = (v: boolean) => {
+    if (disabled) return;
+    setTouched(true);
+    onChange(v);
+  };
+
   return (
-    <label style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, background: '#01030f', borderRadius: 10, border: `1px solid ${value ? '#22c55e40' : '#334155'}`, cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.6 : 1 }}>
-      <input type="checkbox" checked={value} onChange={(e) => onChange(e.target.checked)} disabled={disabled} style={{ width: 18, height: 18, cursor: disabled ? 'not-allowed' : 'pointer' }} />
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 12,
+      padding: 14,
+      background: '#01030f',
+      borderRadius: 10,
+      border: touched || disabled
+        ? `1px solid ${value ? '#22c55e40' : '#ef444440'}`
+        : '1px solid #334155',
+      opacity: disabled ? 0.6 : 1,
+    }}>
       <span style={{ fontSize: 15, color: '#e5e7eb' }}>{label}</span>
-    </label>
+      <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+        <button
+          onClick={() => handleChange(true)}
+          disabled={disabled}
+          style={{
+            padding: '6px 18px',
+            borderRadius: 8,
+            border: 'none',
+            fontWeight: 600,
+            fontSize: 14,
+            cursor: disabled ? 'not-allowed' : 'pointer',
+            background: touched && value ? '#16a34a' : !touched ? '#1e293b' : '#1a2a1a',
+            color: touched && value ? '#ffffff' : !touched ? '#e5e7eb' : '#4ade80',
+            boxShadow: touched && value ? '0 0 8px #22c55e60' : 'none',
+            transition: 'all 0.15s ease',
+          }}
+        >
+          Yes
+        </button>
+        <button
+          onClick={() => handleChange(false)}
+          disabled={disabled}
+          style={{
+            padding: '6px 18px',
+            borderRadius: 8,
+            border: 'none',
+            fontWeight: 600,
+            fontSize: 14,
+            cursor: disabled ? 'not-allowed' : 'pointer',
+            background: touched && !value ? '#7f1d1d' : !touched ? '#1e293b' : '#1a1010',
+            color: touched && !value ? '#ffffff' : !touched ? '#e5e7eb' : '#f87171',
+            boxShadow: touched && !value ? '0 0 8px #ef444460' : 'none',
+            transition: 'all 0.15s ease',
+          }}
+        >
+          No
+        </button>
+      </div>
+    </div>
   );
 }
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { supabase } from '@/src/lib/supabaseClient';
 
 const MAX_PILLAR_POINTS_PER_DAY = 50;
@@ -58,7 +59,6 @@ export default function WeeklyReflectionPage() {
       const now = new Date();
       const estString = now.toLocaleString('en-US', { timeZone: 'America/New_York' });
       
-      // Parse EST date properly
       const [datePart] = estString.split(', ');
       const [month, day, year] = datePart.split('/');
       const estToday = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
@@ -131,7 +131,6 @@ export default function WeeklyReflectionPage() {
           setNextWeekFocus(reflection.next_week_goals || '');
         }
 
-        // Load THIS week's goals from weekly_goals table
         const { data: thisWeekGoals } = await supabase
           .from('weekly_goals')
           .select('*')
@@ -178,11 +177,43 @@ export default function WeeklyReflectionPage() {
     }}>
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
 
-        <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <h1 style={{ fontSize: 36, fontWeight: 600 }}>
-            Week {weekNumber} Reflection
-          </h1>
-          <p style={{ color: '#94a3b8' }}>{weekRange}</p>
+        {/* HEADER */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          marginBottom: 40,
+          flexWrap: 'wrap',
+          gap: 16,
+        }}>
+          <div style={{ textAlign: 'center', flex: 1 }}>
+            <h1 style={{ fontSize: 36, fontWeight: 600 }}>
+              Week {weekNumber} Reflection
+            </h1>
+            <p style={{ color: '#94a3b8' }}>{weekRange}</p>
+          </div>
+
+          {/* VIEW HISTORY BUTTON */}
+          <Link
+            href="/weekly/history"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '10px 18px',
+              borderRadius: 10,
+              background: 'transparent',
+              color: '#94a3b8',
+              fontWeight: 600,
+              fontSize: 14,
+              border: '1px solid #334155',
+              textDecoration: 'none',
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+            }}
+          >
+            📚 View History
+          </Link>
         </div>
 
         {/* TOP TWO BOXES */}
@@ -204,9 +235,21 @@ export default function WeeklyReflectionPage() {
               <h3 style={{ color: '#3b82f6', marginBottom: 16, fontSize: 18 }}>
                 🎯 Your 1-Year Direction
               </h3>
-              {yearGoals.body_goal && <p style={{ marginBottom: 8, fontSize: 14, lineHeight: 1.6 }}>💪 {yearGoals.body_goal}</p>}
-              {yearGoals.mind_goal && <p style={{ marginBottom: 8, fontSize: 14, lineHeight: 1.6 }}>🧠 {yearGoals.mind_goal}</p>}
-              {yearGoals.identity_goal && <p style={{ marginBottom: 0, fontSize: 14, lineHeight: 1.6 }}>⚡ {yearGoals.identity_goal}</p>}
+              {yearGoals.body_goal && (
+                <p style={{ marginBottom: 8, fontSize: 14, lineHeight: 1.6 }}>
+                  💪 {yearGoals.body_goal}
+                </p>
+              )}
+              {yearGoals.mind_goal && (
+                <p style={{ marginBottom: 8, fontSize: 14, lineHeight: 1.6 }}>
+                  🧠 {yearGoals.mind_goal}
+                </p>
+              )}
+              {yearGoals.identity_goal && (
+                <p style={{ marginBottom: 0, fontSize: 14, lineHeight: 1.6 }}>
+                  ⚡ {yearGoals.identity_goal}
+                </p>
+              )}
             </div>
           )}
 
@@ -221,9 +264,15 @@ export default function WeeklyReflectionPage() {
               <h3 style={{ color: '#fbbf24', marginBottom: 16, fontSize: 18 }}>
                 📋 This Week's Goals — How'd You Do?
               </h3>
-              {lastWeekGoals.goal1 && <p style={{ marginBottom: 8, fontSize: 14 }}>• {lastWeekGoals.goal1}</p>}
-              {lastWeekGoals.goal2 && <p style={{ marginBottom: 8, fontSize: 14 }}>• {lastWeekGoals.goal2}</p>}
-              {lastWeekGoals.goal3 && <p style={{ marginBottom: 0, fontSize: 14 }}>• {lastWeekGoals.goal3}</p>}
+              {lastWeekGoals.goal1 && (
+                <p style={{ marginBottom: 8, fontSize: 14 }}>• {lastWeekGoals.goal1}</p>
+              )}
+              {lastWeekGoals.goal2 && (
+                <p style={{ marginBottom: 8, fontSize: 14 }}>• {lastWeekGoals.goal2}</p>
+              )}
+              {lastWeekGoals.goal3 && (
+                <p style={{ marginBottom: 0, fontSize: 14 }}>• {lastWeekGoals.goal3}</p>
+              )}
             </div>
           ) : (
             <div style={{
@@ -283,7 +332,11 @@ export default function WeeklyReflectionPage() {
             📝 Set Next Week's Goals
           </h3>
           <p style={{ color: '#94a3b8', fontSize: 14, marginBottom: 20 }}>
-            Head to the <a href="/goals" style={{ color: '#fbbf24', textDecoration: 'underline' }}>Goals page</a> to set your weekly goals for next week.
+            Head to the{' '}
+            <a href="/goals" style={{ color: '#fbbf24', textDecoration: 'underline' }}>
+              Goals page
+            </a>{' '}
+            to set your weekly goals for next week.
           </p>
         </div>
 
@@ -307,6 +360,7 @@ export default function WeeklyReflectionPage() {
         {message && (
           <p style={{ marginTop: 16, textAlign: 'center', color: '#22c55e' }}>{message}</p>
         )}
+
       </div>
     </div>
   );
