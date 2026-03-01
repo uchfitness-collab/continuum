@@ -28,19 +28,29 @@ export default function LoginPage() {
       return
     }
 
-    // Check if user has set up their habits
     if (data.user) {
+      // Check onboarding status first
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('onboarding_completed')
+        .eq('user_id', data.user.id)
+        .maybeSingle()
+
+      if (!profile || !profile.onboarding_completed) {
+        router.push('/onboarding')
+        return
+      }
+
+      // Check if habits are set up
       const { data: habitData } = await supabase
         .from('user_habits')
         .select('*')
         .eq('user_id', data.user.id)
-        .single()
+        .maybeSingle()
 
-      // If no habits set up, send to habits page
       if (!habitData) {
         router.push('/habits')
       } else {
-        // If habits exist, send to dashboard
         router.push('/dashboard')
       }
     }
@@ -57,38 +67,23 @@ export default function LoginPage() {
       background: 'radial-gradient(circle at top, #020617, #01030f)',
       padding: 'clamp(16px, 4vw, 24px)',
     }}>
-      {/* CONTENT */}
-      <div style={{
-        width: '100%',
-        maxWidth: 440,
-      }}>
+      <div style={{ width: '100%', maxWidth: 440 }}>
+
         {/* LOGO */}
-        <Link 
-          href="/"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            justifyContent: 'center',
-            marginBottom: 'clamp(24px, 5vw, 40px)',
-            textDecoration: 'none',
-          }}
-        >
-          <img 
-            src="/continuum-hero.jpg" 
+        <Link href="/" style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          justifyContent: 'center',
+          marginBottom: 'clamp(24px, 5vw, 40px)',
+          textDecoration: 'none',
+        }}>
+          <img
+            src="/continuum-hero.jpg"
             alt="Continuum"
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 8,
-              filter: 'grayscale(100%)',
-            }}
+            style={{ width: 40, height: 40, borderRadius: 8, filter: 'grayscale(100%)' }}
           />
-          <span style={{
-            fontSize: 'clamp(20px, 4vw, 24px)',
-            fontWeight: 700,
-            color: '#e5e7eb',
-          }}>
+          <span style={{ fontSize: 'clamp(20px, 4vw, 24px)', fontWeight: 700, color: '#e5e7eb' }}>
             Continuum
           </span>
         </Link>
@@ -100,9 +95,9 @@ export default function LoginPage() {
           borderRadius: 16,
           border: '1px solid #1e293b',
         }}>
-          <h1 style={{ 
+          <h1 style={{
             fontSize: 'clamp(24px, 4vw, 28px)',
-            fontWeight: 600, 
+            fontWeight: 600,
             marginBottom: 8,
             textAlign: 'center',
             color: '#e5e7eb',
@@ -218,32 +213,21 @@ export default function LoginPage() {
           }}>
             <p style={{ color: '#94a3b8', fontSize: 14 }}>
               Don't have an account?{' '}
-              <Link 
-                href="/signup"
-                style={{
-                  color: '#22c55e',
-                  textDecoration: 'none',
-                  fontWeight: 600,
-                }}
-              >
+              <Link href="/signup" style={{ color: '#22c55e', textDecoration: 'none', fontWeight: 600 }}>
                 Sign up
               </Link>
             </p>
           </div>
         </div>
 
-        {/* BACK TO HOME */}
-        <Link
-          href="/"
-          style={{
-            display: 'block',
-            marginTop: 20,
-            textAlign: 'center',
-            color: '#94a3b8',
-            fontSize: 14,
-            textDecoration: 'none',
-          }}
-        >
+        <Link href="/" style={{
+          display: 'block',
+          marginTop: 20,
+          textAlign: 'center',
+          color: '#94a3b8',
+          fontSize: 14,
+          textDecoration: 'none',
+        }}>
           ← Back to home
         </Link>
       </div>
