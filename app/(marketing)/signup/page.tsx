@@ -7,7 +7,7 @@ import { supabase } from '@/src/lib/supabaseClient'
 
 export default function SignUpPage() {
   const router = useRouter()
-  const [firstName, setFirstName] = useState('')
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -19,8 +19,8 @@ export default function SignUpPage() {
     e.preventDefault()
     setError(null)
 
-    if (!firstName.trim()) {
-      setError('Please enter your first name')
+    if (!name.trim()) {
+      setError('Please enter your name')
       return
     }
 
@@ -43,18 +43,17 @@ export default function SignUpPage() {
         options: {
           emailRedirectTo: `${window.location.origin}/dashboard`,
           data: {
-            first_name: firstName.trim(),
+            first_name: name.trim(),
           },
         },
       })
 
       if (signUpError) throw signUpError
 
-      // Create the user_profiles row immediately with first name
       if (data.user) {
         await supabase.from('user_profiles').insert({
           user_id: data.user.id,
-          first_name: firstName.trim(),
+          first_name: name.trim(),
           onboarding_completed: false,
         })
       }
@@ -99,7 +98,6 @@ export default function SignUpPage() {
     }}>
       <div style={{ width: '100%', maxWidth: 440 }}>
 
-        {/* LOGO */}
         <Link href="/" style={{
           display: 'flex',
           alignItems: 'center',
@@ -211,20 +209,18 @@ export default function SignUpPage() {
 
               <form onSubmit={handleSubmit}>
 
-                {/* FIRST NAME */}
                 <div style={{ marginBottom: 20 }}>
-                  <label style={labelStyle}>First Name</label>
+                  <label style={labelStyle}>Name</label>
                   <input
                     type="text"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    placeholder="Marcus"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Marcus Aurelius"
                     required
                     style={inputStyle}
                   />
                 </div>
 
-                {/* EMAIL */}
                 <div style={{ marginBottom: 20 }}>
                   <label style={labelStyle}>Email</label>
                   <input
@@ -236,7 +232,6 @@ export default function SignUpPage() {
                   />
                 </div>
 
-                {/* PASSWORD */}
                 <div style={{ marginBottom: 20 }}>
                   <label style={labelStyle}>Password</label>
                   <input
@@ -248,7 +243,6 @@ export default function SignUpPage() {
                   />
                 </div>
 
-                {/* CONFIRM PASSWORD */}
                 <div style={{ marginBottom: 24 }}>
                   <label style={labelStyle}>Confirm Password</label>
                   <input
