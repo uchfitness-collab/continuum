@@ -75,22 +75,18 @@ export default function DailyPage() {
   const today = getESTDate();
   const yesterday = getYesterdayESTDate();
 
-  // Which day we're logging
   const [activeTab, setActiveTab] = useState<'today' | 'yesterday'>('today');
   const activeDate = activeTab === 'today' ? today : yesterday;
 
-  // Today form
   const [todayForm, setTodayForm] = useState(defaultFormState());
   const [todayLog, setTodayLog] = useState<any>(null);
   const [isTodayLocked, setIsTodayLocked] = useState(false);
 
-  // Yesterday form
   const [yesterdayForm, setYesterdayForm] = useState(defaultFormState());
   const [yesterdayLog, setYesterdayLog] = useState<any>(null);
   const [isYesterdayLocked, setIsYesterdayLocked] = useState(false);
   const [showYesterdayTab, setShowYesterdayTab] = useState(false);
 
-  // Shared
   const [userHabits, setUserHabits] = useState<any>(null);
   const [weeklyGoals, setWeeklyGoals] = useState<any>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -119,7 +115,6 @@ export default function DailyPage() {
         .eq('user_id', auth.user.id).eq('week_start_date', weekStart).maybeSingle();
       setWeeklyGoals(goals);
 
-      // Load today's log
       const { data: existingToday } = await supabase
         .from('daily_logs').select('*')
         .eq('user_id', auth.user.id).eq('log_date', today).maybeSingle();
@@ -144,7 +139,6 @@ export default function DailyPage() {
         }
       }
 
-      // Load yesterday's log
       const { data: existingYesterday } = await supabase
         .from('daily_logs').select('*')
         .eq('user_id', auth.user.id).eq('log_date', yesterday).maybeSingle();
@@ -169,7 +163,6 @@ export default function DailyPage() {
           });
         }
       } else {
-        // Yesterday is missing — show tab so they can fill it in
         setShowYesterdayTab(true);
       }
 
@@ -293,7 +286,13 @@ export default function DailyPage() {
 
   if (isLoading) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'radial-gradient(circle at top, #020617, #01030f)' }}>
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        background: 'radial-gradient(circle at top, #020617, #01030f)',
+      }}>
         <p style={{ color: '#94a3b8' }}>Loading...</p>
       </div>
     );
@@ -301,11 +300,35 @@ export default function DailyPage() {
 
   if (!userHabits) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'radial-gradient(circle at top, #020617, #01030f)', padding: 24 }}>
-        <div style={{ maxWidth: 500, padding: 40, background: '#020617', borderRadius: 16, border: '1px solid #ef4444', textAlign: 'center' }}>
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        background: 'radial-gradient(circle at top, #020617, #01030f)',
+        padding: 24,
+      }}>
+        <div style={{
+          maxWidth: 500,
+          padding: 40,
+          background: '#020617',
+          borderRadius: 16,
+          border: '1px solid #ef4444',
+          textAlign: 'center',
+        }}>
           <h2 style={{ fontSize: 24, marginBottom: 16, color: '#ef4444' }}>No Habits Defined</h2>
-          <p style={{ color: '#94a3b8', marginBottom: 24, lineHeight: 1.6 }}>You need to define your daily habits before you can start logging.</p>
-          <Link href="/habits" style={{ display: 'inline-block', padding: '12px 24px', background: 'linear-gradient(180deg, #22c55e, #16a34a)', color: '#020617', fontWeight: 600, borderRadius: 8, textDecoration: 'none' }}>
+          <p style={{ color: '#94a3b8', marginBottom: 24, lineHeight: 1.6 }}>
+            You need to define your daily habits before you can start logging.
+          </p>
+          <Link href="/habits" style={{
+            display: 'inline-block',
+            padding: '12px 24px',
+            background: 'linear-gradient(180deg, #22c55e, #16a34a)',
+            color: '#020617',
+            fontWeight: 600,
+            borderRadius: 8,
+            textDecoration: 'none',
+          }}>
             Set Up Habits
           </Link>
         </div>
@@ -314,27 +337,34 @@ export default function DailyPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', padding: '60px 24px', background: 'radial-gradient(circle at top, #020617, #01030f)' }}>
+    <div style={{
+      minHeight: '100vh',
+      padding: '60px 24px',
+      background: 'radial-gradient(circle at top, #020617, #01030f)',
+    }}>
       <div style={{ maxWidth: 800, margin: '0 auto' }}>
 
         {/* HEADER */}
         <div style={{ marginBottom: 24 }}>
           <h1 style={{ fontSize: 36, fontWeight: 600, marginBottom: 8 }}>Daily Log</h1>
           <p style={{ color: '#94a3b8', fontSize: 16 }}>
-            {isLocked ? `${activeTab === 'yesterday' ? "Yesterday's" : "Today's"} log is complete ✓` : 'Show up. Record truthfully.'}
+            {isLocked
+              ? `${activeTab === 'yesterday' ? "Yesterday's" : "Today's"} log is complete ✓`
+              : 'Show up. Record truthfully.'}
           </p>
         </div>
 
-        {/* DATE TABS — only show if yesterday tab is relevant */}
+        {/* DATE TABS */}
         {showYesterdayTab && (
           <div style={{ display: 'flex', gap: 8, marginBottom: 32 }}>
             <button
               onClick={() => { setActiveTab('today'); setMessage(null); }}
               style={{
-                padding: '10px 20px',
+                flex: 1,
+                padding: '10px 16px',
                 borderRadius: 10,
                 fontWeight: 600,
-                fontSize: 14,
+                fontSize: 13,
                 cursor: 'pointer',
                 background: activeTab === 'today' ? '#22c55e' : '#01030f',
                 color: activeTab === 'today' ? '#020617' : '#94a3b8',
@@ -348,10 +378,11 @@ export default function DailyPage() {
             <button
               onClick={() => { setActiveTab('yesterday'); setMessage(null); }}
               style={{
-                padding: '10px 20px',
+                flex: 1,
+                padding: '10px 16px',
                 borderRadius: 10,
                 fontWeight: 600,
-                fontSize: 14,
+                fontSize: 13,
                 cursor: 'pointer',
                 background: activeTab === 'yesterday' ? '#f59e0b' : '#01030f',
                 color: activeTab === 'yesterday' ? '#020617' : '#94a3b8',
@@ -362,7 +393,7 @@ export default function DailyPage() {
               Yesterday — {getESTDisplayDate(yesterday).split(',')[0]}
               {isYesterdayLocked
                 ? ' ✓'
-                : <span style={{ marginLeft: 8, background: '#ef4444', color: '#fff', fontSize: 11, fontWeight: 700, padding: '2px 6px', borderRadius: 999 }}>MISSED</span>
+                : <span style={{ marginLeft: 6, background: '#ef4444', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 5px', borderRadius: 999 }}>MISSED</span>
               }
             </button>
           </div>
@@ -380,23 +411,58 @@ export default function DailyPage() {
 
         {/* WEEKLY GOALS */}
         {weeklyGoals && (weeklyGoals.goal1 || weeklyGoals.goal2 || weeklyGoals.goal3) && (
-          <div style={{ padding: 20, marginBottom: 32, borderRadius: 12, background: '#2c1810', border: '1px solid #fbbf24' }}>
+          <div style={{
+            padding: 20,
+            marginBottom: 32,
+            borderRadius: 12,
+            background: '#2c1810',
+            border: '1px solid #fbbf24',
+          }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
               <span style={{ fontSize: 20 }}>🎯</span>
               <h3 style={{ color: '#fbbf24', margin: 0, fontSize: 16, fontWeight: 600 }}>This Week's Goals</h3>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {weeklyGoals.goal1 && <div style={{ color: '#e5e7eb', fontSize: 14, display: 'flex', alignItems: 'start', gap: 8 }}><span style={{ color: '#fbbf24', flexShrink: 0 }}>•</span><span>{weeklyGoals.goal1}</span></div>}
-              {weeklyGoals.goal2 && <div style={{ color: '#e5e7eb', fontSize: 14, display: 'flex', alignItems: 'start', gap: 8 }}><span style={{ color: '#fbbf24', flexShrink: 0 }}>•</span><span>{weeklyGoals.goal2}</span></div>}
-              {weeklyGoals.goal3 && <div style={{ color: '#e5e7eb', fontSize: 14, display: 'flex', alignItems: 'start', gap: 8 }}><span style={{ color: '#fbbf24', flexShrink: 0 }}>•</span><span>{weeklyGoals.goal3}</span></div>}
+              {weeklyGoals.goal1 && (
+                <div style={{ color: '#e5e7eb', fontSize: 14, display: 'flex', alignItems: 'start', gap: 8 }}>
+                  <span style={{ color: '#fbbf24', flexShrink: 0 }}>•</span>
+                  <span>{weeklyGoals.goal1}</span>
+                </div>
+              )}
+              {weeklyGoals.goal2 && (
+                <div style={{ color: '#e5e7eb', fontSize: 14, display: 'flex', alignItems: 'start', gap: 8 }}>
+                  <span style={{ color: '#fbbf24', flexShrink: 0 }}>•</span>
+                  <span>{weeklyGoals.goal2}</span>
+                </div>
+              )}
+              {weeklyGoals.goal3 && (
+                <div style={{ color: '#e5e7eb', fontSize: 14, display: 'flex', alignItems: 'start', gap: 8 }}>
+                  <span style={{ color: '#fbbf24', flexShrink: 0 }}>•</span>
+                  <span>{weeklyGoals.goal3}</span>
+                </div>
+              )}
             </div>
-            <Link href="/goals" style={{ marginTop: 12, display: 'inline-block', fontSize: 13, color: '#fbbf24', textDecoration: 'underline' }}>Update goals →</Link>
+            <Link href="/goals" style={{
+              marginTop: 12,
+              display: 'inline-block',
+              fontSize: 13,
+              color: '#fbbf24',
+              textDecoration: 'underline',
+            }}>
+              Update goals →
+            </Link>
           </div>
         )}
 
         {/* SCORES (locked view) */}
         {isLocked && currentLog && (
-          <div style={{ padding: 24, marginBottom: 32, borderRadius: 12, background: '#022c22', border: '1px solid #22c55e' }}>
+          <div style={{
+            padding: 24,
+            marginBottom: 32,
+            borderRadius: 12,
+            background: '#022c22',
+            border: '1px solid #22c55e',
+          }}>
             <h3 style={{ color: '#22c55e', marginBottom: 16, fontSize: 18 }}>
               {activeTab === 'yesterday' ? "Yesterday's Results" : "Today's Results"}
             </h3>
@@ -406,20 +472,40 @@ export default function DailyPage() {
               <ScorePill label="Identity" value={currentLog.identity_score} color="#a855f7" />
               <ScorePill label="Sovereign" value={currentLog.sovereign_score.toFixed(1)} color="#fbbf24" large />
             </div>
-            {currentLog.is_rest_day && <p style={{ marginTop: 12, color: '#94a3b8', fontSize: 14, textAlign: 'center' }}>Rest Day</p>}
+            {currentLog.is_rest_day && (
+              <p style={{ marginTop: 12, color: '#94a3b8', fontSize: 14, textAlign: 'center' }}>Rest Day</p>
+            )}
           </div>
         )}
 
         {message && (
-          <div style={{ padding: 16, marginBottom: 24, borderRadius: 10, background: '#022c22', border: '1px solid #22c55e', color: '#22c55e', textAlign: 'center' }}>
+          <div style={{
+            padding: 16,
+            marginBottom: 24,
+            borderRadius: 10,
+            background: '#022c22',
+            border: '1px solid #22c55e',
+            color: '#22c55e',
+            textAlign: 'center',
+          }}>
             {message}
           </div>
         )}
 
         {/* BODY PILLAR */}
         <Pillar title="Body" color="#22c55e" icon="💪">
-          <HabitCheck label={userHabits.body_physical_activity_name || 'Physical activity'} value={form.physical} onChange={(v) => setForm((p) => ({ ...p, physical: v }))} disabled={isLocked} />
-          <HabitCheck label={userHabits.body_nutritional_discipline_name || 'Nutrition discipline'} value={form.nutrition} onChange={(v) => setForm((p) => ({ ...p, nutrition: v }))} disabled={isLocked} />
+          <HabitCheck
+            label={userHabits.body_physical_activity_name || 'Physical activity'}
+            value={form.physical}
+            onChange={(v) => setForm((p) => ({ ...p, physical: v }))}
+            disabled={isLocked}
+          />
+          <HabitCheck
+            label={userHabits.body_nutritional_discipline_name || 'Nutrition discipline'}
+            value={form.nutrition}
+            onChange={(v) => setForm((p) => ({ ...p, nutrition: v }))}
+            disabled={isLocked}
+          />
           <HabitSelect
             label={`${userHabits.body_daily_reps_name || 'Daily reps'} completed`}
             value={form.reps}
@@ -435,8 +521,18 @@ export default function DailyPage() {
 
         {/* MIND PILLAR */}
         <Pillar title="Mind" color="#3b82f6" icon="🧠">
-          <HabitCheck label={userHabits.mind_positive_habit_name || 'Positive habit completed'} value={form.mindPositive} onChange={(v) => setForm((p) => ({ ...p, mindPositive: v }))} disabled={isLocked} />
-          <HabitCheck label={`Avoided: ${userHabits.mind_negative_habit_name || 'negative habit'}`} value={form.mindNegative} onChange={(v) => setForm((p) => ({ ...p, mindNegative: v }))} disabled={isLocked} />
+          <HabitCheck
+            label={userHabits.mind_positive_habit_name || 'Positive habit completed'}
+            value={form.mindPositive}
+            onChange={(v) => setForm((p) => ({ ...p, mindPositive: v }))}
+            disabled={isLocked}
+          />
+          <HabitCheck
+            label={`Avoided: ${userHabits.mind_negative_habit_name || 'negative habit'}`}
+            value={form.mindNegative}
+            onChange={(v) => setForm((p) => ({ ...p, mindNegative: v }))}
+            disabled={isLocked}
+          />
           {!form.mindNegative && (
             <HabitSelect
               label="What triggered the slip-up?"
@@ -454,22 +550,48 @@ export default function DailyPage() {
               ]}
             />
           )}
-          <HabitRating label="Discipline rating (1-10)" sublabel="How disciplined were you today?" value={form.discipline} onChange={(v) => setForm((p) => ({ ...p, discipline: v }))} disabled={isLocked} />
+          <HabitRating
+            label="Discipline rating (1-10)"
+            sublabel="How disciplined were you today?"
+            value={form.discipline}
+            onChange={(v) => setForm((p) => ({ ...p, discipline: v }))}
+            disabled={isLocked}
+          />
         </Pillar>
 
         {/* IDENTITY PILLAR */}
         <Pillar title="Identity" color="#a855f7" icon="⚡">
-          <HabitCheck label={userHabits.identity_daily_mission_name || 'Daily mission completed'} value={form.mission} onChange={(v) => setForm((p) => ({ ...p, mission: v }))} disabled={isLocked} />
-          <HabitCheck label={userHabits.identity_philosophy_practice_name || 'Philosophy practiced'} value={form.philosophy} onChange={(v) => setForm((p) => ({ ...p, philosophy: v }))} disabled={isLocked} />
-          <HabitRating label="Mood rating (1-10)" sublabel="How was your mood today?" value={form.mood} onChange={(v) => setForm((p) => ({ ...p, mood: v }))} disabled={isLocked} />
+          <HabitCheck
+            label={userHabits.identity_daily_mission_name || 'Daily mission completed'}
+            value={form.mission}
+            onChange={(v) => setForm((p) => ({ ...p, mission: v }))}
+            disabled={isLocked}
+          />
+          <HabitCheck
+            label={userHabits.identity_philosophy_practice_name || 'Philosophy practiced'}
+            value={form.philosophy}
+            onChange={(v) => setForm((p) => ({ ...p, philosophy: v }))}
+            disabled={isLocked}
+          />
+          <HabitRating
+            label="Mood rating (1-10)"
+            sublabel="How was your mood today?"
+            value={form.mood}
+            onChange={(v) => setForm((p) => ({ ...p, mood: v }))}
+            disabled={isLocked}
+          />
         </Pillar>
 
         {/* DAILY JOURNAL */}
         <Pillar title="Daily Notes" color="#fbbf24" icon="📝">
           <div>
             <label style={{ display: 'block', marginBottom: 8 }}>
-              <div style={{ fontSize: 14, color: '#e5e7eb', marginBottom: 4 }}>What happened today? (Optional)</div>
-              <div style={{ fontSize: 13, color: '#94a3b8', fontStyle: 'italic' }}>Capture wins, struggles, or context. This helps you spot patterns.</div>
+              <div style={{ fontSize: 14, color: '#e5e7eb', marginBottom: 4 }}>
+                What happened today? (Optional)
+              </div>
+              <div style={{ fontSize: 13, color: '#94a3b8', fontStyle: 'italic' }}>
+                Capture wins, struggles, or context. This helps you spot patterns.
+              </div>
             </label>
             <textarea
               value={form.dailyNotes}
@@ -477,7 +599,20 @@ export default function DailyPage() {
               disabled={isLocked}
               placeholder="e.g., Crushed the gym, felt unstoppable. Had a stressful work call in the afternoon."
               rows={4}
-              style={{ width: '100%', padding: 14, borderRadius: 10, background: '#01030f', border: '1px solid #334155', color: '#e5e7eb', fontSize: 15, lineHeight: 1.6, resize: 'vertical', fontFamily: 'inherit', cursor: isLocked ? 'not-allowed' : 'text', opacity: isLocked ? 0.6 : 1 }}
+              style={{
+                width: '100%',
+                padding: 14,
+                borderRadius: 10,
+                background: '#01030f',
+                border: '1px solid #334155',
+                color: '#e5e7eb',
+                fontSize: 15,
+                lineHeight: 1.6,
+                resize: 'vertical',
+                fontFamily: 'inherit',
+                cursor: isLocked ? 'not-allowed' : 'text',
+                opacity: isLocked ? 0.6 : 1,
+              }}
             />
           </div>
         </Pillar>
@@ -487,13 +622,33 @@ export default function DailyPage() {
           <div style={{ display: 'flex', gap: 16, marginTop: 40 }}>
             <button
               onClick={submitDay}
-              style={{ flex: 1, padding: 16, background: 'linear-gradient(180deg, #22c55e, #16a34a)', color: '#020617', fontWeight: 600, fontSize: 16, borderRadius: 10, border: 'none', cursor: 'pointer' }}
+              style={{
+                flex: 1,
+                padding: 16,
+                background: 'linear-gradient(180deg, #22c55e, #16a34a)',
+                color: '#020617',
+                fontWeight: 600,
+                fontSize: 16,
+                borderRadius: 10,
+                border: 'none',
+                cursor: 'pointer',
+              }}
             >
               Submit {activeTab === 'yesterday' ? "Yesterday's Log" : "Today's Log"}
             </button>
             <button
               onClick={submitRestDay}
-              style={{ flex: 1, padding: 16, background: 'transparent', color: '#94a3b8', fontWeight: 600, fontSize: 16, borderRadius: 10, border: '1px solid #334155', cursor: 'pointer' }}
+              style={{
+                flex: 1,
+                padding: 16,
+                background: 'transparent',
+                color: '#94a3b8',
+                fontWeight: 600,
+                fontSize: 16,
+                borderRadius: 10,
+                border: '1px solid #334155',
+                cursor: 'pointer',
+              }}
             >
               Log Rest Day
             </button>
@@ -502,7 +657,18 @@ export default function DailyPage() {
           activeTab === 'today' && (
             <button
               onClick={() => router.push('/dashboard')}
-              style={{ width: '100%', padding: 16, marginTop: 40, background: 'linear-gradient(180deg, #22c55e, #16a34a)', color: '#020617', fontWeight: 600, fontSize: 16, borderRadius: 10, border: 'none', cursor: 'pointer' }}
+              style={{
+                width: '100%',
+                padding: 16,
+                marginTop: 40,
+                background: 'linear-gradient(180deg, #22c55e, #16a34a)',
+                color: '#020617',
+                fontWeight: 600,
+                fontSize: 16,
+                borderRadius: 10,
+                border: 'none',
+                cursor: 'pointer',
+              }}
             >
               View Dashboard
             </button>
@@ -511,7 +677,7 @@ export default function DailyPage() {
 
         <p style={{ marginTop: 16, textAlign: 'center', fontSize: 13, color: '#94a3b8' }}>
           {!isLocked && 'Log locks after submission. Be honest.'}
-          {isLocked && activeTab === 'today' && "Your log resets at 12:01 AM EST. Come back tomorrow."}
+          {isLocked && activeTab === 'today' && 'Your log resets at 12:01 AM EST. Come back tomorrow.'}
           {isLocked && activeTab === 'yesterday' && "Yesterday's log is complete."}
         </p>
       </div>
@@ -521,9 +687,21 @@ export default function DailyPage() {
 
 /* ---------- Components ---------- */
 
-function Pillar({ title, color, icon, children }: { title: string; color: string; icon: string; children: React.ReactNode }) {
+function Pillar({ title, color, icon, children }: {
+  title: string;
+  color: string;
+  icon: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div style={{ marginBottom: 28, padding: 28, borderRadius: 16, background: '#020617', border: `1px solid ${color}30`, borderLeft: `4px solid ${color}` }}>
+    <div style={{
+      marginBottom: 28,
+      padding: 28,
+      borderRadius: 16,
+      background: '#020617',
+      border: `1px solid ${color}30`,
+      borderLeft: `4px solid ${color}`,
+    }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
         <span style={{ fontSize: 24 }}>{icon}</span>
         <h2 style={{ color, margin: 0, fontSize: 20, fontWeight: 600 }}>{title}</h2>
@@ -555,9 +733,8 @@ function HabitCheck({
   return (
     <div style={{
       display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: 12,
+      flexDirection: 'column',
+      gap: 10,
       padding: 14,
       background: '#01030f',
       borderRadius: 10,
@@ -567,16 +744,17 @@ function HabitCheck({
       opacity: disabled ? 0.6 : 1,
     }}>
       <span style={{ fontSize: 15, color: '#e5e7eb' }}>{label}</span>
-      <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+      <div style={{ display: 'flex', gap: 8 }}>
         <button
           onClick={() => handleChange(true)}
           disabled={disabled}
           style={{
-            padding: '6px 18px',
+            flex: 1,
+            padding: '10px 0',
             borderRadius: 8,
             border: 'none',
             fontWeight: 600,
-            fontSize: 14,
+            fontSize: 15,
             cursor: disabled ? 'not-allowed' : 'pointer',
             background: touched && value ? '#16a34a' : !touched ? '#1e293b' : '#1a2a1a',
             color: touched && value ? '#ffffff' : !touched ? '#e5e7eb' : '#4ade80',
@@ -590,11 +768,12 @@ function HabitCheck({
           onClick={() => handleChange(false)}
           disabled={disabled}
           style={{
-            padding: '6px 18px',
+            flex: 1,
+            padding: '10px 0',
             borderRadius: 8,
             border: 'none',
             fontWeight: 600,
-            fontSize: 14,
+            fontSize: 15,
             cursor: disabled ? 'not-allowed' : 'pointer',
             background: touched && !value ? '#7f1d1d' : !touched ? '#1e293b' : '#1a1010',
             color: touched && !value ? '#ffffff' : !touched ? '#e5e7eb' : '#f87171',
@@ -609,34 +788,93 @@ function HabitCheck({
   );
 }
 
-function HabitSelect({ label, value, onChange, disabled, options }: { label: string; value: string; onChange: (v: any) => void; disabled: boolean; options: { value: string; label: string }[] }) {
+function HabitSelect({ label, value, onChange, disabled, options }: {
+  label: string;
+  value: string;
+  onChange: (v: any) => void;
+  disabled: boolean;
+  options: { value: string; label: string }[];
+}) {
   return (
     <div>
-      <label style={{ display: 'block', marginBottom: 8, fontSize: 14, color: '#94a3b8' }}>{label}</label>
-      <select value={value} onChange={(e) => onChange(e.target.value)} disabled={disabled} style={{ width: '100%', padding: 14, borderRadius: 10, background: '#01030f', border: '1px solid #334155', color: '#e5e7eb', fontSize: 15, cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.6 : 1 }}>
-        {options.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+      <label style={{ display: 'block', marginBottom: 8, fontSize: 14, color: '#94a3b8' }}>
+        {label}
+      </label>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        disabled={disabled}
+        style={{
+          width: '100%',
+          padding: 14,
+          borderRadius: 10,
+          background: '#01030f',
+          border: '1px solid #334155',
+          color: '#e5e7eb',
+          fontSize: 15,
+          cursor: disabled ? 'not-allowed' : 'pointer',
+          opacity: disabled ? 0.6 : 1,
+        }}
+      >
+        {options.map((opt) => (
+          <option key={opt.value} value={opt.value}>{opt.label}</option>
+        ))}
       </select>
     </div>
   );
 }
 
-function HabitRating({ label, sublabel, value, onChange, disabled }: { label: string; sublabel: string; value: number; onChange: (v: number) => void; disabled: boolean }) {
+function HabitRating({ label, sublabel, value, onChange, disabled }: {
+  label: string;
+  sublabel: string;
+  value: number;
+  onChange: (v: number) => void;
+  disabled: boolean;
+}) {
   return (
     <div>
       <label style={{ display: 'block', marginBottom: 8 }}>
         <div style={{ fontSize: 14, color: '#e5e7eb', marginBottom: 4 }}>{label}</div>
         <div style={{ fontSize: 13, color: '#94a3b8', fontStyle: 'italic' }}>{sublabel}</div>
       </label>
-      <select value={value} onChange={(e) => onChange(Number(e.target.value))} disabled={disabled} style={{ width: '100%', padding: 14, borderRadius: 10, background: '#01030f', border: '1px solid #334155', color: '#e5e7eb', fontSize: 15, cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.6 : 1 }}>
-        {[1,2,3,4,5,6,7,8,9,10].map((n) => <option key={n} value={n}>{n}</option>)}
+      <select
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        disabled={disabled}
+        style={{
+          width: '100%',
+          padding: 14,
+          borderRadius: 10,
+          background: '#01030f',
+          border: '1px solid #334155',
+          color: '#e5e7eb',
+          fontSize: 15,
+          cursor: disabled ? 'not-allowed' : 'pointer',
+          opacity: disabled ? 0.6 : 1,
+        }}
+      >
+        {[1,2,3,4,5,6,7,8,9,10].map((n) => (
+          <option key={n} value={n}>{n}</option>
+        ))}
       </select>
     </div>
   );
 }
 
-function ScorePill({ label, value, color, large = false }: { label: string; value: any; color: string; large?: boolean }) {
+function ScorePill({ label, value, color, large = false }: {
+  label: string;
+  value: any;
+  color: string;
+  large?: boolean;
+}) {
   return (
-    <div style={{ padding: large ? 16 : 12, background: '#01030f', borderRadius: 10, border: `1px solid ${color}40`, textAlign: 'center' }}>
+    <div style={{
+      padding: large ? 16 : 12,
+      background: '#01030f',
+      borderRadius: 10,
+      border: `1px solid ${color}40`,
+      textAlign: 'center',
+    }}>
       <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 4 }}>{label}</div>
       <div style={{ fontSize: large ? 24 : 20, fontWeight: 600, color }}>{value}</div>
     </div>

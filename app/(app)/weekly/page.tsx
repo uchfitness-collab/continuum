@@ -1,5 +1,4 @@
 'use client';
-
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -177,23 +176,21 @@ export default function WeeklyReflectionPage() {
     }}>
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
 
-        {/* HEADER */}
+        {/* HEADER — stacks cleanly on mobile */}
         <div style={{
           display: 'flex',
-          alignItems: 'flex-start',
-          justifyContent: 'space-between',
-          marginBottom: 40,
-          flexWrap: 'wrap',
+          flexDirection: 'column',
+          alignItems: 'center',
           gap: 16,
+          marginBottom: 40,
+          textAlign: 'center',
         }}>
-          <div style={{ textAlign: 'center', flex: 1 }}>
-            <h1 style={{ fontSize: 36, fontWeight: 600 }}>
+          <div>
+            <h1 style={{ fontSize: 36, fontWeight: 600, margin: '0 0 8px 0' }}>
               Week {weekNumber} Reflection
             </h1>
-            <p style={{ color: '#94a3b8' }}>{weekRange}</p>
+            <p style={{ color: '#94a3b8', margin: 0 }}>{weekRange}</p>
           </div>
-
-          {/* VIEW HISTORY BUTTON */}
           <Link
             href="/weekly/history"
             style={{
@@ -208,22 +205,19 @@ export default function WeeklyReflectionPage() {
               fontSize: 14,
               border: '1px solid #334155',
               textDecoration: 'none',
-              whiteSpace: 'nowrap',
-              flexShrink: 0,
             }}
           >
             📚 View History
           </Link>
         </div>
 
-        {/* TOP TWO BOXES */}
+        {/* TOP TWO BOXES — vertical on all screens */}
         <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
+          display: 'flex',
+          flexDirection: 'column',
           gap: 24,
           marginBottom: 40,
         }}>
-
           {yearGoals && (
             <div style={{
               padding: 28,
@@ -376,12 +370,8 @@ function Stat({ label, value }: any) {
   const color = getColor(value);
   return (
     <div style={{ textAlign: 'center' }}>
-      <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 6 }}>
-        {label}
-      </div>
-      <div style={{ fontSize: 24, fontWeight: 600, color }}>
-        {value}%
-      </div>
+      <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 6 }}>{label}</div>
+      <div style={{ fontSize: 24, fontWeight: 600, color }}>{value}%</div>
     </div>
   );
 }
@@ -396,9 +386,7 @@ function Card({ title, color, children }: any) {
       border: `1px solid ${color}30`,
       borderLeft: `4px solid ${color}`,
     }}>
-      <h2 style={{ fontSize: 20, fontWeight: 600, color, marginBottom: 20 }}>
-        {title}
-      </h2>
+      <h2 style={{ fontSize: 20, fontWeight: 600, color, marginBottom: 20 }}>{title}</h2>
       {children}
     </div>
   );
