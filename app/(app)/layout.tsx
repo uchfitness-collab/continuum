@@ -20,7 +20,8 @@ const INTERNAL_USERS = [
   'mr.ifeanyirobi@gmail.com',
   'bonafedeben@gmail.com',
   'mvoelkl7@gmail.com',
-  'brownepatrick026@gmail.com'
+  'brownepatrick026@gmail.com',
+  'onwike20@gmail.com'
 ];
 
 export default function AppLayout({
