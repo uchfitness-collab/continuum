@@ -1,7 +1,5 @@
 import Link from 'next/link';
 
-const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/bJe5kDdx05X34nGbpy5EY00';
-
 export default function MarketingHome() {
   return (
     <section
@@ -82,7 +80,6 @@ export default function MarketingHome() {
           then shows you whether you're building the person you claim to be or just pretending.
         </p>
 
-
         {/* CTA */}
         <div className="cta-buttons" style={{ 
           display: 'flex', 
@@ -90,10 +87,11 @@ export default function MarketingHome() {
           flexWrap: 'wrap',
           justifyContent: 'center',
           padding: '0 16px',
+          marginTop: 12,
         }}>
-          <a href={STRIPE_PAYMENT_LINK} style={{ textDecoration: 'none' }}>
+          <Link href="/pricing" style={{ textDecoration: 'none' }}>
             <button className="primary-btn" style={primaryButton}>Start Tracking</button>
-          </a>
+          </Link>
 
           <Link href="/how-it-works" style={{ textDecoration: 'none' }}>
             <button className="secondary-btn" style={secondaryButton}>How It Works</button>
@@ -160,9 +158,9 @@ export default function MarketingHome() {
           }}>
             See who you actually are when no one's watching.
           </p>
-          <a href={STRIPE_PAYMENT_LINK} style={{ textDecoration: 'none' }}>
-            <button className="primary-btn" style={primaryButton}>Get Started — $12/mo</button>
-          </a>
+          <Link href="/pricing" style={{ textDecoration: 'none' }}>
+            <button className="primary-btn" style={primaryButton}>View Plans</button>
+          </Link>
         </div>
       </div>
 
