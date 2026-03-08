@@ -38,6 +38,7 @@ export default function MarketingLayout({
           <Link href="/about">About</Link>
           <Link href="/stories">Stories</Link>
           <Link href="/faq">FAQ</Link>
+          <Link href="/contact">Contact</Link>
           <Link href="/login">Log In</Link>
 
           <Link
@@ -112,29 +113,36 @@ export default function MarketingLayout({
               zIndex: 10,
             }}
           >
-            <Link 
-              href="/about" 
+            <Link
+              href="/about"
               onClick={() => setMobileMenuOpen(false)}
               style={{ padding: "12px 0", borderBottom: "1px solid #1e293b" }}
             >
               About
             </Link>
-            <Link 
-              href="/stories" 
+            <Link
+              href="/stories"
               onClick={() => setMobileMenuOpen(false)}
               style={{ padding: "12px 0", borderBottom: "1px solid #1e293b" }}
             >
               Stories
             </Link>
-            <Link 
-              href="/faq" 
+            <Link
+              href="/faq"
               onClick={() => setMobileMenuOpen(false)}
               style={{ padding: "12px 0", borderBottom: "1px solid #1e293b" }}
             >
               FAQ
             </Link>
-            <Link 
-              href="/login" 
+            <Link
+              href="/contact"
+              onClick={() => setMobileMenuOpen(false)}
+              style={{ padding: "12px 0", borderBottom: "1px solid #1e293b" }}
+            >
+              Contact
+            </Link>
+            <Link
+              href="/login"
               onClick={() => setMobileMenuOpen(false)}
               style={{ padding: "12px 0", borderBottom: "1px solid #1e293b" }}
             >

@@ -19,7 +19,7 @@ const STEPS = [
   },
   {
     id: 'age_range',
-    question: 'What\'s your age range?',
+    question: "What's your age range?",
     subtitle: 'Helps us understand our community.',
     options: [
       { value: '18_24', label: '18 – 24' },
@@ -31,12 +31,23 @@ const STEPS = [
   {
     id: 'referral_source',
     question: 'How did you hear about Continuum?',
-    subtitle: 'We\'re curious how you found us.',
+    subtitle: "We're curious how you found us.",
     options: [
       { value: 'social_media', label: '📱 Social media' },
       { value: 'friend', label: '👥 A friend told me' },
       { value: 'google', label: '🔍 Google search' },
       { value: 'other', label: '✨ Other' },
+    ],
+  },
+  {
+    id: 'baseline_score',
+    question: 'Set your personal baseline score.',
+    subtitle: 'This is the daily score you commit to hitting. Be honest — this is your minimum standard, not your dream.',
+    options: [
+      { value: '80', label: '80 — I\'m just getting started' },
+      { value: '95', label: '95 — I have some discipline already' },
+      { value: '110', label: '110 — I\'m consistent and ready to push' },
+      { value: '125', label: '125 — I operate at a high level' },
     ],
   },
 ]
@@ -59,7 +70,6 @@ export default function OnboardingPage() {
       }
       setUserId(auth.user.id)
 
-      // Pre-fill first name if already saved
       const { data: profile } = await supabase
         .from('user_profiles')
         .select('first_name, onboarding_completed')
@@ -95,7 +105,6 @@ export default function OnboardingPage() {
       return
     }
 
-    // Last step — save everything
     setLoading(true)
 
     await supabase
@@ -108,6 +117,7 @@ export default function OnboardingPage() {
           primary_goal: answers.primary_goal,
           age_range: answers.age_range,
           referral_source: answers.referral_source,
+          baseline_score: parseInt(answers.baseline_score) || 110,
           onboarding_completed: true,
         },
         { onConflict: 'user_id' }
@@ -117,6 +127,7 @@ export default function OnboardingPage() {
   }
 
   const selectedValue = answers[currentStep?.id]
+  const isBaselineStep = currentStep.id === 'baseline_score'
 
   return (
     <div style={{
@@ -129,17 +140,15 @@ export default function OnboardingPage() {
     }}>
       <div style={{ width: '100%', maxWidth: 500 }}>
 
-        {/* HEADER */}
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <h1 style={{ fontSize: 28, fontWeight: 700, color: '#e5e7eb', marginBottom: 8 }}>
             {firstName ? `Welcome, ${firstName} 👋` : 'Welcome to Continuum 👋'}
           </h1>
           <p style={{ color: '#94a3b8', fontSize: 15 }}>
-            3 quick questions before you start
+            {isBaselineStep ? 'One final step — set your standard.' : '3 quick questions before you start'}
           </p>
         </div>
 
-        {/* PROGRESS BAR */}
         <div style={{
           width: '100%',
           height: 4,
@@ -157,7 +166,6 @@ export default function OnboardingPage() {
           }} />
         </div>
 
-        {/* QUESTION CARD */}
         <div style={{
           background: '#020617',
           padding: 'clamp(24px, 5vw, 40px)',
@@ -166,7 +174,7 @@ export default function OnboardingPage() {
           marginBottom: 24,
         }}>
           <p style={{ color: '#94a3b8', fontSize: 13, marginBottom: 8 }}>
-            Question {step + 1} of {totalSteps}
+            {isBaselineStep ? 'Final step' : `Question ${step + 1} of ${totalSteps - 1}`}
           </p>
 
           <h2 style={{
@@ -182,7 +190,21 @@ export default function OnboardingPage() {
             {currentStep.subtitle}
           </p>
 
-          {/* OPTIONS */}
+          {/* Baseline explanation box */}
+          {isBaselineStep && (
+            <div style={{
+              padding: 16,
+              background: '#022c22',
+              border: '1px solid #22c55e30',
+              borderRadius: 10,
+              marginBottom: 20,
+            }}>
+              <p style={{ color: '#22c55e', fontSize: 13, margin: 0, lineHeight: 1.6 }}>
+                💡 Your baseline is the green line on your dashboard. Below it = slipping. Above it = building. You can update this anytime in settings.
+              </p>
+            </div>
+          )}
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {currentStep.options.map((option) => (
               <button
@@ -211,7 +233,6 @@ export default function OnboardingPage() {
             ))}
           </div>
 
-          {/* PHONE NUMBER — only show on last step */}
           {step === STEPS.length - 1 && (
             <div style={{ marginTop: 28 }}>
               <label style={{
@@ -247,7 +268,6 @@ export default function OnboardingPage() {
           )}
         </div>
 
-        {/* NEXT BUTTON */}
         <button
           onClick={handleNext}
           disabled={!selectedValue || loading}
@@ -269,11 +289,10 @@ export default function OnboardingPage() {
           {loading
             ? 'Saving...'
             : step === STEPS.length - 1
-            ? "Let's go →"
+            ? "Start my challenge →"
             : 'Next →'}
         </button>
 
-        {/* SKIP */}
         <p style={{ textAlign: 'center', marginTop: 16 }}>
           <button
             onClick={() => router.push('/habits')}
