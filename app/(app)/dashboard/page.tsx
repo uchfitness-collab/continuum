@@ -618,7 +618,7 @@ export default function DashboardPage() {
             </h2>
             <div style={{ height: chartHeight }}>
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 5, right: 10, left: isMobile ? -20 : 0, bottom: 5 }}>
+                <LineChart data={chartData} margin={{ top: 5, right: 10, left: isMobile ? 10 : 0, bottom: 5 }}>
                   <XAxis
                     dataKey="label"
                     interval={xAxisInterval}
