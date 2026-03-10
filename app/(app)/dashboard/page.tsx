@@ -41,8 +41,6 @@ const getScoreStatus = (avg: number): { label: string; color: string } => {
   return { label: '🌱 Getting Started', color: '#94a3b8' };
 };
 
-
-
 const getMotivationalQuote = (streak: number, avgScore: number) => {
   if (streak === 0) return { text: "Every master was once a beginner. Start today.", color: "#94a3b8" };
   if (streak >= 30) return { text: "30+ days. You're no longer building habits—you ARE the habit.", color: "#22c55e" };
@@ -52,20 +50,43 @@ const getMotivationalQuote = (streak: number, avgScore: number) => {
   return { text: "Consistency beats intensity. Show up again tomorrow.", color: "#94a3b8" };
 };
 
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div style={{
+        background: '#0f172a',
+        border: '1px solid #334155',
+        borderRadius: 12,
+        padding: '12px 16px',
+        boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
+      }}>
+        <p style={{ color: '#94a3b8', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>{label}</p>
+        {payload.map((entry: any) => (
+          <p key={entry.name} style={{ color: entry.color, fontSize: 14, fontWeight: 600, margin: '2px 0' }}>
+            {entry.name}: {entry.value !== null ? entry.value.toFixed(1) : '—'}
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
+
 export default function DashboardPage() {
   const router = useRouter();
 
   const [chartData, setChartData] = useState<any[]>([]);
   const [avgSovereign, setAvgSovereign] = useState(0);
   const [last7DaysAvg, setLast7DaysAvg] = useState(0);
-  const [last30DaysAvg, setLast30DaysAvg] = useState(0);
   const [priorDay, setPriorDay] = useState(0);
   const [daysIn, setDaysIn] = useState(0);
   const [weeksIn, setWeeksIn] = useState(0);
   const [currentStreak, setCurrentStreak] = useState(0);
+  const [bestDay, setBestDay] = useState(0);
   const [todayLogged, setTodayLogged] = useState(false);
   const [triggerData, setTriggerData] = useState<{ trigger: string; count: number }[]>([]);
   const [baselineScore, setBaselineScore] = useState(110);
+  const [isMobile, setIsMobile] = useState(false);
 
   const [pillarAverages, setPillarAverages] = useState({ body: 0, mind: 0, identity: 0 });
   const [habitCompletion, setHabitCompletion] = useState({
@@ -75,11 +96,17 @@ export default function DashboardPage() {
   });
 
   useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
     const load = async () => {
       const { data: auth } = await supabase.auth.getUser();
       if (!auth.user) { router.push('/login'); return; }
 
-      // Fetch baseline from user profile
       const { data: profile } = await supabase
         .from('user_profiles')
         .select('baseline_score')
@@ -102,6 +129,7 @@ export default function DashboardPage() {
 
       const sovereignScores = logs.map(l => l.sovereign_score);
       setAvgSovereign(sovereignScores.reduce((a, b) => a + b, 0) / sovereignScores.length);
+      setBestDay(Math.max(...sovereignScores));
       setPriorDay(logs.length > 1 ? logs[logs.length - 2].sovereign_score : logs[0].sovereign_score);
 
       const sevenDaysAgo = new Date();
@@ -113,10 +141,6 @@ export default function DashboardPage() {
 
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      const last30Logs = logs.filter(l => new Date(l.log_date) >= thirtyDaysAgo);
-      if (last30Logs.length > 0) {
-        setLast30DaysAvg(last30Logs.reduce((sum, log) => sum + log.sovereign_score, 0) / last30Logs.length);
-      }
 
       setPillarAverages({
         body: logs.reduce((s, l) => s + l.body_score, 0) / logs.length,
@@ -217,6 +241,19 @@ export default function DashboardPage() {
   const trend7Days = last7DaysAvg > avgSovereign ? 'up' : last7DaysAvg < avgSovereign ? 'down' : 'stable';
   const scoreStatus = getScoreStatus(avgSovereign);
 
+  // Overall consistency = avg of all 3 pillar percentages
+  const overallConsistency = Math.round((habitCompletion.body.percentage + habitCompletion.mind.percentage + habitCompletion.identity.percentage) / 3);
+
+  // Sovereign average = combined pillar average out of 100
+  const sovereignAverage = Math.round((toOutOf100(pillarAverages.body) + toOutOf100(pillarAverages.mind) + toOutOf100(pillarAverages.identity)) / 3);
+
+  // Chart x-axis: show fewer ticks on mobile
+  const xAxisInterval = isMobile
+    ? Math.floor(chartData.length / 3)
+    : Math.floor(chartData.length / 5);
+
+  const chartHeight = isMobile ? 240 : 450;
+
   const handleShareProgress = () => {
     const canvas = document.createElement('canvas');
     canvas.width = 1200;
@@ -300,7 +337,7 @@ export default function DashboardPage() {
     if (!chartContainer) { alert('Chart not found. Please try again.'); return; }
     const html2canvas = (await import('html2canvas')).default;
     try {
-      const canvas = await html2canvas(chartContainer as HTMLElement, { backgroundColor: '#f3f4f6', scale: 2, logging: false });
+      const canvas = await html2canvas(chartContainer as HTMLElement, { backgroundColor: '#020617', scale: 2, logging: false });
       canvas.toBlob((blob) => {
         if (!blob) return;
         const url = URL.createObjectURL(blob);
@@ -319,194 +356,415 @@ export default function DashboardPage() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', padding: '60px 24px', background: 'radial-gradient(circle at top, #020617, #01030f)' }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
 
-        <div style={{ marginBottom: 40 }}>
-          <h1 style={{ fontSize: 36, fontWeight: 600, marginBottom: 8 }}>Dashboard</h1>
-          <p style={{ color: '#94a3b8', fontSize: 16 }}>Your discipline, measured over time.</p>
-        </div>
+        .dashboard-root {
+          min-height: 100vh;
+          padding: 60px 24px 80px;
+          background: radial-gradient(ellipse at top, #0a0f1e 0%, #020617 50%, #01030f 100%);
+          font-family: 'DM Sans', sans-serif;
+        }
 
-        {/* MOTIVATIONAL QUOTE */}
-        <div style={{ padding: 20, marginBottom: 32, borderRadius: 12, background: '#020617', border: '1px solid #334155', textAlign: 'center' }}>
-          <p style={{ color: quote.color, fontSize: 16, fontStyle: 'italic', margin: 0, lineHeight: 1.6 }}>
-            "{quote.text}"
-          </p>
-        </div>
+        @media (max-width: 768px) {
+          .dashboard-root { padding: 24px 16px 60px; }
+        }
 
+        .stat-card {
+          background: linear-gradient(135deg, #0d1424 0%, #080d1a 100%);
+          padding: 24px;
+          border-radius: 16px;
+          border: 1px solid #1e293b;
+          position: relative;
+          overflow: hidden;
+          transition: border-color 0.2s, transform 0.2s;
+        }
 
+        .stat-card::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 60%);
+          pointer-events: none;
+        }
 
-        {/* TODAY LOG PENDING */}
-        {!todayLogged && (
-          <div style={{ padding: 20, marginBottom: 32, borderRadius: 12, background: '#022c22', border: '2px solid #22c55e', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <h3 style={{ color: '#22c55e', marginBottom: 4, fontSize: 18 }}>Today's log is pending</h3>
-              <p style={{ color: '#94a3b8', fontSize: 14, margin: 0 }}>Keep your streak alive. Log your day.</p>
-            </div>
-            <Link href="/daily" style={{ padding: '12px 24px', background: 'linear-gradient(180deg, #22c55e, #16a34a)', color: '#020617', fontWeight: 600, borderRadius: 8, textDecoration: 'none', fontSize: 15 }}>
-              Log Today
-            </Link>
+        .stat-card:hover {
+          border-color: #334155;
+          transform: translateY(-2px);
+        }
+
+        .glow-card {
+          box-shadow: 0 0 30px rgba(34, 197, 94, 0.08);
+        }
+
+        .progress-bar {
+          width: 100%;
+          height: 6px;
+          background: #1e293b;
+          border-radius: 999px;
+          overflow: hidden;
+          margin-top: 12px;
+        }
+
+        .progress-fill {
+          height: 100%;
+          border-radius: 999px;
+          transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+          position: relative;
+        }
+
+        .progress-fill::after {
+          content: '';
+          position: absolute;
+          top: 0; right: 0;
+          width: 20px;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4));
+          border-radius: 999px;
+        }
+
+        .section-title {
+          font-family: 'Outfit', sans-serif;
+          font-size: 20px;
+          font-weight: 700;
+          color: #e5e7eb;
+          margin-bottom: 20px;
+          letter-spacing: -0.01em;
+        }
+
+        .chart-container {
+          background: linear-gradient(135deg, #080e1e 0%, #060b17 100%);
+          border-radius: 20px;
+          border: 1px solid #1e293b;
+          padding: 28px;
+          margin-bottom: 32px;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .chart-container::before {
+          content: '';
+          position: absolute;
+          top: 0; left: 0; right: 0;
+          height: 1px;
+          background: linear-gradient(90deg, transparent, #22c55e30, transparent);
+        }
+
+        @media (max-width: 768px) {
+          .chart-container { padding: 16px; }
+        }
+
+        .quote-bar {
+          padding: 18px 24px;
+          margin-bottom: 28px;
+          border-radius: 14px;
+          background: linear-gradient(135deg, #0d1424 0%, #080d1a 100%);
+          border: 1px solid #1e293b;
+          border-left: 3px solid #22c55e40;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .quote-bar::before {
+          content: '';
+          position: absolute;
+          top: 0; left: 0; right: 0; bottom: 0;
+          background: radial-gradient(ellipse at left, rgba(34,197,94,0.04) 0%, transparent 60%);
+          pointer-events: none;
+        }
+
+        .log-banner {
+          padding: 18px 20px;
+          margin-bottom: 28px;
+          border-radius: 14px;
+          background: linear-gradient(135deg, #022c22 0%, #011a15 100%);
+          border: 1px solid #22c55e40;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 16px;
+        }
+
+        .log-btn {
+          padding: 12px 22px;
+          background: linear-gradient(180deg, #22c55e, #16a34a);
+          color: #020617;
+          font-weight: 700;
+          border-radius: 10px;
+          text-decoration: none;
+          font-size: 14px;
+          white-space: nowrap;
+          font-family: 'DM Sans', sans-serif;
+          letter-spacing: 0.01em;
+          flex-shrink: 0;
+        }
+
+        .inner-section {
+          padding: 28px;
+          background: linear-gradient(135deg, #080d1a 0%, #060b17 100%);
+          border-radius: 20px;
+          border: 1px solid #1e293b;
+          margin-bottom: 32px;
+        }
+
+        @media (max-width: 768px) {
+          .inner-section { padding: 20px 16px; }
+        }
+
+        .weakness-card {
+          padding: 20px 24px;
+          border-radius: 16px;
+          background: linear-gradient(135deg, #080d1a 0%, #060b17 100%);
+          border: 1px solid #ef444420;
+          border-left: 3px solid #ef4444;
+          margin-bottom: 32px;
+        }
+
+        .share-btn {
+          padding: 14px 28px;
+          color: #fff;
+          font-weight: 600;
+          border-radius: 12px;
+          border: none;
+          cursor: pointer;
+          font-size: 15px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-family: 'DM Sans', sans-serif;
+          transition: opacity 0.2s, transform 0.2s;
+        }
+
+        .share-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+      `}</style>
+
+      <div className="dashboard-root">
+        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+
+          {/* HEADER */}
+          <div style={{ marginBottom: 32 }}>
+            <h1 style={{ fontFamily: 'Outfit, sans-serif', fontSize: isMobile ? 28 : 40, fontWeight: 800, marginBottom: 6, letterSpacing: '-0.03em', color: '#f1f5f9' }}>
+              Dashboard
+            </h1>
+            <p style={{ color: '#475569', fontSize: 15 }}>Your discipline, measured over time.</p>
           </div>
-        )}
 
-        {/* STAT CARDS */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 20, marginBottom: 40 }}>
-          <StatCard label="Current Streak" value={`${currentStreak} days`} color="#22c55e" />
-          <StatCard label="Total Days" value={daysIn} />
-          <StatCard label="Weeks Active" value={weeksIn} />
+          {/* QUOTE */}
+          <div className="quote-bar">
+            <p style={{ color: quote.color, fontSize: 15, fontStyle: 'italic', margin: 0, lineHeight: 1.7 }}>
+              "{quote.text}"
+            </p>
+          </div>
 
-          {/* AVG SOVEREIGN WITH STATUS LABEL */}
-          <div style={{ background: '#020617', padding: 24, borderRadius: 12, border: '1px solid #1e293b' }}>
-            <div style={{ color: '#94a3b8', fontSize: 13, marginBottom: 8 }}>Avg Sovereign</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div style={{ fontSize: 28, fontWeight: 600, color: '#e5e7eb' }}>
-                {avgSovereign.toFixed(1)}
+          {/* LOG BANNER */}
+          {!todayLogged && (
+            <div className="log-banner">
+              <div>
+                <h3 style={{ color: '#22c55e', marginBottom: 4, fontSize: 16, fontWeight: 600 }}>Today's log is pending</h3>
+                <p style={{ color: '#475569', fontSize: 14, margin: 0 }}>Keep your streak alive. Log your day.</p>
               </div>
-              {trend !== 'stable' && (
-                <span style={{ fontSize: 18, color: trend === 'up' ? '#22c55e' : '#ef4444' }}>
-                  {trend === 'up' ? '↗' : '↘'}
-                </span>
-              )}
-            </div>
-            <div style={{ marginTop: 6, fontSize: 13, fontWeight: 600, color: scoreStatus.color }}>
-              {scoreStatus.label}
-            </div>
-          </div>
-        </div>
-
-        {/* CHART */}
-        <div id="chart-section" style={{ marginBottom: 40, padding: 32, background: '#f3f4f6', borderRadius: 20, border: '1px solid #d1d5db', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
-          <h2 style={{ fontSize: 24, marginBottom: 24, fontWeight: 700, color: '#1f2937', letterSpacing: '-0.025em' }}>
-            Sovereign Trajectory (Last {CHART_DAYS} Days)
-          </h2>
-          <div style={{ height: 450 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
-                <XAxis dataKey="label" interval={Math.floor(chartData.length / 8)} stroke="#6b7280" style={{ fontSize: 13, fontWeight: 500 }} tick={{ fill: '#4b5563' }} axisLine={{ stroke: '#9ca3af', strokeWidth: 2 }} tickLine={{ stroke: '#9ca3af' }} />
-                <YAxis domain={[0, 175]} stroke="#6b7280" style={{ fontSize: 13, fontWeight: 500 }} tick={{ fill: '#4b5563' }} axisLine={{ stroke: '#9ca3af', strokeWidth: 2 }} tickLine={{ stroke: '#9ca3af' }} ticks={[0, 50, 100, baselineScore, 150, 175]} />
-                <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '2px solid #d1d5db', borderRadius: 12, boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', padding: '12px 16px' }} labelStyle={{ color: '#1f2937', fontWeight: 600, marginBottom: 8 }} itemStyle={{ color: '#374151', fontWeight: 500 }} />
-                <Legend wrapperStyle={{ paddingTop: 20, fontSize: 14, fontWeight: 600 }} iconType="line" />
-                <Line type="monotone" dataKey="baseline" name={`Baseline (${baselineScore})`} stroke="#22c55e" strokeWidth={3} dot={false} activeDot={false} />
-                <Line type="monotone" dataKey="sovereign" name="Your Score" stroke="#3b82f6" strokeWidth={4} dot={false} activeDot={{ r: 7, fill: '#3b82f6', stroke: '#ffffff', strokeWidth: 3 }} connectNulls />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-          <div style={{ marginTop: 20, padding: 16, background: '#ffffff', borderRadius: 12, border: '1px solid #d1d5db' }}>
-            <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ width: 32, height: 4, background: '#3b82f6', borderRadius: 2 }}></div>
-                <span style={{ fontSize: 13, color: '#374151', fontWeight: 500 }}>Your daily performance</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ width: 32, height: 4, background: '#22c55e', borderRadius: 2 }}></div>
-                <span style={{ fontSize: 13, color: '#374151', fontWeight: 500 }}>Your baseline ({baselineScore})</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* RECENT TRENDS */}
-        <div style={{ marginBottom: 40 }}>
-          {daysIn > 0 && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 20, marginBottom: 40 }}>
-              <TrendCard label="Last 7 Days Avg" value={last7DaysAvg} trend={trend7Days} color="#3b82f6" icon="📈" />
-              <StrongestPillarCard pillarAverages={pillarAverages} />
-              <NeedsAttentionCard pillarAverages={pillarAverages} />
+              <Link href="/daily" className="log-btn">Log Today</Link>
             </div>
           )}
 
-          <div style={{ padding: 24, background: '#020617', borderRadius: 16, border: '1px solid #1e293b' }}>
+          {/* TOP STAT CARDS */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 16, marginBottom: 32 }}>
+            <StatCard label="Current Streak" value={`${currentStreak} days`} color="#22c55e" glow />
+            <StatCard label="Total Days" value={daysIn} />
+            <StatCard label="Weeks Active" value={weeksIn} />
+            <StatCard label="Best Day" value={bestDay > 0 ? bestDay.toFixed(1) : '—'} color="#fbbf24" />
+          </div>
+
+          {/* AVG SOVEREIGN FEATURE CARD */}
+          <div style={{
+            padding: isMobile ? '20px' : '28px 32px',
+            marginBottom: 32,
+            borderRadius: 20,
+            background: 'linear-gradient(135deg, #0d1424 0%, #080d1a 100%)',
+            border: '1px solid #1e293b',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 16,
+            position: 'relative',
+            overflow: 'hidden',
+          }}>
+            <div style={{ position: 'absolute', top: -40, right: -40, width: 160, height: 160, borderRadius: '50%', background: `radial-gradient(circle, ${scoreStatus.color}15 0%, transparent 70%)`, pointerEvents: 'none' }} />
+            <div>
+              <div style={{ color: '#475569', fontSize: 13, marginBottom: 6, fontWeight: 500 }}>Avg Sovereign Score</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <span style={{ fontFamily: 'Outfit, sans-serif', fontSize: isMobile ? 40 : 52, fontWeight: 700, color: '#f1f5f9', letterSpacing: '-0.02em', lineHeight: 1 }}>
+                  {avgSovereign > 0 ? avgSovereign.toFixed(1) : '—'}
+                </span>
+                {trend !== 'stable' && avgSovereign > 0 && (
+                  <span style={{ fontSize: 24, color: trend === 'up' ? '#22c55e' : '#ef4444' }}>
+                    {trend === 'up' ? '↗' : '↘'}
+                  </span>
+                )}
+              </div>
+            </div>
+            <div style={{ textAlign: isMobile ? 'left' : 'right' }}>
+              <div style={{ fontSize: 22, fontWeight: 700, color: scoreStatus.color, marginBottom: 4 }}>{scoreStatus.label}</div>
+              <div style={{ color: '#475569', fontSize: 13 }}>All-time average</div>
+            </div>
+          </div>
+
+          {/* CHART */}
+          <div id="chart-section" className="chart-container">
+            <h2 style={{ fontFamily: 'Outfit, sans-serif', fontSize: isMobile ? 18 : 22, marginBottom: 24, fontWeight: 700, color: '#f1f5f9', letterSpacing: '-0.02em' }}>
+              Sovereign Score
+            </h2>
+            <div style={{ height: chartHeight }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData} margin={{ top: 5, right: 10, left: isMobile ? -20 : 0, bottom: 5 }}>
+                  <XAxis
+                    dataKey="label"
+                    interval={xAxisInterval}
+                    stroke="#1e293b"
+                    tick={{ fill: '#475569', fontSize: isMobile ? 10 : 12, fontFamily: 'DM Sans' }}
+                    axisLine={{ stroke: '#1e293b' }}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    domain={[0, 175]}
+                    stroke="#1e293b"
+                    tick={{ fill: '#475569', fontSize: isMobile ? 10 : 12, fontFamily: 'DM Sans' }}
+                    axisLine={false}
+                    tickLine={false}
+                    ticks={[0, 50, 110, 150, 175]}
+                    width={isMobile ? 30 : 40}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend
+                    wrapperStyle={{ paddingTop: 20, fontSize: 13, fontWeight: 500, fontFamily: 'DM Sans' }}
+                    iconType="line"
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="baseline"
+                    name={`Baseline (${baselineScore})`}
+                    stroke="#22c55e"
+                    strokeWidth={2}
+                    strokeDasharray="6 4"
+                    dot={false}
+                    activeDot={false}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="sovereign"
+                    name="Your Score"
+                    stroke="#3b82f6"
+                    strokeWidth={isMobile ? 2 : 3}
+                    dot={false}
+                    activeDot={{ r: 6, fill: '#3b82f6', stroke: '#020617', strokeWidth: 3 }}
+                    connectNulls
+                  />
+
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* TREND CARDS */}
+          {daysIn > 0 && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 32 }}>
+              <TrendCard label="Last 7 Days Avg" value={last7DaysAvg} trend={trend7Days} color="#3b82f6" icon="📈" />
+              <StrongestPillarCard pillarAverages={pillarAverages} />
+              <NeedsAttentionCard pillarAverages={pillarAverages} />
+              <OverallConsistencyCard percentage={overallConsistency} />
+            </div>
+          )}
+
+          {/* HABIT CONSISTENCY + PILLAR PERFORMANCE */}
+          <div className="inner-section">
             {habitCompletion.body.total > 0 && (
-              <div style={{ marginBottom: 32 }}>
-                <h2 style={{ fontSize: 22, marginBottom: 20, fontWeight: 600 }}>Habit Consistency (Last 30 Days)</h2>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20 }}>
+              <div style={{ marginBottom: 36 }}>
+                <h2 className="section-title">Habit Consistency — Last 30 Days</h2>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16 }}>
                   <HabitCompletionCard label="Body Habits" completed={habitCompletion.body.completed} total={habitCompletion.body.total} percentage={habitCompletion.body.percentage} color="#22c55e" icon="💪" />
                   <HabitCompletionCard label="Mind Habits" completed={habitCompletion.mind.completed} total={habitCompletion.mind.total} percentage={habitCompletion.mind.percentage} color="#3b82f6" icon="🧠" />
                   <HabitCompletionCard label="Identity Habits" completed={habitCompletion.identity.completed} total={habitCompletion.identity.total} percentage={habitCompletion.identity.percentage} color="#a855f7" icon="⚡" />
+                  <HabitCompletionCard label="All 3 Pillars" completed={Math.round(overallConsistency * habitCompletion.body.total / 100)} total={habitCompletion.body.total} percentage={overallConsistency} color="#fbbf24" icon="🏆" />
                 </div>
               </div>
             )}
+
             <div>
-              <h2 style={{ fontSize: 22, marginBottom: 20, fontWeight: 600 }}>Pillar Performance</h2>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20 }}>
+              <h2 className="section-title">Pillar Performance</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16 }}>
                 <PillarCard label="Body" value={pillarAverages.body} color="#22c55e" icon="💪" />
                 <PillarCard label="Mind" value={pillarAverages.mind} color="#3b82f6" icon="🧠" />
                 <PillarCard label="Identity" value={pillarAverages.identity} color="#a855f7" icon="⚡" />
+                <PillarCard label="Sovereign Avg" value={(pillarAverages.body + pillarAverages.mind + pillarAverages.identity) / 3} color="#fbbf24" icon="👑" overrideValue={sovereignAverage} />
               </div>
             </div>
           </div>
-        </div>
 
-        {/* WEAKNESS PATTERNS */}
-        {triggerData.length > 0 && (
-          <div style={{ marginBottom: 40 }}>
-            <h2 style={{ fontSize: 22, marginBottom: 20, fontWeight: 600 }}>Weakness Patterns (Last 30 Days)</h2>
-            <div style={{ padding: 24, borderRadius: 16, background: '#020617', border: '1px solid #ef444430', borderLeft: '4px solid #ef4444' }}>
+          {/* WEAKNESS PATTERNS */}
+          {triggerData.length > 0 && (
+            <div className="weakness-card">
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-                <span style={{ fontSize: 24 }}>⚠</span>
-                <h3 style={{ fontSize: 18, fontWeight: 600, color: '#ef4444', margin: 0 }}>Your Top Triggers</h3>
+                <span style={{ fontSize: 22 }}>⚠️</span>
+                <h3 style={{ fontSize: 17, fontWeight: 700, color: '#ef4444', margin: 0, fontFamily: 'Outfit, sans-serif' }}>Weakness Patterns</h3>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {triggerData.slice(0, 3).map((item, index) => (
-                  <div key={item.trigger} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 14, background: '#01030f', borderRadius: 10, border: '1px solid #334155' }}>
+                  <div key={item.trigger} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: '#060b17', borderRadius: 10, border: '1px solid #1e293b' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <span style={{ width: 24, height: 24, borderRadius: '50%', background: index === 0 ? '#ef4444' : '#334155', color: '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 600 }}>{index + 1}</span>
-                      <span style={{ color: '#e5e7eb', fontSize: 15, fontWeight: 500 }}>{item.trigger}</span>
+                      <span style={{ width: 22, height: 22, borderRadius: '50%', background: index === 0 ? '#ef4444' : '#1e293b', color: '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, flexShrink: 0 }}>{index + 1}</span>
+                      <span style={{ color: '#e2e8f0', fontSize: 14, fontWeight: 500 }}>{item.trigger}</span>
                     </div>
-                    <span style={{ color: '#ef4444', fontSize: 16, fontWeight: 600 }}>{item.count}x</span>
+                    <span style={{ color: '#ef4444', fontSize: 15, fontWeight: 700 }}>{item.count}x</span>
                   </div>
                 ))}
               </div>
-              <p style={{ marginTop: 16, color: '#94a3b8', fontSize: 14, lineHeight: 1.6 }}>
+              <p style={{ marginTop: 14, color: '#475569', fontSize: 13, lineHeight: 1.6 }}>
                 Awareness is the first step to mastery. Plan ahead to defend against these triggers.
               </p>
             </div>
+          )}
+
+          {/* SHARE BUTTONS */}
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button onClick={handleShareProgress} className="share-btn" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+              📸 Share Progress
+            </button>
+            <button onClick={handleShareChart} className="share-btn" style={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' }}>
+              📊 Share Chart
+            </button>
           </div>
-        )}
 
-        {/* SHARE BUTTONS */}
-        <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <button onClick={handleShareProgress} style={{ padding: '14px 28px', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', fontWeight: 600, borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 15, display: 'flex', alignItems: 'center', gap: 8 }}>
-            📸 Share My Progress
-          </button>
-          <button onClick={handleShareChart} style={{ padding: '14px 28px', background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', color: '#fff', fontWeight: 600, borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 15, display: 'flex', alignItems: 'center', gap: 8 }}>
-            📊 Share My Chart
-          </button>
         </div>
-
       </div>
-    </div>
+    </>
   );
 }
 
-function StatCard({ label, value, color, trend }: { label: string; value: any; color?: string; trend?: 'up' | 'down' | 'stable' }) {
+function StatCard({ label, value, color, glow }: { label: string; value: any; color?: string; glow?: boolean }) {
   return (
-    <div style={{ background: '#020617', padding: 24, borderRadius: 12, border: '1px solid #1e293b' }}>
-      <div style={{ color: '#94a3b8', fontSize: 13, marginBottom: 8 }}>{label}</div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <div style={{ fontSize: 28, fontWeight: 600, color: color || '#e5e7eb' }}>{value}</div>
-        {trend && trend !== 'stable' && (
-          <span style={{ fontSize: 18, color: trend === 'up' ? '#22c55e' : '#ef4444' }}>{trend === 'up' ? '↗' : '↘'}</span>
-        )}
-      </div>
+    <div className={`stat-card${glow ? ' glow-card' : ''}`}>
+      <div style={{ color: '#475569', fontSize: 12, fontWeight: 500, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</div>
+      <div style={{ fontFamily: 'Outfit, sans-serif', fontSize: 26, fontWeight: 800, color: color || '#f1f5f9', letterSpacing: '-0.02em', lineHeight: 1 }}>{value}</div>
     </div>
   );
 }
 
 function TrendCard({ label, value, trend, color, icon }: { label: string; value: number; trend: 'up' | 'down' | 'stable'; color: string; icon: string }) {
   return (
-    <div style={{ background: '#020617', padding: 24, borderRadius: 12, border: `1px solid ${color}30`, borderLeft: `4px solid ${color}` }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-        <span style={{ fontSize: 24 }}>{icon}</span>
-        <div style={{ color, fontWeight: 600, fontSize: 16 }}>{label}</div>
+    <div className="stat-card" style={{ borderLeft: `3px solid ${color}` }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+        <span style={{ fontSize: 20 }}>{icon}</span>
+        <div style={{ color: '#475569', fontSize: 12, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</div>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <div style={{ fontSize: 28, fontWeight: 600, color }}>{value > 0 ? value.toFixed(1) : 'N/A'}</div>
+        <div style={{ fontFamily: 'Outfit, sans-serif', fontSize: 28, fontWeight: 800, color, letterSpacing: '-0.02em' }}>{value > 0 ? value.toFixed(1) : '—'}</div>
         {value > 0 && trend !== 'stable' && (
-          <span style={{ fontSize: 20, color: trend === 'up' ? '#22c55e' : '#ef4444' }}>{trend === 'up' ? '↗' : '↘'}</span>
+          <span style={{ fontSize: 18, color: trend === 'up' ? '#22c55e' : '#ef4444' }}>{trend === 'up' ? '↗' : '↘'}</span>
         )}
       </div>
-      <div style={{ color: '#94a3b8', fontSize: 13, marginTop: 4 }}>
+      <div style={{ color: '#475569', fontSize: 12, marginTop: 4 }}>
         {trend === 'up' && 'Improving'}{trend === 'down' && 'Needs focus'}{trend === 'stable' && 'Steady'}
       </div>
     </div>
@@ -521,13 +779,13 @@ function StrongestPillarCard({ pillarAverages }: { pillarAverages: { body: numbe
   ];
   const strongest = pillars.reduce((max, p) => p.value > max.value ? p : max);
   return (
-    <div style={{ background: '#020617', padding: 24, borderRadius: 12, border: `1px solid ${strongest.color}30`, borderLeft: `4px solid ${strongest.color}` }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-        <span style={{ fontSize: 24 }}>{strongest.icon}</span>
-        <div style={{ color: strongest.color, fontWeight: 600, fontSize: 16 }}>Strongest Pillar</div>
+    <div className="stat-card" style={{ borderLeft: `3px solid ${strongest.color}` }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+        <span style={{ fontSize: 20 }}>{strongest.icon}</span>
+        <div style={{ color: '#475569', fontSize: 12, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Strongest Pillar</div>
       </div>
-      <div style={{ fontSize: 28, fontWeight: 600, color: strongest.color, marginBottom: 4 }}>{strongest.name}</div>
-      <div style={{ color: '#94a3b8', fontSize: 13 }}>{toOutOf100(strongest.value)}% average</div>
+      <div style={{ fontFamily: 'Outfit, sans-serif', fontSize: 28, fontWeight: 800, color: strongest.color, letterSpacing: '-0.02em', marginBottom: 4 }}>{strongest.name}</div>
+      <div style={{ color: '#475569', fontSize: 12 }}>{toOutOf100(strongest.value)}% average</div>
     </div>
   );
 }
@@ -540,46 +798,62 @@ function NeedsAttentionCard({ pillarAverages }: { pillarAverages: { body: number
   ];
   const weakest = pillars.reduce((min, p) => p.value < min.value ? p : min);
   return (
-    <div style={{ background: '#020617', padding: 24, borderRadius: 12, border: '1px solid #fbbf2430', borderLeft: '4px solid #fbbf24' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-        <span style={{ fontSize: 24 }}>{weakest.icon}</span>
-        <div style={{ color: '#fbbf24', fontWeight: 600, fontSize: 16 }}>Needs Attention</div>
+    <div className="stat-card" style={{ borderLeft: '3px solid #fbbf24' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+        <span style={{ fontSize: 20 }}>{weakest.icon}</span>
+        <div style={{ color: '#475569', fontSize: 12, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Needs Attention</div>
       </div>
-      <div style={{ fontSize: 28, fontWeight: 600, color: '#fbbf24', marginBottom: 4 }}>{weakest.name}</div>
-      <div style={{ color: '#94a3b8', fontSize: 13 }}>{toOutOf100(weakest.value)}% average</div>
+      <div style={{ fontFamily: 'Outfit, sans-serif', fontSize: 28, fontWeight: 800, color: '#fbbf24', letterSpacing: '-0.02em', marginBottom: 4 }}>{weakest.name}</div>
+      <div style={{ color: '#475569', fontSize: 12 }}>{toOutOf100(weakest.value)}% average</div>
+    </div>
+  );
+}
+
+function OverallConsistencyCard({ percentage }: { percentage: number }) {
+  return (
+    <div className="stat-card" style={{ borderLeft: '3px solid #e879f9' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+        <span style={{ fontSize: 20 }}>🎯</span>
+        <div style={{ color: '#475569', fontSize: 12, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Overall Consistency</div>
+      </div>
+      <div style={{ fontFamily: 'Outfit, sans-serif', fontSize: 28, fontWeight: 800, color: '#e879f9', letterSpacing: '-0.02em', marginBottom: 8 }}>{percentage > 0 ? `${percentage}%` : '—'}</div>
+      <div className="progress-bar">
+        <div className="progress-fill" style={{ width: `${percentage}%`, background: 'linear-gradient(90deg, #a855f7, #e879f9)' }} />
+      </div>
     </div>
   );
 }
 
 function HabitCompletionCard({ label, completed, total, percentage, color, icon }: { label: string; completed: number; total: number; percentage: number; color: string; icon: string }) {
   return (
-    <div style={{ background: '#020617', padding: 24, borderRadius: 12, border: `1px solid ${color}30`, borderLeft: `4px solid ${color}` }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-        <span style={{ fontSize: 24 }}>{icon}</span>
-        <div style={{ color, fontWeight: 600, fontSize: 16 }}>{label}</div>
+    <div className="stat-card" style={{ borderLeft: `3px solid ${color}` }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+        <span style={{ fontSize: 20 }}>{icon}</span>
+        <div style={{ color: '#475569', fontSize: 12, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</div>
       </div>
-      <div style={{ fontSize: 32, fontWeight: 600, marginBottom: 4, color }}>{percentage}%</div>
-      <div style={{ color: '#94a3b8', fontSize: 14, marginBottom: 12 }}>{completed}/{total} days</div>
-      <div style={{ width: '100%', height: 8, background: '#1e293b', borderRadius: 4, overflow: 'hidden' }}>
-        <div style={{ width: `${percentage}%`, height: '100%', background: color, borderRadius: 4, transition: 'width 0.3s ease' }} />
+      <div style={{ fontFamily: 'Outfit, sans-serif', fontSize: 32, fontWeight: 800, color, letterSpacing: '-0.03em', marginBottom: 4 }}>{percentage}%</div>
+      <div style={{ color: '#475569', fontSize: 12, marginBottom: 10 }}>{completed}/{total} days</div>
+      <div className="progress-bar">
+        <div className="progress-fill" style={{ width: `${percentage}%`, background: color }} />
       </div>
     </div>
   );
 }
 
-function PillarCard({ label, value, color, icon }: { label: string; value: number; color: string; icon: string }) {
-  const percentage = toOutOf100(value);
+function PillarCard({ label, value, color, icon, overrideValue }: { label: string; value: number; color: string; icon: string; overrideValue?: number }) {
+  const percentage = overrideValue !== undefined ? overrideValue : toOutOf100(value);
   return (
-    <div style={{ background: '#020617', padding: 24, borderRadius: 12, border: `1px solid ${color}30`, borderLeft: `4px solid ${color}` }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-        <span style={{ fontSize: 24 }}>{icon}</span>
-        <div style={{ color, fontWeight: 600, fontSize: 16 }}>{label}</div>
+    <div className="stat-card" style={{ borderLeft: `3px solid ${color}` }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+        <span style={{ fontSize: 20 }}>{icon}</span>
+        <div style={{ color: '#475569', fontSize: 12, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</div>
       </div>
-      <div style={{ fontSize: 32, fontWeight: 600, marginBottom: 8 }}>
-        {percentage}<span style={{ fontSize: 18, color: '#94a3b8', fontWeight: 400 }}>/100</span>
+      <div style={{ fontFamily: 'Outfit, sans-serif', fontSize: 32, fontWeight: 800, letterSpacing: '-0.03em', marginBottom: 8 }}>
+        <span style={{ color }}>{percentage}</span>
+        <span style={{ fontSize: 16, color: '#334155', fontWeight: 400 }}>/100</span>
       </div>
-      <div style={{ width: '100%', height: 8, background: '#1e293b', borderRadius: 4, overflow: 'hidden' }}>
-        <div style={{ width: `${percentage}%`, height: '100%', background: color, borderRadius: 4, transition: 'width 0.3s ease' }} />
+      <div className="progress-bar">
+        <div className="progress-fill" style={{ width: `${percentage}%`, background: color }} />
       </div>
     </div>
   );
