@@ -267,7 +267,7 @@ export default function AppLayout({
           className="mobile-menu"
           style={{
             position: 'fixed',
-            top: 61,
+            top: 0,
             left: 0,
             right: 0,
             background: '#020617',
