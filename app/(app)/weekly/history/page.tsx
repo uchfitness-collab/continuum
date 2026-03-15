@@ -15,26 +15,18 @@ export default function WeeklyHistoryPage() {
   useEffect(() => {
     const load = async () => {
       const { data: auth } = await supabase.auth.getUser();
-      if (!auth.user) {
-        router.push('/login');
-        return;
-      }
+      if (!auth.user) { router.push('/login'); return; }
 
       const userId = auth.user.id;
 
-      // Load all weekly reflections
       const { data: allReflections } = await supabase
         .from('weekly_reflections')
         .select('*')
         .eq('user_id', userId)
         .order('week_number', { ascending: false });
 
-      if (!allReflections || allReflections.length === 0) {
-        setLoading(false);
-        return;
-      }
+      if (!allReflections || allReflections.length === 0) { setLoading(false); return; }
 
-      // For each reflection, load the daily logs for that week to compute scores
       const enriched = await Promise.all(
         allReflections.map(async (ref) => {
           if (!ref.week_start_date || !ref.week_end_date) return { ...ref, bodyPercent: 0, mindPercent: 0, identityPercent: 0, weeklyPercent: 0 };
@@ -46,24 +38,21 @@ export default function WeeklyHistoryPage() {
             .gte('log_date', ref.week_start_date)
             .lte('log_date', ref.week_end_date);
 
-          if (!logs || logs.length === 0) {
-            return { ...ref, bodyPercent: 0, mindPercent: 0, identityPercent: 0, weeklyPercent: 0 };
-          }
+          if (!logs || logs.length === 0) return { ...ref, bodyPercent: 0, mindPercent: 0, identityPercent: 0, weeklyPercent: 0 };
 
-          const totalBody = logs.reduce((sum, l) => sum + (l.body_score || 0), 0);
-          const totalMind = logs.reduce((sum, l) => sum + (l.mind_score || 0), 0);
+          const totalBody     = logs.reduce((sum, l) => sum + (l.body_score || 0), 0);
+          const totalMind     = logs.reduce((sum, l) => sum + (l.mind_score || 0), 0);
           const totalIdentity = logs.reduce((sum, l) => sum + (l.identity_score || 0), 0);
           const totalSovereign = logs.reduce((sum, l) => sum + (l.sovereign_score || 0), 0);
-
           const maxPillar = logs.length * MAX_PILLAR_POINTS_PER_DAY;
           const maxTotalPossible = 7 * MAX_PILLAR_POINTS_PER_DAY * 3;
 
           return {
             ...ref,
-            bodyPercent: Math.round((totalBody / maxPillar) * 100),
-            mindPercent: Math.round((totalMind / maxPillar) * 100),
+            bodyPercent:     Math.round((totalBody / maxPillar) * 100),
+            mindPercent:     Math.round((totalMind / maxPillar) * 100),
             identityPercent: Math.round((totalIdentity / maxPillar) * 100),
-            weeklyPercent: Math.round((totalSovereign / maxTotalPossible) * 100),
+            weeklyPercent:   Math.round((totalSovereign / maxTotalPossible) * 100),
           };
         })
       );
@@ -82,20 +71,18 @@ export default function WeeklyHistoryPage() {
   const formatDateRange = (startDate: string, endDate: string) => {
     if (!startDate || !endDate) return '';
     const start = new Date(startDate + 'T00:00:00');
-    const end = new Date(endDate + 'T00:00:00');
-    return `${start.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' })} - ${end.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' })}`;
+    const end   = new Date(endDate   + 'T00:00:00');
+    return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
   };
 
   if (loading) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        background: 'radial-gradient(circle at top, #020617, #01030f)',
-      }}>
-        <p style={{ color: '#94a3b8' }}>Loading...</p>
+      <div style={{ minHeight: '100vh', background: '#080c18', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ width: 32, height: 32, border: '2px solid rgba(255,255,255,0.06)', borderTopColor: '#4ade80', borderRadius: '50%', margin: '0 auto 12px', animation: 'spin 1s linear infinite' }} />
+          <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>Loading...</p>
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </div>
       </div>
     );
   }
@@ -103,42 +90,27 @@ export default function WeeklyHistoryPage() {
   return (
     <div style={{
       minHeight: '100vh',
-      padding: '60px 24px',
-      background: 'radial-gradient(circle at top, #020617, #01030f)',
+      background: '#080c18',
+      color: '#fff',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      padding: 'clamp(32px, 5vw, 60px) clamp(16px, 4vw, 24px)',
     }}>
-      <div style={{ maxWidth: 900, margin: '0 auto' }}>
+      <div style={{ maxWidth: 720, margin: '0 auto' }}>
 
         {/* HEADER */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: 48,
-          flexWrap: 'wrap',
-          gap: 16,
-        }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 40, flexWrap: 'wrap' }}>
           <div>
-            <h1 style={{ fontSize: 36, fontWeight: 600, marginBottom: 8 }}>
-              Weekly History
-            </h1>
-            <p style={{ color: '#94a3b8', fontSize: 16, margin: 0 }}>
-              Every week you've shown up. See what you learned.
-            </p>
+            <p style={{ fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)', fontWeight: 600, marginBottom: 12 }}>Week</p>
+            <h1 style={{ fontSize: 'clamp(26px, 5vw, 36px)', fontWeight: 700, letterSpacing: '-0.025em', marginBottom: 8, lineHeight: 1.15 }}>Weekly History</h1>
+            <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 14, margin: 0 }}>Every week you&apos;ve shown up. See what you learned.</p>
           </div>
-          <Link
-            href="/weekly"
-            style={{
-              padding: '10px 20px',
-              borderRadius: 10,
-              background: 'transparent',
-              color: '#94a3b8',
-              fontWeight: 600,
-              fontSize: 14,
-              border: '1px solid #334155',
-              textDecoration: 'none',
-              whiteSpace: 'nowrap',
-            }}
-          >
+          <Link href="/weekly" style={{
+            padding: '10px 18px', borderRadius: 10,
+            background: 'rgba(255,255,255,0.03)',
+            color: 'rgba(255,255,255,0.4)', fontWeight: 500, fontSize: 13,
+            border: '1px solid rgba(255,255,255,0.08)', textDecoration: 'none',
+            whiteSpace: 'nowrap', flexShrink: 0,
+          }}>
             ← Current Week
           </Link>
         </div>
@@ -146,149 +118,105 @@ export default function WeeklyHistoryPage() {
         {/* EMPTY STATE */}
         {reflections.length === 0 && (
           <div style={{
-            padding: 48,
+            padding: 'clamp(32px, 5vw, 48px)',
             borderRadius: 16,
-            background: '#020617',
-            border: '1px solid #334155',
+            background: 'rgba(255,255,255,0.025)',
+            border: '1px solid rgba(255,255,255,0.07)',
             textAlign: 'center',
           }}>
-            <p style={{ fontSize: 20, marginBottom: 12 }}>📭</p>
-            <p style={{ color: '#94a3b8', fontSize: 16 }}>
+            <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: 14, marginBottom: 20, lineHeight: 1.65 }}>
               No reflections yet. Complete your first weekly reflection to start building your history.
             </p>
-            <Link
-              href="/weekly"
-              style={{
-                display: 'inline-block',
-                marginTop: 20,
-                padding: '12px 24px',
-                background: 'linear-gradient(180deg, #22c55e, #16a34a)',
-                color: '#020617',
-                fontWeight: 600,
-                borderRadius: 8,
-                textDecoration: 'none',
-              }}
-            >
-              Write This Week's Reflection
+            <Link href="/weekly" style={{
+              display: 'inline-block', padding: '13px 28px',
+              background: '#4ade80', color: '#080c18',
+              fontWeight: 700, borderRadius: 10, textDecoration: 'none', fontSize: 14,
+            }}>
+              Write This Week&apos;s Reflection
             </Link>
           </div>
         )}
 
         {/* REFLECTION CARDS */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {reflections.map((ref) => {
             const isExpanded = expandedWeek === ref.week_number;
-            const overallColor = getColor(ref.weeklyPercent);
+            const overallColor = getScoreColor(ref.weeklyPercent);
             const hasContent = ref.what_worked_well || ref.what_broke_standard || ref.next_week_goals || ref.pattern_observed;
 
             return (
-              <div
-                key={ref.week_number}
-                style={{
-                  borderRadius: 16,
-                  background: '#020617',
-                  border: `1px solid ${isExpanded ? overallColor + '60' : '#1e293b'}`,
-                  borderLeft: `4px solid ${overallColor}`,
-                  overflow: 'hidden',
-                  transition: 'border-color 0.2s ease',
-                }}
-              >
-                {/* CARD HEADER — always visible, clickable */}
+              <div key={ref.week_number} style={{
+                borderRadius: 14,
+                background: 'rgba(255,255,255,0.025)',
+                border: '1px solid rgba(255,255,255,0.07)',
+                borderLeft: `3px solid ${overallColor}`,
+                overflow: 'hidden',
+                transition: 'border-color 0.15s',
+              }}>
+                {/* HEADER ROW */}
                 <button
                   onClick={() => toggleWeek(ref.week_number)}
                   style={{
-                    width: '100%',
-                    padding: '24px 28px',
-                    background: 'transparent',
-                    border: 'none',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: 16,
-                    flexWrap: 'wrap',
+                    width: '100%', padding: 'clamp(16px, 2.5vw, 22px) clamp(16px, 2.5vw, 24px)',
+                    background: 'transparent', border: 'none', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+                    textAlign: 'left',
                   }}
                 >
-                  {/* Left: week info */}
-                  <div style={{ textAlign: 'left' }}>
-                    <div style={{ fontSize: 18, fontWeight: 600, color: '#e5e7eb', marginBottom: 4 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: 15, fontWeight: 700, color: '#fff', marginBottom: 3 }}>
                       Week {ref.week_number}
-                    </div>
-                    <div style={{ fontSize: 13, color: '#64748b' }}>
+                    </p>
+                    <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.28)', margin: 0 }}>
                       {formatDateRange(ref.week_start_date, ref.week_end_date)}
-                    </div>
+                    </p>
                     {ref.weekly_theme && (
-                      <div style={{ fontSize: 13, color: '#94a3b8', marginTop: 4, fontStyle: 'italic' }}>
-                        "{ref.weekly_theme}"
-                      </div>
+                      <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginTop: 3, fontStyle: 'italic', margin: 0 }}>
+                        &quot;{ref.weekly_theme}&quot;
+                      </p>
                     )}
                   </div>
 
-                  {/* Right: scores + chevron */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-                    <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
-                      <ScoreBadge label="Overall" value={ref.weeklyPercent} />
-                      <ScoreBadge label="Body" value={ref.bodyPercent} />
-                      <ScoreBadge label="Mind" value={ref.mindPercent} />
-                      <ScoreBadge label="Identity" value={ref.identityPercent} />
+                  {/* SCORES */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
+                    <div className="score-badges" style={{ display: 'flex', gap: 14 }}>
+                      <ScoreBadge label="Overall"   value={ref.weeklyPercent} />
+                      <ScoreBadge label="Body"      value={ref.bodyPercent} />
+                      <ScoreBadge label="Mind"      value={ref.mindPercent} />
+                      <ScoreBadge label="Identity"  value={ref.identityPercent} />
                     </div>
-                    <div style={{
-                      fontSize: 18,
-                      color: '#64748b',
+                    <span style={{
+                      fontSize: 12, color: 'rgba(255,255,255,0.25)',
                       transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                      transition: 'transform 0.2s ease',
-                      flexShrink: 0,
-                    }}>
-                      ▾
-                    </div>
+                      transition: 'transform 0.2s', display: 'inline-block',
+                    }}>▾</span>
                   </div>
                 </button>
 
-                {/* EXPANDED CONTENT */}
+                {/* EXPANDED */}
                 {isExpanded && (
                   <div style={{
-                    padding: '0 28px 28px 28px',
-                    borderTop: '1px solid #1e293b',
+                    padding: 'clamp(16px, 2.5vw, 24px)',
+                    borderTop: '1px solid rgba(255,255,255,0.05)',
                   }}>
                     {!hasContent ? (
-                      <p style={{ color: '#64748b', fontSize: 14, paddingTop: 20, margin: 0 }}>
+                      <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 13, margin: 0 }}>
                         No written reflection was saved for this week.
                       </p>
                     ) : (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 24, paddingTop: 24 }}>
-
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                         {ref.what_worked_well && (
-                          <ReflectionBlock
-                            label="Where did you execute at or above your standard?"
-                            color="#22c55e"
-                            content={ref.what_worked_well}
-                          />
+                          <ReflectionBlock label="What worked" color="#4ade80" content={ref.what_worked_well} />
                         )}
-
                         {ref.what_broke_standard && (
-                          <ReflectionBlock
-                            label="Where did you fall below your standard — and why?"
-                            color="#ef4444"
-                            content={ref.what_broke_standard}
-                          />
+                          <ReflectionBlock label="What broke" color="#f87171" content={ref.what_broke_standard} />
                         )}
-
                         {ref.next_week_goals && (
-                          <ReflectionBlock
-                            label="What specific adjustment did you plan for the following week?"
-                            color="#a855f7"
-                            content={ref.next_week_goals}
-                          />
+                          <ReflectionBlock label="Next week's adjustment" color="#a78bfa" content={ref.next_week_goals} />
                         )}
-
                         {ref.pattern_observed && (
-                          <ReflectionBlock
-                            label="Pattern observed"
-                            color="#3b82f6"
-                            content={ref.pattern_observed}
-                          />
+                          <ReflectionBlock label="Pattern observed" color="#60a5fa" content={ref.pattern_observed} />
                         )}
-
                       </div>
                     )}
                   </div>
@@ -298,45 +226,39 @@ export default function WeeklyHistoryPage() {
           })}
         </div>
 
-        {/* BOTTOM BACK LINK */}
         {reflections.length > 0 && (
-          <div style={{ marginTop: 48, textAlign: 'center' }}>
-            <Link
-              href="/weekly"
-              style={{
-                color: '#64748b',
-                fontSize: 14,
-                textDecoration: 'underline',
-              }}
-            >
+          <div style={{ marginTop: 40, textAlign: 'center' }}>
+            <Link href="/weekly" style={{ color: 'rgba(255,255,255,0.2)', fontSize: 13, textDecoration: 'none' }}>
               ← Back to current week
             </Link>
           </div>
         )}
+
+        <style>{`
+          @media (max-width: 480px) {
+            .score-badges { gap: 10px !important; }
+          }
+        `}</style>
 
       </div>
     </div>
   );
 }
 
-/* ---------- Components ---------- */
+/* ---------- COMPONENTS ---------- */
 
-function getColor(value: number) {
-  if (value >= 80) return '#22c55e';
-  if (value >= 50) return '#facc15';
-  return '#ef4444';
+function getScoreColor(value: number) {
+  if (value >= 80) return '#4ade80';
+  if (value >= 50) return '#fbbf24';
+  return '#f87171';
 }
 
 function ScoreBadge({ label, value }: { label: string; value: number }) {
-  const color = getColor(value);
+  const color = getScoreColor(value);
   return (
     <div style={{ textAlign: 'center' }}>
-      <div style={{ fontSize: 11, color: '#64748b', marginBottom: 3 }}>
-        {label}
-      </div>
-      <div style={{ fontSize: 16, fontWeight: 700, color }}>
-        {value}%
-      </div>
+      <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', marginBottom: 3, letterSpacing: '0.04em' }}>{label}</p>
+      <p style={{ fontSize: 14, fontWeight: 700, color, margin: 0 }}>{value}%</p>
     </div>
   );
 }
@@ -344,29 +266,16 @@ function ScoreBadge({ label, value }: { label: string; value: number }) {
 function ReflectionBlock({ label, color, content }: { label: string; color: string; content: string }) {
   return (
     <div style={{
-      padding: 20,
-      borderRadius: 12,
-      background: '#01030f',
-      border: `1px solid ${color}20`,
+      padding: 'clamp(14px, 2vw, 18px)',
+      borderRadius: 10,
+      background: 'rgba(255,255,255,0.02)',
+      border: '1px solid rgba(255,255,255,0.06)',
       borderLeft: `3px solid ${color}`,
     }}>
-      <div style={{
-        fontSize: 13,
-        fontWeight: 600,
-        color,
-        marginBottom: 10,
-        textTransform: 'uppercase',
-        letterSpacing: '0.05em',
-      }}>
+      <p style={{ fontSize: 10, fontWeight: 700, color, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
         {label}
-      </div>
-      <p style={{
-        fontSize: 15,
-        color: '#e5e7eb',
-        lineHeight: 1.7,
-        margin: 0,
-        whiteSpace: 'pre-wrap',
-      }}>
+      </p>
+      <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.65)', lineHeight: 1.7, margin: 0, whiteSpace: 'pre-wrap' }}>
         {content}
       </p>
     </div>

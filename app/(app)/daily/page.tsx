@@ -33,16 +33,12 @@ const getYesterdayESTDate = () => {
 const getESTDisplayDate = (dateStr?: string) => {
   if (dateStr) {
     const date = new Date(dateStr + 'T00:00:00');
-    return date.toLocaleDateString('en-US', {
-      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-    });
+    return date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   }
   const now = new Date();
   const estString = now.toLocaleString('en-US', { timeZone: 'America/New_York' });
   const estDate = new Date(estString);
-  return estDate.toLocaleDateString('en-US', {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-  });
+  return estDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 };
 
 const getMondayOfWeek = (dateStr: string) => {
@@ -54,7 +50,6 @@ const getMondayOfWeek = (dateStr: string) => {
   return monday.toISOString().split('T')[0];
 };
 
-/* ---------- Default form state ---------- */
 const defaultFormState = () => ({
   physical: false,
   nutrition: false,
@@ -89,7 +84,7 @@ export default function DailyPage() {
 
   const [userHabits, setUserHabits] = useState<any>(null);
   const [weeklyGoals, setWeeklyGoals] = useState<any>(null);
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const isLocked = activeTab === 'today' ? isTodayLocked : isYesterdayLocked;
@@ -105,20 +100,14 @@ export default function DailyPage() {
       const { data: auth } = await supabase.auth.getUser();
       if (!auth.user) { router.push('/login'); return; }
 
-      const { data: habits } = await supabase
-        .from('user_habits').select('*').eq('user_id', auth.user.id).maybeSingle();
+      const { data: habits } = await supabase.from('user_habits').select('*').eq('user_id', auth.user.id).maybeSingle();
       setUserHabits(habits);
 
       const weekStart = getMondayOfWeek(today);
-      const { data: goals } = await supabase
-        .from('weekly_goals').select('*')
-        .eq('user_id', auth.user.id).eq('week_start_date', weekStart).maybeSingle();
+      const { data: goals } = await supabase.from('weekly_goals').select('*').eq('user_id', auth.user.id).eq('week_start_date', weekStart).maybeSingle();
       setWeeklyGoals(goals);
 
-      const { data: existingToday } = await supabase
-        .from('daily_logs').select('*')
-        .eq('user_id', auth.user.id).eq('log_date', today).maybeSingle();
-
+      const { data: existingToday } = await supabase.from('daily_logs').select('*').eq('user_id', auth.user.id).eq('log_date', today).maybeSingle();
       if (existingToday) {
         setTodayLog(existingToday);
         setIsTodayLocked(true);
@@ -139,10 +128,7 @@ export default function DailyPage() {
         }
       }
 
-      const { data: existingYesterday } = await supabase
-        .from('daily_logs').select('*')
-        .eq('user_id', auth.user.id).eq('log_date', yesterday).maybeSingle();
-
+      const { data: existingYesterday } = await supabase.from('daily_logs').select('*').eq('user_id', auth.user.id).eq('log_date', yesterday).maybeSingle();
       if (existingYesterday) {
         setYesterdayLog(existingYesterday);
         setIsYesterdayLocked(true);
@@ -193,37 +179,23 @@ export default function DailyPage() {
     const sovereignScore = priorScore * 0.7 + REST_DAY_SCORE * 0.3;
 
     const { error } = await supabase.from('daily_logs').insert({
-      user_id: data.user.id,
-      log_date: activeDate,
-      is_rest_day: true,
-      daily_raw_score: REST_DAY_SCORE,
-      sovereign_score: sovereignScore,
-      sovereign_value: sovereignScore,
-      body_score: 0, mind_score: 0, identity_score: 0,
-      negative_trigger: 'None',
+      user_id: data.user.id, log_date: activeDate, is_rest_day: true,
+      daily_raw_score: REST_DAY_SCORE, sovereign_score: sovereignScore, sovereign_value: sovereignScore,
+      body_score: 0, mind_score: 0, identity_score: 0, negative_trigger: 'None',
       daily_notes: form.dailyNotes,
-      body_physical_activity_completed: false,
-      body_nutritional_discipline_maintained: false,
-      body_daily_reps_level: 'below_10',
-      mind_positive_habit_completed: false,
-      mind_negative_habit_avoided: false,
-      mind_discipline_rating: 5,
-      identity_daily_mission_completed: false,
-      identity_philosophy_practice_completed: false,
+      body_physical_activity_completed: false, body_nutritional_discipline_maintained: false,
+      body_daily_reps_level: 'below_10', mind_positive_habit_completed: false,
+      mind_negative_habit_avoided: false, mind_discipline_rating: 5,
+      identity_daily_mission_completed: false, identity_philosophy_practice_completed: false,
       identity_mood_rating: 5,
     });
 
     if (error) {
-      setMessage(error.message);
+      setMessage({ type: 'error', text: error.message });
     } else {
-      setMessage('Rest day logged successfully!');
-      if (activeTab === 'today') {
-        setIsTodayLocked(true);
-        setTimeout(() => router.push('/dashboard'), 1500);
-      } else {
-        setIsYesterdayLocked(true);
-        setTimeout(() => setActiveTab('today'), 1500);
-      }
+      setMessage({ type: 'success', text: 'Rest day logged.' });
+      if (activeTab === 'today') { setIsTodayLocked(true); setTimeout(() => router.push('/dashboard'), 1500); }
+      else { setIsYesterdayLocked(true); setTimeout(() => setActiveTab('today'), 1500); }
     }
   };
 
@@ -248,8 +220,7 @@ export default function DailyPage() {
     const sovereignScore = priorScore * 0.7 + dailyRawScore * 0.3;
 
     const { error } = await supabase.from('daily_logs').insert({
-      user_id: data.user.id,
-      log_date: activeDate,
+      user_id: data.user.id, log_date: activeDate,
       body_physical_activity_completed: form.physical,
       body_nutritional_discipline_maintained: form.nutrition,
       body_daily_reps_level: form.reps,
@@ -260,74 +231,48 @@ export default function DailyPage() {
       identity_daily_mission_completed: form.mission,
       identity_philosophy_practice_completed: form.philosophy,
       identity_mood_rating: form.mood,
-      body_score: bodyScore,
-      mind_score: mindScore,
-      identity_score: identityScore,
-      daily_raw_score: dailyRawScore,
-      sovereign_score: sovereignScore,
-      sovereign_value: sovereignScore,
-      is_rest_day: false,
-      daily_notes: form.dailyNotes,
+      body_score: bodyScore, mind_score: mindScore, identity_score: identityScore,
+      daily_raw_score: dailyRawScore, sovereign_score: sovereignScore, sovereign_value: sovereignScore,
+      is_rest_day: false, daily_notes: form.dailyNotes,
     });
 
     if (error) {
-      setMessage(error.message);
+      setMessage({ type: 'error', text: error.message });
     } else {
-      setMessage('Daily log submitted successfully!');
-      if (activeTab === 'today') {
-        setIsTodayLocked(true);
-        setTimeout(() => router.push('/dashboard'), 1500);
-      } else {
-        setIsYesterdayLocked(true);
-        setTimeout(() => setActiveTab('today'), 1500);
-      }
+      setMessage({ type: 'success', text: 'Log submitted.' });
+      if (activeTab === 'today') { setIsTodayLocked(true); setTimeout(() => router.push('/dashboard'), 1500); }
+      else { setIsYesterdayLocked(true); setTimeout(() => setActiveTab('today'), 1500); }
     }
   };
 
   if (isLoading) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        background: 'radial-gradient(circle at top, #020617, #01030f)',
-      }}>
-        <p style={{ color: '#94a3b8' }}>Loading...</p>
+      <div style={{ minHeight: '100vh', background: '#080c18', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ width: 32, height: 32, border: '2px solid rgba(255,255,255,0.06)', borderTopColor: '#4ade80', borderRadius: '50%', margin: '0 auto 12px', animation: 'spin 1s linear infinite' }} />
+          <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>Loading...</p>
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </div>
       </div>
     );
   }
 
   if (!userHabits) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        background: 'radial-gradient(circle at top, #020617, #01030f)',
-        padding: 24,
-      }}>
+      <div style={{ minHeight: '100vh', background: '#080c18', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
         <div style={{
-          maxWidth: 500,
-          padding: 40,
-          background: '#020617',
-          borderRadius: 16,
-          border: '1px solid #ef4444',
-          textAlign: 'center',
+          maxWidth: 440, width: '100%', padding: 'clamp(28px, 5vw, 40px)',
+          background: 'rgba(255,255,255,0.025)', borderRadius: 18,
+          border: '1px solid rgba(248,113,113,0.2)', textAlign: 'center',
         }}>
-          <h2 style={{ fontSize: 24, marginBottom: 16, color: '#ef4444' }}>No Habits Defined</h2>
-          <p style={{ color: '#94a3b8', marginBottom: 24, lineHeight: 1.6 }}>
+          <h2 style={{ fontSize: 20, marginBottom: 12, color: '#f87171', fontWeight: 700 }}>No Habits Defined</h2>
+          <p style={{ color: 'rgba(255,255,255,0.4)', marginBottom: 28, lineHeight: 1.65, fontSize: 14 }}>
             You need to define your daily habits before you can start logging.
           </p>
           <Link href="/habits" style={{
-            display: 'inline-block',
-            padding: '12px 24px',
-            background: 'linear-gradient(180deg, #22c55e, #16a34a)',
-            color: '#020617',
-            fontWeight: 600,
-            borderRadius: 8,
-            textDecoration: 'none',
+            display: 'inline-block', padding: '14px 32px',
+            background: '#4ade80', color: '#080c18',
+            fontWeight: 700, borderRadius: 10, textDecoration: 'none', fontSize: 15,
           }}>
             Set Up Habits
           </Link>
@@ -339,315 +284,201 @@ export default function DailyPage() {
   return (
     <div style={{
       minHeight: '100vh',
-      padding: '60px 24px',
-      background: 'radial-gradient(circle at top, #020617, #01030f)',
+      background: '#080c18',
+      color: '#fff',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      padding: 'clamp(32px, 5vw, 60px) clamp(16px, 4vw, 24px)',
     }}>
-      <div style={{ maxWidth: 800, margin: '0 auto' }}>
+      <div style={{ maxWidth: 720, margin: '0 auto' }}>
 
         {/* HEADER */}
-        <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontSize: 36, fontWeight: 600, marginBottom: 8 }}>Daily Log</h1>
-          <p style={{ color: '#94a3b8', fontSize: 16 }}>
-            {isLocked
-              ? `${activeTab === 'yesterday' ? "Yesterday's" : "Today's"} log is complete ✓`
-              : 'Show up. Record truthfully.'}
+        <div style={{ marginBottom: 28 }}>
+          <p style={{ fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)', fontWeight: 600, marginBottom: 12 }}>
+            Daily Log
+          </p>
+          <h1 style={{ fontSize: 'clamp(26px, 5vw, 36px)', fontWeight: 700, letterSpacing: '-0.025em', marginBottom: 6, lineHeight: 1.15 }}>
+            {isLocked ? `${activeTab === 'yesterday' ? "Yesterday's" : "Today's"} log is complete ✓` : 'Show up. Record truthfully.'}
+          </h1>
+          <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>
+            {getESTDisplayDate(activeDate)} · EST
           </p>
         </div>
 
         {/* DATE TABS */}
         {showYesterdayTab && (
-          <div style={{ display: 'flex', gap: 8, marginBottom: 32 }}>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 28 }}>
             <button
               onClick={() => { setActiveTab('today'); setMessage(null); }}
               style={{
-                flex: 1,
-                padding: '10px 16px',
-                borderRadius: 10,
-                fontWeight: 600,
-                fontSize: 13,
-                cursor: 'pointer',
-                background: activeTab === 'today' ? '#22c55e' : '#01030f',
-                color: activeTab === 'today' ? '#020617' : '#94a3b8',
-                border: activeTab === 'today' ? '1px solid #22c55e' : '1px solid #334155',
-                transition: 'all 0.15s ease',
+                flex: 1, padding: '11px 16px', borderRadius: 10,
+                fontWeight: 600, fontSize: 13, cursor: 'pointer',
+                background: activeTab === 'today' ? '#4ade80' : 'rgba(255,255,255,0.03)',
+                color: activeTab === 'today' ? '#080c18' : 'rgba(255,255,255,0.4)',
+                border: activeTab === 'today' ? '1px solid #4ade80' : '1px solid rgba(255,255,255,0.08)',
+                transition: 'all 0.15s',
               }}
             >
-              Today — {getESTDisplayDate().split(',')[0]}
-              {isTodayLocked ? ' ✓' : ''}
+              Today {isTodayLocked ? '✓' : ''}
             </button>
             <button
               onClick={() => { setActiveTab('yesterday'); setMessage(null); }}
               style={{
-                flex: 1,
-                padding: '10px 16px',
-                borderRadius: 10,
-                fontWeight: 600,
-                fontSize: 13,
-                cursor: 'pointer',
-                background: activeTab === 'yesterday' ? '#f59e0b' : '#01030f',
-                color: activeTab === 'yesterday' ? '#020617' : '#94a3b8',
-                border: activeTab === 'yesterday' ? '1px solid #f59e0b' : '1px solid #334155',
-                transition: 'all 0.15s ease',
+                flex: 1, padding: '11px 16px', borderRadius: 10,
+                fontWeight: 600, fontSize: 13, cursor: 'pointer',
+                background: activeTab === 'yesterday' ? '#fbbf24' : 'rgba(255,255,255,0.03)',
+                color: activeTab === 'yesterday' ? '#080c18' : 'rgba(255,255,255,0.4)',
+                border: activeTab === 'yesterday' ? '1px solid #fbbf24' : '1px solid rgba(255,255,255,0.08)',
+                transition: 'all 0.15s',
               }}
             >
-              Yesterday — {getESTDisplayDate(yesterday).split(',')[0]}
-              {isYesterdayLocked
-                ? ' ✓'
-                : <span style={{ marginLeft: 6, background: '#ef4444', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 5px', borderRadius: 999 }}>MISSED</span>
-              }
+              Yesterday {isYesterdayLocked ? '✓' : '⚠️'}
             </button>
           </div>
         )}
-
-        {/* DATE DISPLAY */}
-        <div style={{ marginBottom: 28, color: '#94a3b8', fontSize: 14 }}>
-          📅 {getESTDisplayDate(activeDate)} (EST)
-          {activeTab === 'yesterday' && !isYesterdayLocked && (
-            <span style={{ marginLeft: 10, color: '#f59e0b', fontWeight: 600, fontSize: 13 }}>
-              ⚠️ Logging for yesterday — last chance!
-            </span>
-          )}
-        </div>
 
         {/* WEEKLY GOALS */}
         {weeklyGoals && (weeklyGoals.goal1 || weeklyGoals.goal2 || weeklyGoals.goal3) && (
           <div style={{
-            padding: 20,
-            marginBottom: 32,
-            borderRadius: 12,
-            background: '#2c1810',
-            border: '1px solid #fbbf24',
+            padding: 'clamp(16px, 2.5vw, 20px)', marginBottom: 24, borderRadius: 12,
+            background: 'rgba(251,191,36,0.05)', border: '1px solid rgba(251,191,36,0.2)',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-              <span style={{ fontSize: 20 }}>🎯</span>
-              <h3 style={{ color: '#fbbf24', margin: 0, fontSize: 16, fontWeight: 600 }}>This Week's Goals</h3>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <p style={{ color: '#fbbf24', fontSize: 12, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', margin: 0 }}>This Week's Goals</p>
+              <Link href="/goals" style={{ color: 'rgba(255,255,255,0.25)', fontSize: 12, textDecoration: 'none' }}>Edit →</Link>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {weeklyGoals.goal1 && (
-                <div style={{ color: '#e5e7eb', fontSize: 14, display: 'flex', alignItems: 'start', gap: 8 }}>
-                  <span style={{ color: '#fbbf24', flexShrink: 0 }}>•</span>
-                  <span>{weeklyGoals.goal1}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+              {[weeklyGoals.goal1, weeklyGoals.goal2, weeklyGoals.goal3].filter(Boolean).map((goal: string, i: number) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: 13, color: 'rgba(255,255,255,0.55)' }}>
+                  <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#fbbf24', flexShrink: 0, marginTop: 5 }} />
+                  {goal}
                 </div>
-              )}
-              {weeklyGoals.goal2 && (
-                <div style={{ color: '#e5e7eb', fontSize: 14, display: 'flex', alignItems: 'start', gap: 8 }}>
-                  <span style={{ color: '#fbbf24', flexShrink: 0 }}>•</span>
-                  <span>{weeklyGoals.goal2}</span>
-                </div>
-              )}
-              {weeklyGoals.goal3 && (
-                <div style={{ color: '#e5e7eb', fontSize: 14, display: 'flex', alignItems: 'start', gap: 8 }}>
-                  <span style={{ color: '#fbbf24', flexShrink: 0 }}>•</span>
-                  <span>{weeklyGoals.goal3}</span>
-                </div>
-              )}
+              ))}
             </div>
-            <Link href="/goals" style={{
-              marginTop: 12,
-              display: 'inline-block',
-              fontSize: 13,
-              color: '#fbbf24',
-              textDecoration: 'underline',
-            }}>
-              Update goals →
-            </Link>
           </div>
         )}
 
-        {/* SCORES (locked view) */}
+        {/* LOCKED SCORES */}
         {isLocked && currentLog && (
           <div style={{
-            padding: 24,
-            marginBottom: 32,
-            borderRadius: 12,
-            background: '#022c22',
-            border: '1px solid #22c55e',
+            padding: 'clamp(18px, 3vw, 24px)', marginBottom: 24, borderRadius: 14,
+            background: 'rgba(74,222,128,0.05)', border: '1px solid rgba(74,222,128,0.15)',
           }}>
-            <h3 style={{ color: '#22c55e', marginBottom: 16, fontSize: 18 }}>
+            <p style={{ fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)', fontWeight: 600, marginBottom: 16 }}>
               {activeTab === 'yesterday' ? "Yesterday's Results" : "Today's Results"}
-            </h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: 16 }}>
-              <ScorePill label="Body" value={currentLog.body_score} color="#22c55e" />
-              <ScorePill label="Mind" value={currentLog.mind_score} color="#3b82f6" />
-              <ScorePill label="Identity" value={currentLog.identity_score} color="#a855f7" />
-              <ScorePill label="Sovereign" value={currentLog.sovereign_score.toFixed(1)} color="#fbbf24" large />
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
+              <ScorePill label="Body"      value={currentLog.body_score}                   color="#4ade80" />
+              <ScorePill label="Mind"      value={currentLog.mind_score}                   color="#60a5fa" />
+              <ScorePill label="Identity"  value={currentLog.identity_score}               color="#a78bfa" />
+              <ScorePill label="Sovereign" value={currentLog.sovereign_score?.toFixed(1)}  color="#fbbf24" large />
             </div>
             {currentLog.is_rest_day && (
-              <p style={{ marginTop: 12, color: '#94a3b8', fontSize: 14, textAlign: 'center' }}>Rest Day</p>
+              <p style={{ marginTop: 12, color: 'rgba(255,255,255,0.3)', fontSize: 13, textAlign: 'center' }}>Rest Day</p>
             )}
           </div>
         )}
 
+        {/* MESSAGE */}
         {message && (
           <div style={{
-            padding: 16,
-            marginBottom: 24,
-            borderRadius: 10,
-            background: '#022c22',
-            border: '1px solid #22c55e',
-            color: '#22c55e',
-            textAlign: 'center',
+            padding: '13px 16px', marginBottom: 20, borderRadius: 10,
+            background: message.type === 'success' ? 'rgba(74,222,128,0.06)' : 'rgba(248,113,113,0.06)',
+            border: `1px solid ${message.type === 'success' ? 'rgba(74,222,128,0.25)' : 'rgba(248,113,113,0.25)'}`,
+            color: message.type === 'success' ? '#4ade80' : '#f87171',
+            fontSize: 14, textAlign: 'center',
           }}>
-            {message}
+            {message.text}
           </div>
         )}
 
-        {/* BODY PILLAR */}
-        <Pillar title="Body" color="#22c55e" icon="💪">
-          <HabitCheck
-            label={userHabits.body_physical_activity_name || 'Physical activity'}
-            value={form.physical}
-            onChange={(v) => setForm((p) => ({ ...p, physical: v }))}
-            disabled={isLocked}
-          />
-          <HabitCheck
-            label={userHabits.body_nutritional_discipline_name || 'Nutrition discipline'}
-            value={form.nutrition}
-            onChange={(v) => setForm((p) => ({ ...p, nutrition: v }))}
-            disabled={isLocked}
-          />
+        {/* BODY */}
+        <Pillar title="Body" color="#4ade80">
+          <HabitCheck label={userHabits.body_physical_activity_name || 'Physical activity'} value={form.physical} onChange={(v) => setForm((p) => ({ ...p, physical: v }))} disabled={isLocked} />
+          <HabitCheck label={userHabits.body_nutritional_discipline_name || 'Nutrition discipline'} value={form.nutrition} onChange={(v) => setForm((p) => ({ ...p, nutrition: v }))} disabled={isLocked} />
           <HabitSelect
             label={`${userHabits.body_daily_reps_name || 'Daily reps'} completed`}
-            value={form.reps}
-            onChange={(v) => setForm((p) => ({ ...p, reps: v }))}
-            disabled={isLocked}
+            value={form.reps} onChange={(v) => setForm((p) => ({ ...p, reps: v }))} disabled={isLocked}
             options={[
               { value: 'below_10', label: 'Below 10 (-5 pts)' },
-              { value: '25_plus', label: '25+ reps (+5 pts)' },
-              { value: '50_plus', label: '50+ reps (+10 pts)' },
+              { value: '25_plus',  label: '25+ reps (+5 pts)' },
+              { value: '50_plus',  label: '50+ reps (+10 pts)' },
             ]}
           />
         </Pillar>
 
-        {/* MIND PILLAR */}
-        <Pillar title="Mind" color="#3b82f6" icon="🧠">
-          <HabitCheck
-            label={userHabits.mind_positive_habit_name || 'Positive habit completed'}
-            value={form.mindPositive}
-            onChange={(v) => setForm((p) => ({ ...p, mindPositive: v }))}
-            disabled={isLocked}
-          />
-          <HabitCheck
-            label={`Avoided: ${userHabits.mind_negative_habit_name || 'negative habit'}`}
-            value={form.mindNegative}
-            onChange={(v) => setForm((p) => ({ ...p, mindNegative: v }))}
-            disabled={isLocked}
-          />
+        {/* MIND */}
+        <Pillar title="Mind" color="#60a5fa">
+          <HabitCheck label={userHabits.mind_positive_habit_name || 'Positive habit completed'} value={form.mindPositive} onChange={(v) => setForm((p) => ({ ...p, mindPositive: v }))} disabled={isLocked} />
+          <HabitCheck label={`Avoided: ${userHabits.mind_negative_habit_name || 'negative habit'}`} value={form.mindNegative} onChange={(v) => setForm((p) => ({ ...p, mindNegative: v }))} disabled={isLocked} />
           {!form.mindNegative && (
             <HabitSelect
               label="What triggered the slip-up?"
-              value={form.negativeTrigger}
-              onChange={(v) => setForm((p) => ({ ...p, negativeTrigger: v }))}
-              disabled={isLocked}
+              value={form.negativeTrigger} onChange={(v) => setForm((p) => ({ ...p, negativeTrigger: v }))} disabled={isLocked}
               options={[
-                { value: 'Social Media', label: 'Social Media' },
-                { value: 'Boredom', label: 'Boredom' },
-                { value: 'Stress', label: 'Stress' },
-                { value: 'Fatigue', label: 'Fatigue' },
-                { value: 'Hunger', label: 'Hunger' },
-                { value: 'Peer Pressure', label: 'Peer Pressure' },
-                { value: 'Other', label: 'Other' },
+                { value: 'Social Media',   label: 'Social Media' },
+                { value: 'Boredom',        label: 'Boredom' },
+                { value: 'Stress',         label: 'Stress' },
+                { value: 'Fatigue',        label: 'Fatigue' },
+                { value: 'Hunger',         label: 'Hunger' },
+                { value: 'Peer Pressure',  label: 'Peer Pressure' },
+                { value: 'Other',          label: 'Other' },
               ]}
             />
           )}
-          <HabitRating
-            label="Discipline rating (1-10)"
-            sublabel="How disciplined were you today?"
-            value={form.discipline}
-            onChange={(v) => setForm((p) => ({ ...p, discipline: v }))}
-            disabled={isLocked}
-          />
+          <HabitRating label="Discipline rating (1–10)" sublabel="How disciplined were you today?" value={form.discipline} onChange={(v) => setForm((p) => ({ ...p, discipline: v }))} disabled={isLocked} />
         </Pillar>
 
-        {/* IDENTITY PILLAR */}
-        <Pillar title="Identity" color="#a855f7" icon="⚡">
-          <HabitCheck
-            label={userHabits.identity_daily_mission_name || 'Daily mission completed'}
-            value={form.mission}
-            onChange={(v) => setForm((p) => ({ ...p, mission: v }))}
-            disabled={isLocked}
-          />
-          <HabitCheck
-            label={userHabits.identity_philosophy_practice_name || 'Philosophy practiced'}
-            value={form.philosophy}
-            onChange={(v) => setForm((p) => ({ ...p, philosophy: v }))}
-            disabled={isLocked}
-          />
-          <HabitRating
-            label="Mood rating (1-10)"
-            sublabel="How was your mood today?"
-            value={form.mood}
-            onChange={(v) => setForm((p) => ({ ...p, mood: v }))}
-            disabled={isLocked}
-          />
+        {/* IDENTITY */}
+        <Pillar title="Identity" color="#a78bfa">
+          <HabitCheck label={userHabits.identity_daily_mission_name || 'Daily mission completed'} value={form.mission} onChange={(v) => setForm((p) => ({ ...p, mission: v }))} disabled={isLocked} />
+          <HabitCheck label={userHabits.identity_philosophy_practice_name || 'Philosophy practiced'} value={form.philosophy} onChange={(v) => setForm((p) => ({ ...p, philosophy: v }))} disabled={isLocked} />
+          <HabitRating label="Mood rating (1–10)" sublabel="How was your mood today?" value={form.mood} onChange={(v) => setForm((p) => ({ ...p, mood: v }))} disabled={isLocked} />
         </Pillar>
 
-        {/* DAILY JOURNAL */}
-        <Pillar title="Daily Notes" color="#fbbf24" icon="📝">
+        {/* DAILY NOTES */}
+        <Pillar title="Daily Notes" color="#fbbf24">
           <div>
-            <label style={{ display: 'block', marginBottom: 8 }}>
-              <div style={{ fontSize: 14, color: '#e5e7eb', marginBottom: 4 }}>
-                What happened today? (Optional)
-              </div>
-              <div style={{ fontSize: 13, color: '#94a3b8', fontStyle: 'italic' }}>
-                Capture wins, struggles, or context. This helps you spot patterns.
-              </div>
-            </label>
+            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 10, lineHeight: 1.5 }}>
+              Capture wins, struggles, or context. Patterns emerge when you review these later.
+            </p>
             <textarea
               value={form.dailyNotes}
               onChange={(e) => setForm((p) => ({ ...p, dailyNotes: e.target.value }))}
               disabled={isLocked}
-              placeholder="e.g., Crushed the gym, felt unstoppable. Had a stressful work call in the afternoon."
+              placeholder="e.g., Crushed the gym today. Stressful work call in the afternoon affected my focus."
               rows={4}
               style={{
-                width: '100%',
-                padding: 14,
-                borderRadius: 10,
-                background: '#01030f',
-                border: '1px solid #334155',
-                color: '#e5e7eb',
-                fontSize: 15,
-                lineHeight: 1.6,
-                resize: 'vertical',
-                fontFamily: 'inherit',
+                width: '100%', padding: '13px 14px', borderRadius: 10,
+                background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)',
+                color: '#fff', fontSize: 14, lineHeight: 1.6, resize: 'vertical',
+                fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box',
                 cursor: isLocked ? 'not-allowed' : 'text',
-                opacity: isLocked ? 0.6 : 1,
+                opacity: isLocked ? 0.5 : 1,
               }}
             />
           </div>
         </Pillar>
 
-        {/* SUBMIT BUTTONS */}
+        {/* SUBMIT */}
         {!isLocked ? (
-          <div style={{ display: 'flex', gap: 16, marginTop: 40 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 8 }}>
             <button
               onClick={submitDay}
               style={{
-                flex: 1,
-                padding: 16,
-                background: 'linear-gradient(180deg, #22c55e, #16a34a)',
-                color: '#020617',
-                fontWeight: 600,
-                fontSize: 16,
-                borderRadius: 10,
-                border: 'none',
-                cursor: 'pointer',
+                width: '100%', padding: 'clamp(14px, 2vw, 16px)',
+                background: '#4ade80', color: '#080c18',
+                fontWeight: 700, fontSize: 15, borderRadius: 12, border: 'none', cursor: 'pointer',
               }}
             >
-              Submit {activeTab === 'yesterday' ? "Yesterday's Log" : "Today's Log"}
+              Submit {activeTab === 'yesterday' ? "Yesterday's" : "Today's"} Log
             </button>
             <button
               onClick={submitRestDay}
               style={{
-                flex: 1,
-                padding: 16,
-                background: 'transparent',
-                color: '#94a3b8',
-                fontWeight: 600,
-                fontSize: 16,
-                borderRadius: 10,
-                border: '1px solid #334155',
-                cursor: 'pointer',
+                width: '100%', padding: 'clamp(13px, 2vw, 15px)',
+                background: 'transparent', color: 'rgba(255,255,255,0.35)',
+                fontWeight: 500, fontSize: 14, borderRadius: 12,
+                border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer',
               }}
             >
               Log Rest Day
@@ -658,16 +489,9 @@ export default function DailyPage() {
             <button
               onClick={() => router.push('/dashboard')}
               style={{
-                width: '100%',
-                padding: 16,
-                marginTop: 40,
-                background: 'linear-gradient(180deg, #22c55e, #16a34a)',
-                color: '#020617',
-                fontWeight: 600,
-                fontSize: 16,
-                borderRadius: 10,
-                border: 'none',
-                cursor: 'pointer',
+                width: '100%', padding: 'clamp(14px, 2vw, 16px)', marginTop: 8,
+                background: '#4ade80', color: '#080c18',
+                fontWeight: 700, fontSize: 15, borderRadius: 12, border: 'none', cursor: 'pointer',
               }}
             >
               View Dashboard
@@ -675,53 +499,36 @@ export default function DailyPage() {
           )
         )}
 
-        <p style={{ marginTop: 16, textAlign: 'center', fontSize: 13, color: '#94a3b8' }}>
+        <p style={{ marginTop: 14, textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.2)' }}>
           {!isLocked && 'Log locks after submission. Be honest.'}
-          {isLocked && activeTab === 'today' && 'Your log resets at 12:01 AM EST. Come back tomorrow.'}
+          {isLocked && activeTab === 'today' && 'Resets at 12:01 AM EST. Come back tomorrow.'}
           {isLocked && activeTab === 'yesterday' && "Yesterday's log is complete."}
         </p>
+
       </div>
     </div>
   );
 }
 
-/* ---------- Components ---------- */
+/* ---------- COMPONENTS ---------- */
 
-function Pillar({ title, color, icon, children }: {
-  title: string;
-  color: string;
-  icon: string;
-  children: React.ReactNode;
-}) {
+function Pillar({ title, color, children }: { title: string; color: string; children: React.ReactNode }) {
   return (
     <div style={{
-      marginBottom: 28,
-      padding: 28,
+      marginBottom: 16,
+      padding: 'clamp(18px, 3vw, 24px)',
       borderRadius: 16,
-      background: '#020617',
-      border: `1px solid ${color}30`,
-      borderLeft: `4px solid ${color}`,
+      background: 'rgba(255,255,255,0.025)',
+      border: '1px solid rgba(255,255,255,0.07)',
+      borderLeft: `3px solid ${color}`,
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-        <span style={{ fontSize: 24 }}>{icon}</span>
-        <h2 style={{ color, margin: 0, fontSize: 20, fontWeight: 600 }}>{title}</h2>
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>{children}</div>
+      <h2 style={{ color, margin: '0 0 20px', fontSize: 'clamp(15px, 2vw, 17px)', fontWeight: 700, letterSpacing: '0.01em' }}>{title}</h2>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>{children}</div>
     </div>
   );
 }
 
-function HabitCheck({
-  label,
-  value,
-  onChange,
-  disabled,
-}: {
-  label: string;
-  value: boolean;
-  onChange: (v: boolean) => void;
-  disabled: boolean;
-}) {
+function HabitCheck({ label, value, onChange, disabled }: { label: string; value: boolean; onChange: (v: boolean) => void; disabled: boolean }) {
   const [touched, setTouched] = useState(false);
 
   const handleChange = (v: boolean) => {
@@ -732,53 +539,39 @@ function HabitCheck({
 
   return (
     <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 10,
-      padding: 14,
-      background: '#01030f',
+      padding: 'clamp(12px, 2vw, 16px)',
+      background: 'rgba(255,255,255,0.02)',
       borderRadius: 10,
       border: touched || disabled
-        ? `1px solid ${value ? '#22c55e40' : '#ef444440'}`
-        : '1px solid #334155',
-      opacity: disabled ? 0.6 : 1,
+        ? `1px solid ${value ? 'rgba(74,222,128,0.25)' : 'rgba(248,113,113,0.2)'}`
+        : '1px solid rgba(255,255,255,0.06)',
+      opacity: disabled ? 0.65 : 1,
+      transition: 'border-color 0.15s',
     }}>
-      <span style={{ fontSize: 15, color: '#e5e7eb' }}>{label}</span>
+      <p style={{ fontSize: 'clamp(13px, 2vw, 14px)', color: 'rgba(255,255,255,0.75)', marginBottom: 12, lineHeight: 1.4 }}>{label}</p>
       <div style={{ display: 'flex', gap: 8 }}>
         <button
-          onClick={() => handleChange(true)}
-          disabled={disabled}
+          onClick={() => handleChange(true)} disabled={disabled}
           style={{
-            flex: 1,
-            padding: '10px 0',
-            borderRadius: 8,
-            border: 'none',
-            fontWeight: 600,
-            fontSize: 15,
-            cursor: disabled ? 'not-allowed' : 'pointer',
-            background: touched && value ? '#16a34a' : !touched ? '#1e293b' : '#1a2a1a',
-            color: touched && value ? '#ffffff' : !touched ? '#e5e7eb' : '#4ade80',
-            boxShadow: touched && value ? '0 0 8px #22c55e60' : 'none',
-            transition: 'all 0.15s ease',
+            flex: 1, padding: '11px 0', borderRadius: 8, border: 'none',
+            fontWeight: 700, fontSize: 14, cursor: disabled ? 'not-allowed' : 'pointer',
+            background: touched && value ? 'rgba(74,222,128,0.15)' : 'rgba(255,255,255,0.04)',
+            color: touched && value ? '#4ade80' : 'rgba(255,255,255,0.4)',
+            outline: touched && value ? '1px solid rgba(74,222,128,0.3)' : 'none',
+            transition: 'all 0.15s',
           }}
         >
           Yes
         </button>
         <button
-          onClick={() => handleChange(false)}
-          disabled={disabled}
+          onClick={() => handleChange(false)} disabled={disabled}
           style={{
-            flex: 1,
-            padding: '10px 0',
-            borderRadius: 8,
-            border: 'none',
-            fontWeight: 600,
-            fontSize: 15,
-            cursor: disabled ? 'not-allowed' : 'pointer',
-            background: touched && !value ? '#7f1d1d' : !touched ? '#1e293b' : '#1a1010',
-            color: touched && !value ? '#ffffff' : !touched ? '#e5e7eb' : '#f87171',
-            boxShadow: touched && !value ? '0 0 8px #ef444460' : 'none',
-            transition: 'all 0.15s ease',
+            flex: 1, padding: '11px 0', borderRadius: 8, border: 'none',
+            fontWeight: 700, fontSize: 14, cursor: disabled ? 'not-allowed' : 'pointer',
+            background: touched && !value ? 'rgba(248,113,113,0.12)' : 'rgba(255,255,255,0.04)',
+            color: touched && !value ? '#f87171' : 'rgba(255,255,255,0.4)',
+            outline: touched && !value ? '1px solid rgba(248,113,113,0.25)' : 'none',
+            transition: 'all 0.15s',
           }}
         >
           No
@@ -788,95 +581,56 @@ function HabitCheck({
   );
 }
 
-function HabitSelect({ label, value, onChange, disabled, options }: {
-  label: string;
-  value: string;
-  onChange: (v: any) => void;
-  disabled: boolean;
-  options: { value: string; label: string }[];
-}) {
+function HabitSelect({ label, value, onChange, disabled, options }: { label: string; value: string; onChange: (v: any) => void; disabled: boolean; options: { value: string; label: string }[] }) {
   return (
     <div>
-      <label style={{ display: 'block', marginBottom: 8, fontSize: 14, color: '#94a3b8' }}>
-        {label}
-      </label>
+      <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>{label}</p>
       <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        disabled={disabled}
+        value={value} onChange={(e) => onChange(e.target.value)} disabled={disabled}
         style={{
-          width: '100%',
-          padding: 14,
-          borderRadius: 10,
-          background: '#01030f',
-          border: '1px solid #334155',
-          color: '#e5e7eb',
-          fontSize: 15,
-          cursor: disabled ? 'not-allowed' : 'pointer',
-          opacity: disabled ? 0.6 : 1,
+          width: '100%', padding: '13px 14px', borderRadius: 10,
+          background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)',
+          color: '#fff', fontSize: 14, cursor: disabled ? 'not-allowed' : 'pointer',
+          opacity: disabled ? 0.6 : 1, outline: 'none',
         }}
       >
-        {options.map((opt) => (
-          <option key={opt.value} value={opt.value}>{opt.label}</option>
-        ))}
+        {options.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
       </select>
     </div>
   );
 }
 
-function HabitRating({ label, sublabel, value, onChange, disabled }: {
-  label: string;
-  sublabel: string;
-  value: number;
-  onChange: (v: number) => void;
-  disabled: boolean;
-}) {
+function HabitRating({ label, sublabel, value, onChange, disabled }: { label: string; sublabel: string; value: number; onChange: (v: number) => void; disabled: boolean }) {
   return (
     <div>
-      <label style={{ display: 'block', marginBottom: 8 }}>
-        <div style={{ fontSize: 14, color: '#e5e7eb', marginBottom: 4 }}>{label}</div>
-        <div style={{ fontSize: 13, color: '#94a3b8', fontStyle: 'italic' }}>{sublabel}</div>
-      </label>
+      <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginBottom: 3, fontWeight: 500 }}>{label}</p>
+      <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.28)', marginBottom: 8 }}>{sublabel}</p>
       <select
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        disabled={disabled}
+        value={value} onChange={(e) => onChange(Number(e.target.value))} disabled={disabled}
         style={{
-          width: '100%',
-          padding: 14,
-          borderRadius: 10,
-          background: '#01030f',
-          border: '1px solid #334155',
-          color: '#e5e7eb',
-          fontSize: 15,
-          cursor: disabled ? 'not-allowed' : 'pointer',
-          opacity: disabled ? 0.6 : 1,
+          width: '100%', padding: '13px 14px', borderRadius: 10,
+          background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)',
+          color: '#fff', fontSize: 14, cursor: disabled ? 'not-allowed' : 'pointer',
+          opacity: disabled ? 0.6 : 1, outline: 'none',
         }}
       >
-        {[1,2,3,4,5,6,7,8,9,10].map((n) => (
-          <option key={n} value={n}>{n}</option>
-        ))}
+        {[1,2,3,4,5,6,7,8,9,10].map((n) => <option key={n} value={n}>{n}</option>)}
       </select>
     </div>
   );
 }
 
-function ScorePill({ label, value, color, large = false }: {
-  label: string;
-  value: any;
-  color: string;
-  large?: boolean;
-}) {
+function ScorePill({ label, value, color, large = false }: { label: string; value: any; color: string; large?: boolean }) {
   return (
     <div style={{
-      padding: large ? 16 : 12,
-      background: '#01030f',
+      padding: large ? '14px 10px' : '12px 10px',
+      background: 'rgba(255,255,255,0.02)',
       borderRadius: 10,
-      border: `1px solid ${color}40`,
+      border: `1px solid ${color}25`,
       textAlign: 'center',
     }}>
-      <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 4 }}>{label}</div>
-      <div style={{ fontSize: large ? 24 : 20, fontWeight: 600, color }}>{value}</div>
+      <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginBottom: 5, letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 600 }}>{label}</p>
+      <p style={{ fontSize: large ? 22 : 18, fontWeight: 700, color, margin: 0 }}>{value}</p>
     </div>
   );
 }
