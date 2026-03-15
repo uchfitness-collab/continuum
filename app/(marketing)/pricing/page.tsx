@@ -121,7 +121,7 @@ export default function PricingPage() {
 }
 
 function PricingCard({
-  name, price, total, duration, description, features,
+  name, price, duration, description, features,
   color, href, cta, highlighted = false,
 }: {
   name: string; price: number; duration: string;
