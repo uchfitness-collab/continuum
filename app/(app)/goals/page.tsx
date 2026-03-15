@@ -271,7 +271,7 @@ export default function GoalsPage() {
               type="text"
               value={weeklyGoal3}
               onChange={(e) => setWeeklyGoal3(e.target.value)}
-              placeholder="Goal 3: e.g., Ship product feature by Friday"
+              placeholder="Goal 3: e.g., Finish Project for Work by Friday"
               style={{
                 width: '100%',
                 padding: 14,
@@ -397,13 +397,13 @@ export default function GoalsPage() {
           examples={[
             "Launch profitable side business ($5k/month revenue)",
             "Publish 52 blog posts or essays",
-            "Build and ship 3 software products",
+            "Finish Work Project by Friday",
             "Network with 100 new people in my industry",
             "Write and self-publish a book"
           ]}
           value={identityGoal}
           onChange={setIdentityGoal}
-          placeholder="Example: Launch SaaS product with 100 paying customers and $10k MRR"
+          placeholder="Example: Work on business 1 hour minimum"
         />
 
         {/* SAVE BUTTON */}
