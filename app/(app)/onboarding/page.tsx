@@ -44,7 +44,7 @@ const STEPS = [
     question: 'Set your personal baseline score.',
     subtitle: 'This is the daily score you commit to hitting. Be honest — this is your minimum standard, not your dream.',
     options: [
-      { value: '80', label: '80 — I\'m just getting started' },
+      { value: '80', label: "80 — I'm just getting started" },
       { value: '95', label: '95 — I have some discipline already' },
       { value: '110', label: '110 — I\'m consistent and ready to push' },
       { value: '125', label: '125 — I operate at a high level' },
@@ -126,6 +126,18 @@ export default function OnboardingPage() {
     router.push('/habits')
   }
 
+  // FIX: Skip now marks onboarding_completed = true so it never shows again
+  const handleSkip = async () => {
+    if (!userId) return
+    await supabase
+      .from('user_profiles')
+      .upsert(
+        { user_id: userId, onboarding_completed: true },
+        { onConflict: 'user_id' }
+      )
+    router.push('/habits')
+  }
+
   const selectedValue = answers[currentStep?.id]
   const isBaselineStep = currentStep.id === 'baseline_score'
 
@@ -135,26 +147,43 @@ export default function OnboardingPage() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'radial-gradient(circle at top, #020617, #01030f)',
+      background: '#080c18',
       padding: 'clamp(16px, 4vw, 24px)',
     }}>
       <div style={{ width: '100%', maxWidth: 500 }}>
 
+        {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <h1 style={{ fontSize: 28, fontWeight: 700, color: '#e5e7eb', marginBottom: 8 }}>
+          <div style={{
+            display: 'inline-block',
+            fontSize: 11,
+            fontWeight: 600,
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            color: '#22c55e',
+            background: 'rgba(34,197,94,0.08)',
+            border: '1px solid rgba(34,197,94,0.2)',
+            borderRadius: 999,
+            padding: '4px 14px',
+            marginBottom: 16,
+          }}>
+            Continuum
+          </div>
+          <h1 style={{ fontSize: 28, fontWeight: 700, color: '#f1f5f9', marginBottom: 8, margin: '0 0 8px' }}>
             {firstName ? `Welcome, ${firstName} 👋` : 'Welcome to Continuum 👋'}
           </h1>
-          <p style={{ color: '#94a3b8', fontSize: 15 }}>
+          <p style={{ color: '#64748b', fontSize: 15, margin: 0 }}>
             {isBaselineStep ? 'One final step — set your standard.' : '3 quick questions before you start'}
           </p>
         </div>
 
+        {/* Progress bar */}
         <div style={{
           width: '100%',
-          height: 4,
-          background: '#1e293b',
+          height: 3,
+          background: 'rgba(255,255,255,0.06)',
           borderRadius: 999,
-          marginBottom: 40,
+          marginBottom: 32,
           overflow: 'hidden',
         }}>
           <div style={{
@@ -166,36 +195,38 @@ export default function OnboardingPage() {
           }} />
         </div>
 
+        {/* Card */}
         <div style={{
-          background: '#020617',
-          padding: 'clamp(24px, 5vw, 40px)',
+          background: 'rgba(255,255,255,0.025)',
+          padding: 'clamp(24px, 5vw, 36px)',
           borderRadius: 16,
-          border: '1px solid #1e293b',
-          marginBottom: 24,
+          border: '1px solid rgba(255,255,255,0.06)',
+          marginBottom: 16,
         }}>
-          <p style={{ color: '#94a3b8', fontSize: 13, marginBottom: 8 }}>
+          <p style={{ color: '#475569', fontSize: 12, marginBottom: 8, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600 }}>
             {isBaselineStep ? 'Final step' : `Question ${step + 1} of ${totalSteps - 1}`}
           </p>
 
           <h2 style={{
-            fontSize: 'clamp(20px, 4vw, 24px)',
+            fontSize: 'clamp(18px, 4vw, 22px)',
             fontWeight: 600,
-            color: '#e5e7eb',
-            marginBottom: 8,
+            color: '#f1f5f9',
+            marginBottom: 6,
+            margin: '0 0 6px',
           }}>
             {currentStep.question}
           </h2>
 
-          <p style={{ color: '#64748b', fontSize: 14, marginBottom: 28 }}>
+          <p style={{ color: '#475569', fontSize: 14, marginBottom: 24, margin: '0 0 24px' }}>
             {currentStep.subtitle}
           </p>
 
-          {/* Baseline explanation box */}
+          {/* Baseline info box */}
           {isBaselineStep && (
             <div style={{
-              padding: 16,
-              background: '#022c22',
-              border: '1px solid #22c55e30',
+              padding: 14,
+              background: 'rgba(34,197,94,0.06)',
+              border: '1px solid rgba(34,197,94,0.15)',
               borderRadius: 10,
               marginBottom: 20,
             }}>
@@ -205,22 +236,23 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {currentStep.options.map((option) => (
               <button
                 key={option.value}
                 onClick={() => handleSelect(option.value)}
                 style={{
                   width: '100%',
-                  padding: '14px 18px',
+                  padding: '13px 16px',
                   borderRadius: 10,
                   border: selectedValue === option.value
-                    ? '1px solid #22c55e'
-                    : '1px solid #334155',
+                    ? '1px solid rgba(34,197,94,0.5)'
+                    : '1px solid rgba(255,255,255,0.06)',
                   background: selectedValue === option.value
-                    ? '#022c22'
-                    : '#01030f',
-                  color: selectedValue === option.value ? '#22c55e' : '#e5e7eb',
+                    ? 'rgba(34,197,94,0.08)'
+                    : 'rgba(255,255,255,0.02)',
+                  color: selectedValue === option.value ? '#22c55e' : '#94a3b8',
                   fontSize: 15,
                   fontWeight: selectedValue === option.value ? 600 : 400,
                   cursor: 'pointer',
@@ -233,19 +265,21 @@ export default function OnboardingPage() {
             ))}
           </div>
 
+          {/* Phone input on last step */}
           {step === STEPS.length - 1 && (
-            <div style={{ marginTop: 28 }}>
+            <div style={{ marginTop: 24 }}>
               <label style={{
                 display: 'block',
-                marginBottom: 8,
-                fontSize: 14,
+                marginBottom: 6,
+                fontSize: 13,
                 fontWeight: 500,
-                color: '#e5e7eb',
+                color: '#94a3b8',
+                letterSpacing: '0.04em',
               }}>
                 Phone number{' '}
-                <span style={{ color: '#64748b', fontWeight: 400 }}>(optional)</span>
+                <span style={{ color: '#475569', fontWeight: 400 }}>(optional)</span>
               </label>
-              <p style={{ color: '#64748b', fontSize: 13, marginBottom: 10 }}>
+              <p style={{ color: '#475569', fontSize: 12, marginBottom: 10, margin: '0 0 10px' }}>
                 For SMS reminders in the future.
               </p>
               <input
@@ -255,51 +289,55 @@ export default function OnboardingPage() {
                 placeholder="+1 (555) 000-0000"
                 style={{
                   width: '100%',
-                  padding: 14,
+                  padding: 13,
                   borderRadius: 10,
-                  background: '#01030f',
-                  border: '1px solid #334155',
-                  color: '#e5e7eb',
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  color: '#f1f5f9',
                   fontSize: 15,
                   boxSizing: 'border-box',
+                  outline: 'none',
                 }}
               />
             </div>
           )}
         </div>
 
+        {/* CTA button */}
         <button
           onClick={handleNext}
           disabled={!selectedValue || loading}
           style={{
             width: '100%',
-            padding: 16,
+            padding: 15,
             borderRadius: 10,
             background: !selectedValue || loading
-              ? '#1e293b'
+              ? 'rgba(255,255,255,0.04)'
               : 'linear-gradient(180deg, #22c55e, #16a34a)',
-            color: !selectedValue || loading ? '#64748b' : '#020617',
-            fontWeight: 600,
-            fontSize: 16,
+            color: !selectedValue || loading ? '#334155' : '#020617',
+            fontWeight: 700,
+            fontSize: 15,
             border: 'none',
             cursor: !selectedValue || loading ? 'not-allowed' : 'pointer',
             transition: 'all 0.15s ease',
+            letterSpacing: '0.02em',
           }}
         >
           {loading
             ? 'Saving...'
             : step === STEPS.length - 1
-            ? "Start my challenge →"
+            ? 'Start my challenge →'
             : 'Next →'}
         </button>
 
-        <p style={{ textAlign: 'center', marginTop: 16 }}>
+        {/* Skip — now correctly marks onboarding complete */}
+        <p style={{ textAlign: 'center', marginTop: 14 }}>
           <button
-            onClick={() => router.push('/habits')}
+            onClick={handleSkip}
             style={{
               background: 'none',
               border: 'none',
-              color: '#64748b',
+              color: '#334155',
               fontSize: 13,
               cursor: 'pointer',
               textDecoration: 'underline',
