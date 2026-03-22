@@ -29,36 +29,7 @@ export default function LoginPage() {
     }
 
     if (data.user) {
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('onboarding_completed')
-        .eq('user_id', data.user.id)
-        .maybeSingle()
-
-      // Brand new user — no profile yet
-      if (!profile) {
-        router.push('/onboarding')
-        return
-      }
-
-      // Profile exists but onboarding explicitly not done
-      if (profile.onboarding_completed === false) {
-        router.push('/onboarding')
-        return
-      }
-
-      // Onboarding done — check habits
-      const { data: habitData } = await supabase
-        .from('user_habits')
-        .select('*')
-        .eq('user_id', data.user.id)
-        .maybeSingle()
-
-      if (!habitData) {
-        router.push('/habits')
-      } else {
-        router.push('/dashboard')
-      }
+      router.push('/dashboard')
     }
 
     setLoading(false)
@@ -136,7 +107,6 @@ export default function LoginPage() {
     </Link>
   )
 
-  // ─── FORGOT SENT ───
   if (view === 'forgot-sent') {
     return (
       <div style={wrap}>
@@ -179,7 +149,6 @@ export default function LoginPage() {
     )
   }
 
-  // ─── FORGOT PASSWORD ───
   if (view === 'forgot') {
     return (
       <div style={wrap}>
@@ -233,7 +202,6 @@ export default function LoginPage() {
     )
   }
 
-  // ─── LOGIN ───
   return (
     <div style={wrap}>
       <div style={{ width: '100%', maxWidth: 420 }}>
