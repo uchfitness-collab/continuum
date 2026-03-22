@@ -59,6 +59,7 @@ export default function OnboardingPage() {
   const [phoneNumber, setPhoneNumber] = useState('')
   const [firstName, setFirstName] = useState('')
   const [loading, setLoading] = useState(false)
+  const [checking, setChecking] = useState(true)
   const [userId, setUserId] = useState<string | null>(null)
 
   useEffect(() => {
@@ -76,7 +77,8 @@ export default function OnboardingPage() {
         .eq('user_id', auth.user.id)
         .maybeSingle()
 
-      if (profile?.onboarding_completed) {
+      // If onboarding already done, skip straight to habits
+      if (profile && profile.onboarding_completed === true) {
         router.push('/habits')
         return
       }
@@ -84,10 +86,34 @@ export default function OnboardingPage() {
       if (profile?.first_name) {
         setFirstName(profile.first_name)
       }
+
+      setChecking(false)
     }
 
     checkAuth()
   }, [router])
+
+  // Show nothing while checking to prevent flash of onboarding
+  if (checking) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: '#080c18',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+        <div style={{
+          width: 32, height: 32,
+          border: '2px solid rgba(255,255,255,0.06)',
+          borderTopColor: '#4ade80',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite',
+        }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    )
+  }
 
   const currentStep = STEPS[step]
   const totalSteps = STEPS.length
@@ -126,7 +152,6 @@ export default function OnboardingPage() {
     router.push('/habits')
   }
 
-  // FIX: Skip now marks onboarding_completed = true so it never shows again
   const handleSkip = async () => {
     if (!userId) return
     await supabase
@@ -330,7 +355,6 @@ export default function OnboardingPage() {
             : 'Next →'}
         </button>
 
-        {/* Skip — now correctly marks onboarding complete */}
         <p style={{ textAlign: 'center', marginTop: 14 }}>
           <button
             onClick={handleSkip}
