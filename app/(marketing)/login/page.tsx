@@ -35,11 +35,19 @@ export default function LoginPage() {
         .eq('user_id', data.user.id)
         .maybeSingle()
 
-      if (!profile || !profile.onboarding_completed) {
+      // Brand new user — no profile yet
+      if (!profile) {
         router.push('/onboarding')
         return
       }
 
+      // Profile exists but onboarding explicitly not done
+      if (profile.onboarding_completed === false) {
+        router.push('/onboarding')
+        return
+      }
+
+      // Onboarding done — check habits
       const { data: habitData } = await supabase
         .from('user_habits')
         .select('*')
