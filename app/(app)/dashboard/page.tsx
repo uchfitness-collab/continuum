@@ -336,7 +336,7 @@ export default function DashboardPage() {
 
           {/* CHART */}
           <div id="chart-section" className="chart-container">
-            <p className="section-title">Sovereign Score — Last {CHART_DAYS} Days</p>
+            <p className="section-title">Sovereign Score </p>
             <div style={{ height: chartHeight }}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData} margin={{ top: 5, right: 10, left: isMobile ? 10 : 0, bottom: 5 }}>
