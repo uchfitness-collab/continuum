@@ -43,9 +43,6 @@ export default function MarketingLayout({
           <Link href="/how-it-works" style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", textDecoration: "none", letterSpacing: "0.02em" }}>
             How It Works
           </Link>
-          <Link href="/pricing" style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", textDecoration: "none", letterSpacing: "0.02em" }}>
-            Pricing
-          </Link>
           <Link href="/contact" style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", textDecoration: "none", letterSpacing: "0.02em" }}>
             Contact
           </Link>
@@ -56,7 +53,7 @@ export default function MarketingLayout({
           <Link href="/login" style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>
             Log In
           </Link>
-          <Link href="/pricing" style={{
+          <Link href="/signup" style={{
             padding: "9px 20px",
             background: "#4ade80",
             color: "#080c18",
@@ -107,7 +104,6 @@ export default function MarketingLayout({
           }}>
             {[
               { href: "/how-it-works", label: "How It Works" },
-              { href: "/pricing",      label: "Pricing" },
               { href: "/contact",      label: "Contact" },
               { href: "/login",        label: "Log In" },
             ].map(({ href, label }) => (
@@ -127,7 +123,7 @@ export default function MarketingLayout({
               </Link>
             ))}
             <Link
-              href="/pricing"
+              href="/signup"
               onClick={() => setMobileMenuOpen(false)}
               style={{
                 display: "block",

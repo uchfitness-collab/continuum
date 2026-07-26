@@ -5,28 +5,6 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/src/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
 
-/* ---------- Internal Free Tier Allowlist ---------- */
-const INTERNAL_USERS = [
-  'uchfitness@gmail.com',
-  'heribertor7@yahoo.com',
-  'helenalejo2@gmail.com',
-  'davianhall2002@gmail.com',
-  'chidi.akusobi@gmail.com',
-  'kelechiakusobi@gmail.com',
-  'ijeoma.akusobi@gmail.com',
-  'davidhkoffi@gmail.com',
-  'darrenhall1997@gmail.com',
-  'akusobiinvestments@gmail.com',
-  'mr.ifeanyirobi@gmail.com',
-  'bonafedeben@gmail.com',
-  'mvoelkl7@gmail.com',
-  'brownepatrick026@gmail.com',
-  'onwike20@gmail.com',
-  'vaisogun@gmail.com',
-  'Emmanuelaisogun@gmail.com',
-  'uakusobi@gmail.com',
-];
-
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [email, setEmail] = useState<string | null>(null);
@@ -34,52 +12,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    const runGate = async () => {
+    const checkAuth = async () => {
       const { data } = await supabase.auth.getUser();
       const user = data.user;
       if (!user) { router.push('/login'); return; }
-      const userEmail = user.email ?? null;
-      setEmail(userEmail);
-      if (userEmail && INTERNAL_USERS.includes(userEmail)) { setLoading(false); return; }
-      try {
-        const res = await fetch(
-          'https://cvfcwwgnnmanzgcbpjon.supabase.co/functions/v1/check-subscription',
-          { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: userEmail }) }
-        );
-        if (!res.ok) throw new Error('Failed to check subscription');
-        const result = await res.json();
-        if (result.active) { setLoading(false); return; }
-        await redirectToCheckout();
-      } catch (err) {
-        console.error('Subscription gate error:', err);
-        await redirectToCheckout();
-      }
+      setEmail(user.email ?? null);
+      setLoading(false);
     };
-    runGate();
+    checkAuth();
   }, [router]);
-
-  const redirectToCheckout = async () => {
-    try {
-      const res = await fetch(
-        'https://cvfcwwgnnmanzgcbpjon.supabase.co/functions/v1/bright-responder',
-        { method: 'POST', headers: { 'Content-Type': 'application/json' } }
-      );
-      if (!res.ok) throw new Error('Failed to create checkout session');
-      const data = await res.json();
-      if (data.url) { window.location.href = data.url; }
-      else throw new Error('No checkout URL returned');
-    } catch (err) {
-      console.error('Checkout redirect error:', err);
-      router.push('/signup?error=payment_required');
-    }
-  };
 
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', background: '#080c18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ width: 32, height: 32, border: '2px solid rgba(255,255,255,0.06)', borderTopColor: '#4ade80', borderRadius: '50%', margin: '0 auto 14px', animation: 'spin 1s linear infinite' }} />
-          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.04em' }}>Verifying access...</p>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.04em' }}>Loading...</p>
         </div>
       </div>
     );
